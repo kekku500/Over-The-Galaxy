@@ -1,0 +1,14 @@
+======== CHANGELOG ========
+VERSION 0.1
+========
+
+0.1 
+Created general code structure.
+Made update and render in separate threads.
+A basic state system.
+How the structure works:
+	1)Main.class starts the Game.class.
+	2)Game.class starts threads in ThreadManager.class
+	3)ThreadManager starts a game state specified in Game.class
+	3)PlayState creates a World
+
