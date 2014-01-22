@@ -1,34 +1,37 @@
 package game.world.entities;
 
-import game.Game;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_QUADS;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glDisableClientState;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glTranslatef;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glDeleteBuffers;
+import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.world.World;
 
 import java.nio.FloatBuffer;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import main.Main;
-
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
 
 public class Box implements Entity{
 	
-	private float w, h;
-	
-	int vboVertexID;
-	
-	private int id;
-	
-	FloatBuffer vertices;
-	
 	EntityVariables[] variables = {new EntityVariables(), new EntityVariables(), new EntityVariables()};
-	
 	private World world;
 	
+	private float w, h;
+	private int id;
+	
+	int vboVertexID;
+	FloatBuffer vertices;
+
 	public Box(float x, float y, float w, float h){
 		for(EntityVariables variable: variables){
 			variable.setPos(new Vector2f(x, y));
@@ -36,52 +39,20 @@ public class Box implements Entity{
 		this.w = w;
 		this.h = h;
 		
+		//Create Vertex Buffer
 		vertices = BufferUtils.createFloatBuffer(2 * 4);
-		
 		vertices.put(new float[]
 				{0,0, w,0, w,h, 0,h});
 		vertices.rewind();
 	}
 	
-	public boolean isVBOGenerated(){
-		if(vboVertexID == 0)
-			return false;
-		return true;
-	}
-	
-	public Vector2f getPos(){
-		int variableId = getWorld().getLatestState().getId();
-		Vector2f pos = variables[variableId].getPos();
-		Vector2f realPos = new Vector2f(pos.x, pos.y);
-		return realPos;
-	}
-	
-	@Override
-	public void setX(float x){
-		int variableId = getWorld().getLatestState().getId();
-		variables[variableId].getPos().x = x;
-	}
-	
-	@Override
-	public void setY(float y){
-		int variableId = getWorld().getLatestState().getId();
-		variables[variableId].getPos().y = y;
-	}
-	
-	public float getWidth(){
-		return w;
-	}
-	
-	public float getHeight(){
-		return h;
-	}
-	
-	
 	@Override
 	public void render(){
 		if(!isVBOGenerated())
 			generateVBO();
-		glTranslatef(getPos().x, getPos().y, 0);
+		EntityVariables vars = variables[EntityVariables.getRendering()];
+		Vector2f pos = vars.getPos();
+		glTranslatef(pos.x, pos.y, 0);
 		
 		// Bind the vertex buffer
 		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
@@ -93,16 +64,13 @@ public class Box implements Entity{
 	    
 	    glDisableClientState(GL_VERTEX_ARRAY);
 	    
-		glTranslatef(-getPos().x, -getPos().y, 0);
-	}
-
-	@Override
-	public Entity getCopy() {
-		return null;
+		glTranslatef(-pos.x, -pos.y, 0);
 	}
 	
-	public int getVboID(){
-		return vboVertexID;
+	private boolean isVBOGenerated(){
+		if(vboVertexID == 0)
+			return false;
+		return true;
 	}
 	
 	@Override
@@ -110,34 +78,7 @@ public class Box implements Entity{
 	    // Dispose the buffers
 	    glDeleteBuffers(vboVertexID);
 	}
-
-	@Override
-	public int getId() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void setId(int id) {
-		this.id = id;
-		
-	}
-
-	@Override
-	public World getWorld() {
-		return world;
-	}
-
-	@Override
-	public void setWorld(World world) {
-		this.world = world;
-	}
-
-	@Override
-	public EntityVariables getVariables(int i) {
-		return variables[i];
-	}
-
+	
 	@Override
 	public void generateVBO() {
 		vboVertexID = glGenBuffers();
@@ -145,6 +86,63 @@ public class Box implements Entity{
 		glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);	
 	}
+	
+	@Override
+	public void setWorld(World world) {
+		this.world = world;
+	}
+	
+	@Override
+	public void setId(int id) {
+		this.id = id;
+	}
+	
+	@Override
+	public World getWorld() {
+		return world;
+	}
+	
+	@Override
+	public int getId() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	@Override
+	public int getVboID(){
+		return vboVertexID;
+	}
+	
+	@Override
+	public float getWidth(){
+		return w;
+	}
+	
+	@Override
+	public float getHeight(){
+		return h;
+	}
+	
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+	@Override
+	public EntityVariables getVariables(int i) {
+		return variables[i];
+	}
+
+
 
 
 }

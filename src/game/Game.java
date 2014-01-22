@@ -12,6 +12,9 @@ public class Game extends ThreadManager{
 	//Time
 	public static int fps = 60; //framerate
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
+	public static int width = 800;
+	public static int height = 600;
+	public static boolean fullscreen = false;
 
 	//States
 	private final int PLAYGAME = 0;

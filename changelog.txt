@@ -3,12 +3,14 @@ VERSION 0.1
 ========
 
 0.1 
-Created general code structure.
-Made update and render in separate threads.
-A basic state system.
-How the structure works:
-	1)Main.class starts the Game.class.
-	2)Game.class starts threads in ThreadManager.class
-	3)ThreadManager starts a game state specified in Game.class
+*Created general code structure.
+*Made multithreading rendering and updating system. 
+Used: http://blog.slapware.eu/game-engine/programming/multithreaded-renderloop-part1/
+*Game is based on states (ex. in main IntroState and PlayState)
+*How the code runs works:
+	1)Main.java starts the Game.java.
+	2)Game.java starts threads in ThreadManager.java
+	3)ThreadManager starts a game state specified in Game.java
 	3)PlayState creates a World
+*Fps changable in Game.java
 

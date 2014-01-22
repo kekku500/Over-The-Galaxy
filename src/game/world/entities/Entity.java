@@ -6,27 +6,24 @@ public interface Entity {
 	
 	public void render();
 	
-	public Entity getCopy();
-	
 	public void dispose();
 	
-	public int getVboID();
+	public void generateVBO();
 	
-	
-	public int getId();
+	public void setWorld(World world);
 	
 	public void setId(int id);
 	
 	public World getWorld();
 	
-	public void setWorld(World world);
+	public int getId();
+	
+	public int getVboID();
 	
 	public EntityVariables getVariables(int i);
 	
-	public void setX(float x);
+	public float getWidth();
 	
-	public void setY(float y);
-	
-	public void generateVBO();
+	public float getHeight();
 
 }

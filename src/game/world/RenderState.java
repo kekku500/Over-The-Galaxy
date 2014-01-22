@@ -1,13 +1,6 @@
 package game.world;
 
-import game.Game;
-import game.world.entities.Box;
-import game.world.entities.Entity;
-
-import java.util.ArrayList;
-
-import threading.RenderThread;
-import main.Main;
+import game.world.entities.EntityVariables;
 
 public class RenderState {
 
@@ -23,20 +16,26 @@ public class RenderState {
 		this.id = id;
 	}
 	
-	public int getFrameCount(){
-		return frame;
+	public void setReadOnly(boolean b){
+		if(b)
+			EntityVariables.setRendering(id);
+		else
+			EntityVariables.setRendering(-1);
+		readOnly = b;
+	}
+	
+	public void setUpdating(boolean b){
+		if(b){ //true
+			EntityVariables.setUpdating(id); //starting update
+		}else{ //false
+			EntityVariables.setUpdating(-1); //update done
+			EntityVariables.setUpToDate(id);
+		}
+		updating = b;
 	}
 	
 	public void setFrameCount(int f){
 		frame = f;
-	}
-	
-	public int getId(){
-		return id;
-	}
-	
-	public void setReadOnly(boolean b){
-		readOnly = b;
 	}
 	
 	public boolean isReadOnly(){
@@ -47,8 +46,12 @@ public class RenderState {
 		return updating;
 	}
 	
-	public void setUpdating(boolean b){
-		updating = b;
+	public int getFrameCount(){
+		return frame;
 	}
-
+	
+	public int getId(){
+		return id;
+	}
+	
 }

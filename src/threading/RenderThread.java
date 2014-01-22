@@ -4,18 +4,16 @@ import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
 import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glColor3f;
 import static org.lwjgl.opengl.GL11.glLoadIdentity;
 import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glViewport;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-
-import java.util.ArrayList;
-import java.util.PriorityQueue;
-
 import game.Game;
 import game.State;
+import game.world.RenderState;
+
+import java.util.ArrayList;
+
 import main.Main;
 
 import org.lwjgl.LWJGLException;
@@ -30,16 +28,19 @@ public class RenderThread implements Runnable{
 		this.threadManager = threadManager;
 	}
 	
+	/**
+	 * OpenGL Initialization goes here.
+	 */
 	private void setupOpenGL(){
 	    try{
 	    	Main.debugPrint("Setting up display");
 	        Display.setDisplayMode(new DisplayMode(0, 0));
 	        Display.create();
-	        setDisplayMode(800, 600, false);
+	        setDisplayMode(Game.width, Game.height, Game.fullscreen);
 	        Display.setResizable(true);
 	    }catch (LWJGLException e){
 	        e.printStackTrace();
-	        System.exit(-1); // There is no point in running without hardware acceleration right?
+	        System.exit(-1); 
 	    }
 	    
 	    Main.debugPrint("Setting up OpenGL");
@@ -48,7 +49,7 @@ public class RenderThread implements Runnable{
 	    glLoadIdentity();
 
 	    glMatrixMode(GL_MODELVIEW);
-	    glOrtho(0, 800, 600, 0, 1, -1);
+	    glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
 	    glViewport(0, 0, Display.getWidth(), Display.getHeight());
 	}
 
@@ -56,42 +57,78 @@ public class RenderThread implements Runnable{
 	public void run(){
 		setupOpenGL();
 		
+		//Get Active State
+		State activeState = threadManager.getState(threadManager.getActiveStateId());
+		
+		
 		//Rendering loop
 		Main.debugPrint("Starting renderThread loop");
-		State activeState = threadManager.getState(threadManager.getActiveStateId());
 		threadManager.setRenderReady(true);
-		
-
 		while(!Thread.interrupted()){
+			//Display fps
 			updateDisplayFps();
 			//Check if state has been changed
 			if(threadManager.getActiveStateId() != activeState.getId())
 				activeState = threadManager.getState(threadManager.getActiveStateId());
-
+			
 		    // Clear the color information.
 		    glClear(GL_COLOR_BUFFER_BIT);
-		    // Set the color to white.
-		    glColor3f(1, 1, 1);
 		    
-		    activeState.render();
+			RenderState latestState = threadManager.getLatestState();
+			int renderingFrame = latestState.getFrameCount();
+			//Main.debugPrint("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
+			latestState.setReadOnly(true); //Must not modify a state that is being rendered
+			//Main.debugPrint("Rendering " + latestState.getId() + " at " + Main.getTime());
 			
+			activeState.render(); //RENDER
+			
+			latestState.setReadOnly(false);
 			Display.update();
 			
-			//Check if got something new to render, sleep while not
-			while(!Thread.interrupted() && !ThreadManager.newStuffToRender){
+			//Check if screen has been resized
+			if(Display.wasResized())
+				resized();
+				
+			//Check if got something new to render || sleep while not
+			if(threadManager.getLatestState().getFrameCount() == renderingFrame){
+				//Main.debugPrint("No new stuff to render at " + Main.getTime());
+				threadManager.setStuffToRender(false);
+			}
+			while(!Thread.interrupted() && !threadManager.newStuffToRender()){
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					//End while sleeping
 					endGame();
 				}
 			}
 			
 		}
-		
+		//End normally
 		endGame();
 	}
 	
+	public void endGame(){
+		Main.debugPrint("Ending game");
+		dispose(); //Clean up GPU
+		Display.destroy();
+		System.exit(0);
+	}
+	
+	/**
+	 * Clears up memory
+	 */
+	private void dispose(){
+		for(State state: threadManager.getStates()){
+			state.dispose();
+		}
+	}
+	
+	public void resized(){
+		glViewport(0, 0, Display.getWidth(), Display.getHeight());
+	}
+	
+	//Display fps counter
 	private float lastFPS = Main.getTime();
 	private int fps = 0;
 	private ArrayList<Integer> allFps = new ArrayList<Integer>();
@@ -113,23 +150,6 @@ public class RenderThread implements Runnable{
 			lastFPS += 1;
 		}
 		fps++;
-	}
-	
-	
-	public void endGame(){
-		Main.debugPrint("Ending game");
-		dispose(); //Clean up GPU
-		Display.destroy();
-		System.exit(0);
-	}
-	
-	private void dispose(){
-		threadManager.getState(threadManager.getActiveStateId()).dispose();
-	}
-	
-	
-	public void resized(){
-		glViewport(0, 0, Display.getWidth(), Display.getHeight());
 	}
 	
 	/**

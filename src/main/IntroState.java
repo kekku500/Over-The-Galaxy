@@ -18,25 +18,23 @@ public class IntroState extends State{
 
 	@Override
 	public void update(float dt) {
-		Main.debugPrint("Intro update");
 		
 	}
 
 	@Override
 	public void render() {
-		Main.debugPrint("Intro render");
 		
-	}
-
-	@Override
-	public int getId() {
-		return stateId;
 	}
 
 	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public int getId() {
+		return stateId;
 	}
 
 }

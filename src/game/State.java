@@ -8,8 +8,8 @@ public abstract class State {
 	
 	public abstract void render();
 	
-	public abstract int getId();
-	
 	public abstract void dispose();
+	
+	public abstract int getId();
 
 }
