@@ -10,7 +10,7 @@ public class Controller2{
 	public Vector3f position;
 	public Vector3f rotation;
 	private static int walkingSpeed = 10;
-	private static int mouseSpeed = 1;
+	private static int mouseSpeed = 2;
 	private static final int maxLookUp = 85;
 	private static final int maxLookDown = -85;
 	
@@ -24,8 +24,8 @@ public class Controller2{
 			float mouseDY, int delta){
 		
 		if (Mouse.isGrabbed()) {
-	        float mouseDXx = mouseDX * mouseSpeed * 0.0016f;
-	        float mouseDYy = mouseDY * mouseSpeed * 0.0016f;
+	        float mouseDXx = mouseDX * mouseSpeed * 0.16f;
+	        float mouseDYy = mouseDY * mouseSpeed * 0.16f;
 	        if (rotation.y + mouseDXx >= 360) {
 	            rotation.y = rotation.y + mouseDXx - 360;
 	        } else if (rotation.y + mouseDXx < 0) {

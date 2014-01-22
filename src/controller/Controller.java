@@ -1,6 +1,8 @@
 package controller;
 
-import java.util.Random;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
@@ -10,9 +12,11 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.util.vector.Vector3f;
 
+import test.OBJloader.Face;
+import test.OBJloader.Model;
+import test.OBJloader.OBJLoader;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
-
 import controller.Controller2;
 
 public class Controller {
@@ -49,18 +53,55 @@ public class Controller {
 		gluPerspective((float) 30, 640f / 480f, 0.001f, 100);
 		glMatrixMode(GL_MODELVIEW);
 		
-		Point[] points = new Point[10000];
-		Random random = new Random();
-		
-		for(int i = 0; i < points.length; i++){
-			points[i] = new Point((random.nextFloat() - 0.5f)* 100f,
-								  (random.nextFloat() - 0.5f)* 100f,
-								  random.nextInt(200) - 200);
+		int objectDisplayList = glGenLists(1);
+		glNewList(objectDisplayList, GL_COMPILE);
+		{
+			Model m = null;
+			try{
+				m = OBJLoader.loadModel(new File("C:/Users/Marko/Documents/GitHub/Over-The-Galaxy/src/mees.obj"));
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+				Display.destroy();
+				System.exit(1);
+			}catch(IOException e){
+				e.printStackTrace();
+				Display.destroy();
+				System.exit(1);
+			}
+			glBegin(GL_TRIANGLES);
+			for(Face face : m.faces){
+				System.out.println(face.normal.y);
+				Vector3f n1 = m.normals.get((int) face.normal.x -1);
+				glNormal3f(n1.x,n1.y,n1.z);
+				Vector3f v1 = m.vertices.get((int)face.vertex.x -1);
+				glVertex3f(v1.x,v1.y,v1.z);
+				Vector3f n2 = m.normals.get((int) face.normal.y -1);
+				glNormal3f(n2.x,n2.y,n2.z);
+				Vector3f v2 = m.vertices.get((int)face.vertex.y -1);
+				glVertex3f(v2.x,v2.y,v2.z);
+				Vector3f n3 = m.normals.get((int) face.normal.z -1);
+				glNormal3f(n3.x,n3.y,n3.z);
+				Vector3f v3 = m.vertices.get((int)face.vertex.z -1);
+				glVertex3f(v3.x,v3.y,v3.z);
+			}
+			glEnd();
+			
 		}
-		
+		glEndList();
 		
 		while(!Display.isCloseRequested()){
-			int delta = getDelta();
+			int delta = getDelta();			
+			
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			
+			glCallList(objectDisplayList);
+			
+			glLoadIdentity();
+			glRotatef(rotation.x,1,0,0);
+			glRotatef(rotation.y,0,1,0);
+			glRotatef(rotation.z,0,0,1);
+			glTranslatef(position.x,position.y,position.z);
 			
 			boolean keyUp = Keyboard.isKeyDown(Keyboard.KEY_UP) || Keyboard.isKeyDown(Keyboard.KEY_W);
 			boolean keyDown = Keyboard.isKeyDown(Keyboard.KEY_DOWN) || Keyboard.isKeyDown(Keyboard.KEY_S);
@@ -77,19 +118,9 @@ public class Controller {
 		    control.Control(keyUp, keyDown, keyLeft, keyRight, flyUp, flyDown, moveFaster, moveSlower,
 		    		mouseDX, mouseDY, delta);
 			position = control.position;
-			rotation = control.rotation;				
+			rotation = control.rotation;	
 			
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glRotatef(rotation.x,1,0,0);
-			glRotatef(rotation.y,0,1,0);
-			glRotatef(rotation.z,0,0,1);
-			glTranslatef(position.x,position.y,position.z);
 			
-			glBegin(GL_POINTS);
-			for(Point p: points){
-				glVertex3f(p.x,p.y,p.z);
-			}
-			glEnd();
 									
 			Display.update();
 			Display.sync(60);			
@@ -98,15 +129,6 @@ public class Controller {
 		System.exit(0);
 	}
 	
-	private static class Point{
-		float x, y, z;
-		
-		public Point(float x, float y, float z){
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-	}
 	
 	public static void main(String[] args){
 		new Controller();
