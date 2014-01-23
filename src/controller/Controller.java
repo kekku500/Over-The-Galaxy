@@ -16,6 +16,7 @@ import test.OBJloader.Face;
 import test.OBJloader.Model;
 import test.OBJloader.OBJLoader;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
 import controller.Controller2;
 
@@ -47,13 +48,26 @@ public class Controller {
 		}
 		
 		control = new Controller2(position, rotation);
-
+		Model m = null;
+		try{
+			m = OBJLoader.loadModel(new File("C:/Users/Marko/Documents/GitHub/Over-The-Galaxy/src/mees.obj"));
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			Display.destroy();
+			System.exit(1);
+		}catch(IOException e){
+			e.printStackTrace();
+			Display.destroy();
+			System.exit(1);
+		}
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective((float) 30, 640f / 480f, 0.001f, 100);
 		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glEnable(GL_ARRAY_BUFFER_BINDING);
 		
-		int objectDisplayList = glGenLists(1);
+		/*int objectDisplayList = glGenLists(1);
 		glNewList(objectDisplayList, GL_COMPILE);
 		{
 			Model m = null;
@@ -68,9 +82,9 @@ public class Controller {
 				Display.destroy();
 				System.exit(1);
 			}
+
 			glBegin(GL_TRIANGLES);
 			for(Face face : m.faces){
-				System.out.println(face.normal.y);
 				Vector3f n1 = m.normals.get((int) face.normal.x -1);
 				glNormal3f(n1.x,n1.y,n1.z);
 				Vector3f v1 = m.vertices.get((int)face.vertex.x -1);
@@ -87,15 +101,16 @@ public class Controller {
 			glEnd();
 			
 		}
-		glEndList();
-		
+		glEndList();*/
+
 		while(!Display.isCloseRequested()){
 			int delta = getDelta();			
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			
-			glCallList(objectDisplayList);
+			//glCallList(objectDisplayList);
+			m.Render();
 			
 			glLoadIdentity();
 			glRotatef(rotation.x,1,0,0);
