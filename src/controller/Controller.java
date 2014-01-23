@@ -12,7 +12,6 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.util.vector.Vector3f;
 
-import test.OBJloader.Face;
 import test.OBJloader.Model;
 import test.OBJloader.OBJLoader;
 import static org.lwjgl.opengl.GL11.*;
@@ -50,7 +49,7 @@ public class Controller {
 		control = new Controller2(position, rotation);
 		Model m = null;
 		try{
-			m = OBJLoader.loadModel(new File("C:/Users/Marko/Documents/GitHub/Over-The-Galaxy/src/mees.obj"));
+			m = OBJLoader.loadModel(new File("src/mees.obj"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			Display.destroy();
@@ -66,50 +65,12 @@ public class Controller {
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glEnable(GL_ARRAY_BUFFER_BINDING);
-		
-		/*int objectDisplayList = glGenLists(1);
-		glNewList(objectDisplayList, GL_COMPILE);
-		{
-			Model m = null;
-			try{
-				m = OBJLoader.loadModel(new File("C:/Users/Marko/Documents/GitHub/Over-The-Galaxy/src/mees.obj"));
-			}catch(FileNotFoundException e){
-				e.printStackTrace();
-				Display.destroy();
-				System.exit(1);
-			}catch(IOException e){
-				e.printStackTrace();
-				Display.destroy();
-				System.exit(1);
-			}
-
-			glBegin(GL_TRIANGLES);
-			for(Face face : m.faces){
-				Vector3f n1 = m.normals.get((int) face.normal.x -1);
-				glNormal3f(n1.x,n1.y,n1.z);
-				Vector3f v1 = m.vertices.get((int)face.vertex.x -1);
-				glVertex3f(v1.x,v1.y,v1.z);
-				Vector3f n2 = m.normals.get((int) face.normal.y -1);
-				glNormal3f(n2.x,n2.y,n2.z);
-				Vector3f v2 = m.vertices.get((int)face.vertex.y -1);
-				glVertex3f(v2.x,v2.y,v2.z);
-				Vector3f n3 = m.normals.get((int) face.normal.z -1);
-				glNormal3f(n3.x,n3.y,n3.z);
-				Vector3f v3 = m.vertices.get((int)face.vertex.z -1);
-				glVertex3f(v3.x,v3.y,v3.z);
-			}
-			glEnd();
-			
-		}
-		glEndList();*/
 
 		while(!Display.isCloseRequested()){
 			int delta = getDelta();			
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			
-			//glCallList(objectDisplayList);
+
 			m.Render();
 			
 			glLoadIdentity();

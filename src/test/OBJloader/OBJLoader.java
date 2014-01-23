@@ -20,7 +20,7 @@ public class OBJLoader{
 		Material material = null;
 		while((line = reader.readLine()) != null){
 			if(line.startsWith("mtllib ")){
-				MTLLoader.loadMaterial(m, "C:/Users/Marko/Documents/GitHub/Over-The-Galaxy/src/" +line.split(" ")[1]  + ".mtl");
+				MTLLoader.loadMaterial(m, "src/" +line.split(" ")[1]  + ".mtl");
 			}else if(line.startsWith("v ")){
 				float x = Float.valueOf(line.split(" ")[1]);
 				float y = Float.valueOf(line.split(" ")[2]);

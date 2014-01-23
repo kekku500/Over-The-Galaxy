@@ -60,26 +60,31 @@ public class Model {
 			
 			Vector3f v1 = vertices.get((int) face.vertex.x - 1);
 			vertexBuffer.put(v1.x).put(v1.y).put(v1.z);
-			colorBuffer.put(material.diffuse.x)
-					   .put(material.diffuse.y)
-					   .put(material.diffuse.z);
+			colorBuffer.put(material.getDiffuse().x)
+					   .put(material.getDiffuse().y)
+					   .put(material.getDiffuse().z);
 			
-			
+			Vector3f n1 = normals.get((int) face.normal.x -1);
+			normalBuffer.put(n1.x).put(n1.y).put(n1.z);
+						
 			Vector3f v2 = vertices.get((int) face.vertex.y - 1);
 			vertexBuffer.put(v2.x).put(v2.y).put(v2.z);
-			colorBuffer.put(material.diffuse.x)
-					   .put(material.diffuse.y)
-					   .put(material.diffuse.z);
+			colorBuffer.put(material.getDiffuse().x)
+					   .put(material.getDiffuse().y)
+					   .put(material.getDiffuse().z);
+			
 			Vector3f n2 = normals.get((int) face.normal.y -1);
 			normalBuffer.put(n2.x).put(n2.y).put(n2.z);
 			
 			Vector3f v3 = vertices.get((int) face.vertex.z - 1);
 			vertexBuffer.put(v3.x).put(v3.y).put(v3.z);
-			colorBuffer.put(material.diffuse.x)
-					   .put(material.diffuse.y)
-					   .put(material.diffuse.z);
+			colorBuffer.put(material.getDiffuse().x)
+					   .put(material.getDiffuse().y)
+					   .put(material.getDiffuse().z);
+			
 			Vector3f n3 = normals.get((int) face.normal.z -1);
 			normalBuffer.put(n3.x).put(n3.y).put(n3.z);
+		}
 			
 			vertexBuffer.rewind();
 			normalBuffer.rewind();
@@ -96,7 +101,7 @@ public class Model {
 			glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
 			glBufferData(GL_ARRAY_BUFFER, colorBuffer, GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
+		
 	}
 	
 	public void dispose(){
