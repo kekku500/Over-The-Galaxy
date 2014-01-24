@@ -1,12 +1,12 @@
 package threading;
 
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glLoadIdentity;
 import static org.lwjgl.opengl.GL11.glMatrixMode;
-import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glViewport;
 import game.Game;
 import game.State;
@@ -17,8 +17,11 @@ import java.util.ArrayList;
 import main.Main;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.GLU;
 
 public class RenderThread implements Runnable{
 	
@@ -48,9 +51,14 @@ public class RenderThread implements Runnable{
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
 
+	    
+	    //glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
+	    GLU.gluPerspective((float) 60, Display.getWidth() / Display.getHeight(), 0.001f, 400);
 	    glMatrixMode(GL_MODELVIEW);
-	    glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
 	    glViewport(0, 0, Display.getWidth(), Display.getHeight());
+	    
+	    //hide the mouse
+	    Mouse.setGrabbed(true);
 	}
 
 	@Override
@@ -58,8 +66,7 @@ public class RenderThread implements Runnable{
 		setupOpenGL();
 		
 		//Get Active State
-		State activeState = threadManager.getState(threadManager.getActiveStateId());
-		
+		State activeState = threadManager.getActiveState();
 		
 		//Rendering loop
 		Main.debugPrint("Starting renderThread loop");
@@ -69,12 +76,16 @@ public class RenderThread implements Runnable{
 			updateDisplayFps();
 			//Check if state has been changed
 			if(threadManager.getActiveStateId() != activeState.getId())
-				activeState = threadManager.getState(threadManager.getActiveStateId());
+				activeState = threadManager.getActiveState();
 			
 		    // Clear the color information.
-		    glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
+	        //set the modelview matrix back to the identity
+	        GL11.glLoadIdentity();
 		    
-			RenderState latestState = threadManager.getLatestState();
+			RenderState latestState = activeState.getLatestState();
+			//System.out.println("Rendering " + activeState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")");
 			int renderingFrame = latestState.getFrameCount();
 			//Main.debugPrint("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
 			latestState.setReadOnly(true); //Must not modify a state that is being rendered
@@ -90,11 +101,13 @@ public class RenderThread implements Runnable{
 				resized();
 				
 			//Check if got something new to render || sleep while not
-			if(threadManager.getLatestState().getFrameCount() == renderingFrame){
+			if(activeState.getLatestState().getFrameCount() == renderingFrame){
 				//Main.debugPrint("No new stuff to render at " + Main.getTime());
-				threadManager.setStuffToRender(false);
+				activeState.setStuffToRender(false);
 			}
-			while(!Thread.interrupted() && !threadManager.newStuffToRender()){
+			while(!Thread.interrupted() && //Thread can still run
+					!activeState.newStuffToRender() &&  //Nothing new to render
+					threadManager.getActiveStateId() == activeState.getId()){ //State hasn't changed
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
@@ -188,7 +201,6 @@ public class RenderThread implements Runnable{
 	                            freq = targetDisplayMode.getFrequency();
 	                        }
 	                    }
-
 	                    // if we've found a match for bpp and frequency against the 
 	                    // original display mode then it's probably best to go for this one
 	                    // since it's most likely compatible with the monitor

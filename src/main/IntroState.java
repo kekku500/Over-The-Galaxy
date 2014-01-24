@@ -2,6 +2,10 @@ package main;
 
 import game.State;
 
+/**
+ * A simple example of a state.
+ */
+
 public class IntroState extends State{
 	
 	private int stateId;
@@ -28,7 +32,7 @@ public class IntroState extends State{
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
+		//Dispose all objects created in this state.
 		
 	}
 	

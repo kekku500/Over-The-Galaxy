@@ -5,8 +5,8 @@ import game.world.entities.EntityVariables;
 public class RenderState {
 
 	
-	private boolean readOnly = false;
-	private boolean updating = false;
+	private boolean readOnly = false; //while rendering
+	private boolean updating = false; //while being updated, not usable for rendering
 	
 	private int frame;
 	
@@ -16,6 +16,7 @@ public class RenderState {
 		this.id = id;
 	}
 	
+	//SET
 	public void setReadOnly(boolean b){
 		if(b)
 			EntityVariables.setRendering(id);
@@ -24,6 +25,11 @@ public class RenderState {
 		readOnly = b;
 	}
 	
+	public void setFrameCount(int f){
+		frame = f;
+	}
+	
+	//GET
 	public void setUpdating(boolean b){
 		if(b){ //true
 			EntityVariables.setUpdating(id); //starting update
@@ -33,11 +39,7 @@ public class RenderState {
 		}
 		updating = b;
 	}
-	
-	public void setFrameCount(int f){
-		frame = f;
-	}
-	
+
 	public boolean isReadOnly(){
 		return readOnly;
 	}

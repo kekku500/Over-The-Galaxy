@@ -1,18 +1,17 @@
 package main;
 
-import game.Game;
-
 import org.lwjgl.Sys;
+
+import game.Game;
 
 public class Main {
 	
 	public static boolean debugging = true;
-	public static final String VERSION = "0.1";
+	public static final String VERSION = "0.2";
 	
 	public static void main(String[] args){
 		Game game = new Game("Over-The-Galaxy v" + VERSION);
 		game.start();
-		
 	}
 	
 	/**

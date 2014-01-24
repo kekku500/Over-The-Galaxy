@@ -1,28 +1,35 @@
 package game.world.entities;
 
-import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
+
+/**
+ *	EntityVariables are used to store copies of entity variables. 
+ *	Copies are required to use multithreading efficiently.
+ *	For example. One EntityVariable class is used to render entity position. The same
+ *	EntityVariable can't be used for collision detection because rendered position must
+ *	not change suddenly in the frame or it will create flickering. Rendered variables must be read-only.
+ */
 
 public class EntityVariables {
 	
-	private Vector2f pos;
+	private Vector3f pos;
 	
-	//Keeps track which entity variables are in which state
-	public static int updating = -1;
-	public static int upToDate = 0;
-	public static int rendering = -1;
+	//Keeps track which entity variables are in which state.
+	public static int updating = 0; //These variables are changed and used for calcluations.
+	public static int upToDate = 1; //The most up to date variables, used for copying upToDate variables to updating.
+	public static int rendering = 1; //Used for rendering
 	
 	public EntityVariables(){
-		pos = new Vector2f();
+		pos = new Vector3f();
 	}
 	
 	//SET
-	public void setPos(Vector2f p){
+	public void setPos(Vector3f p){
 		pos = p;
 	}
 	
 	//GET
-	public Vector2f getPos(){
+	public Vector3f getPos(){
 		return pos;
 	}
 	

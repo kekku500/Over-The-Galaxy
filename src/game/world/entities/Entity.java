@@ -1,5 +1,7 @@
 package game.world.entities;
 
+import org.lwjgl.util.vector.Vector3f;
+
 import game.world.World;
 
 public interface Entity {
@@ -10,20 +12,22 @@ public interface Entity {
 	
 	public void generateVBO();
 	
+	//SET
+	public void setId(int id);
+	
 	public void setWorld(World world);
 	
-	public void setId(int id);
+	//GET
+	public int getId();
 	
 	public World getWorld();
 	
-	public int getId();
-	
 	public int getVboID();
 	
+	public boolean isVBOGenerated();
+	
+	public Vector3f getPos();
+	
 	public EntityVariables getVariables(int i);
-	
-	public float getWidth();
-	
-	public float getHeight();
 
 }
