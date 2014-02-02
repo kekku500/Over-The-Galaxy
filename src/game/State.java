@@ -1,8 +1,12 @@
 package game;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
-import game.world.RenderState;
+import controller.Camera;
+import game.world.World;
+import game.world.gui.graphics.Graphics;
+import game.world.sync.SyncManager;
 
 public abstract class State {
 	
@@ -10,15 +14,21 @@ public abstract class State {
 	private boolean newStuffToRender = true;
 	
 	//Multithreading rendering handling (synchronizing update and render threads)
-	//To know which EntityVariables to use
-	RenderState[] renderStates = {new RenderState(0), new RenderState(1), new RenderState(2)};
+	RenderState[] renderStates = new RenderState[3];
+	private SyncManager syncManager = new SyncManager();
+	
+	public State(){
+		renderStates[0] = new RenderState(this, 0, 0);
+		renderStates[1] = new RenderState(this, 1, -1);
+		renderStates[2] = new RenderState(this, 2, -1);
+	}
 	
 	//ABSTRACT
 	public abstract void init();
 	
 	public abstract void update(float dt);
 	
-	public abstract void render();
+	public abstract void render(Graphics g);
 	
 	public abstract void dispose();
 	
@@ -37,12 +47,13 @@ public abstract class State {
 	public RenderState getLatestState(){
 		RenderState latestState = null;
 		int highestFrame = 0;
-		for(RenderState state: renderStates)
-			//Select state which has higher frame count and is not updating
+		for(RenderState state: renderStates){
+			//Select world which has higher frame count and is not updating
 			if(state.getFrameCount() >= highestFrame && !state.isUpdating()){
 				latestState = state;
 				highestFrame = state.getFrameCount();
-			}		
+			}	
+		}
 		return latestState;
 	}
 	
@@ -52,13 +63,14 @@ public abstract class State {
 	 */
 	public RenderState getOldestState(){
 		RenderState oldestState = null; 
-		int lowestFrame = -1;
-		for(RenderState state: renderStates)
-			//Must not be read-only and has lower frame count
-			if(!state.isReadOnly() && (lowestFrame == -1 || state.getFrameCount() <= lowestFrame)){
+		int lowestFrame = -2;
+		for(RenderState state: renderStates){
+			//Must not be rendering and has lower frame count
+			if(!state.isRendering() && (lowestFrame == -2 || state.getFrameCount() <= lowestFrame)){
 				oldestState = state;
 				lowestFrame = state.getFrameCount();
 			}		
+		}
 		return oldestState;
 	}
 	
@@ -74,6 +86,22 @@ public abstract class State {
 			i++;
 		}
 		return Arrays.toString(counts);
+	}
+	
+	public SyncManager getSyncManager(){
+		return syncManager;
+	}
+	
+	public RenderState getUpdatingState(){
+		return renderStates[RenderState.updatingId];
+	}
+	
+	public RenderState getRenderingState(){
+		return renderStates[RenderState.renderingId];
+	}
+	
+	public RenderState getUpToDateState(){
+		return renderStates[RenderState.upToDateId];
 	}
 	
 	public RenderState[] getRenderStates(){

@@ -1,17 +1,29 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.PriorityQueue;
+
+import math.Vector3fc;
+
 import org.lwjgl.Sys;
+import org.lwjgl.util.vector.Vector3f;
 
 import game.Game;
 
 public class Main {
 	
 	public static boolean debugging = true;
-	public static final String VERSION = "0.2";
+	public static final String VERSION = "0.3";
 	
 	public static void main(String[] args){
 		Game game = new Game("Over-The-Galaxy v" + VERSION);
 		game.start();
+		
+		
 	}
 	
 	/**

@@ -1,11 +1,17 @@
-package threading;
+package game.threading;
 
+
+import java.util.List;
 
 import game.Game;
+import game.RenderState;
 import game.State;
-import game.world.RenderState;
+import game.world.World;
+import game.world.entities.Entity;
+import game.world.entities.Player;
 import main.Main;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
 public class UpdateThread implements Runnable{
@@ -33,7 +39,7 @@ public class UpdateThread implements Runnable{
 		}
 		
 		Main.debugPrint("Starting updateThread loop");
-		while(!Display.isCloseRequested()){
+		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			//Check if state has changed
 			if(threadManager.getActiveStateId() != activeState.getId()){
 				activeState = threadManager.getActiveState();
@@ -43,14 +49,16 @@ public class UpdateThread implements Runnable{
 			RenderState oldestState = activeState.getOldestState();
 			RenderState latestState = activeState.getLatestState();
 
-			//System.out.println("Updating " + activeState.getId() + " " + activeState.getStatesCounts() + 
-			//		" (" + oldestState.getFrameCount() + "->" + (latestState.getFrameCount()+1) + ")");
-			//Main.debugPrint("Updating " + oldestState.getId() + " at " + Main.getTime());
+			//System.out.println("Updating " + oldestState.getId() + " " + activeState.getStatesCounts() + 
+			//		" (" + oldestState.getFrameCount() + "->" + (latestState.getFrameCount()+1) + ")" + " at " + Main.getTime());
+			//Main.debugPrint("Updating RenderState " + oldestState.getId() + " at " + Main.getTime());
 			
-			//Start updating
+
 			oldestState.setUpdating(true);
+			oldestState.copyFrom(latestState);
 			oldestState.setFrameCount(latestState.getFrameCount()+1);
-			
+
+
 			accumulator += dt; //How much time must be updated
 			if(accumulator > Game.targetStep){ //Behind from real time, no time for thread sleep
 				int framesBehind = (int)(accumulator / (Game.targetStep)); // How many frames is simulation behind
@@ -59,22 +67,15 @@ public class UpdateThread implements Runnable{
 				accumulator -= Game.targetStep*framesBehind;
 			}else{ //Can update simulation ahead from real time and let update thread sleep
 				activeState.update(Game.targetStep);
-				accumulator -= Game.targetStep;			
+				accumulator -= Game.targetStep;		
 			}
 			//System.out.println("realTime " + realTime + " updatedTime " + updatedTime + " framesBehind");
-			
 			oldestState.setUpdating(false);
 			activeState.setStuffToRender(true);
 			//Updating done
 			
 			//Main.debugPrint("New stuff to render at " + Main.getTime());
 			Display.sync(Game.fps); //Sleep until during the free time which is left from updating
-			try {
-				Thread.sleep((int)(1000*Game.targetStep));
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 		
 		//Display has been closed

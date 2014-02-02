@@ -1,4 +1,4 @@
-package threading;
+package game.threading;
 
 import game.State;
 
@@ -14,6 +14,7 @@ public abstract class ThreadManager {
 	//States
 	private static ArrayList<State> states = new ArrayList<State>();
 	private State activeState;
+	private boolean endGame = false;
 	
 	//Threading
 	Thread updateThread = new Thread(new UpdateThread(this));
@@ -46,7 +47,7 @@ public abstract class ThreadManager {
 		
 		//Create thread manager loop here!
 		//CODE BELOW IS JUST FOR TEsTING
-		while(true){
+		while(!endGame){
 			try { //Wait for render thread to get ready
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -69,6 +70,7 @@ public abstract class ThreadManager {
 	}
 	
 	public void endGame(){
+		endGame = true;
 		//Update thread has stopped, also stop rendering
 		renderThread.interrupt();
 	}

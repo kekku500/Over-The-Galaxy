@@ -1,16 +1,10 @@
-package threading;
+package game.threading;
 
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
-import static org.lwjgl.opengl.GL11.glMatrixMode;
-import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL11.*;
 import game.Game;
+import game.RenderState;
 import game.State;
-import game.world.RenderState;
+import game.world.gui.graphics.Graphics;
 
 import java.util.ArrayList;
 
@@ -26,6 +20,8 @@ import org.lwjgl.util.glu.GLU;
 public class RenderThread implements Runnable{
 	
 	private ThreadManager threadManager;
+	
+	private Graphics g;
 	
 	public RenderThread(ThreadManager threadManager){
 		this.threadManager = threadManager;
@@ -47,18 +43,39 @@ public class RenderThread implements Runnable{
 	    }
 	    
 	    Main.debugPrint("Setting up OpenGL");
-	    // Setup OpenGL
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-
 	    
-	    //glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
-	    GLU.gluPerspective((float) 60, Display.getWidth() / Display.getHeight(), 0.001f, 400);
-	    glMatrixMode(GL_MODELVIEW);
-	    glViewport(0, 0, Display.getWidth(), Display.getHeight());
+	    //Setup OpenGL
+	    perspective3D(); //Starting perspective
+	    
+	    //Initialize graphics class
+	    g = new Graphics();
+	    g.init();
 	    
 	    //hide the mouse
 	    Mouse.setGrabbed(true);
+	}
+	
+	public static void perspective3D(){
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	    //glViewport(0,0,Display.getWidth(), Display.getHeight());
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    GLU.gluPerspective((float) Game.fov, Game.width / Game.height, Game.zNear, Game.zFar);
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	}
+	
+	public static void perspective2D(){   
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    GLU.gluOrtho2D(0.0f, (float)Game.width, (float)Game.height, 0.0f);
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	    
+	    GL11.glEnable(GL11.GL_BLEND); //For font
+	    //GL11.glDisable(GL_CULL_FACE);
 	}
 
 	@Override
@@ -81,24 +98,24 @@ public class RenderThread implements Runnable{
 		    // Clear the color information.
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
+			//Check if screen has been resized
+			if(Display.wasResized())
+				resized();
+			
 	        //set the modelview matrix back to the identity
 	        GL11.glLoadIdentity();
 		    
 			RenderState latestState = activeState.getLatestState();
-			//System.out.println("Rendering " + activeState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")");
+			//System.out.println("Rendering " + latestState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")" + " at " + Main.getTime());
 			int renderingFrame = latestState.getFrameCount();
 			//Main.debugPrint("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
-			latestState.setReadOnly(true); //Must not modify a state that is being rendered
-			//Main.debugPrint("Rendering " + latestState.getId() + " at " + Main.getTime());
+			latestState.setRendering(true); //Must not modify a state that is being rendered
+			//Main.debugPrint("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
 			
-			activeState.render(); //RENDER
+			activeState.render(g); //RENDER
 			
-			latestState.setReadOnly(false);
+			latestState.setRendering(false);
 			Display.update();
-			
-			//Check if screen has been resized
-			if(Display.wasResized())
-				resized();
 				
 			//Check if got something new to render || sleep while not
 			if(activeState.getLatestState().getFrameCount() == renderingFrame){
