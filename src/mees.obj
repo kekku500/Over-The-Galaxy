@@ -1,6 +1,6 @@
 # Blender v2.69 (sub 0) OBJ File: 'superman hero101.blend'
 # www.blender.org
-mtllib superman hero101.mtl
+mtllib superman.mtl
 o VisualSceneNode63.001_Geometry.001
 v 0.445359 1.944030 -0.530758
 v 0.461141 1.724110 -0.541808

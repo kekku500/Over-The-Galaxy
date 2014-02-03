@@ -5,7 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+import test.OBJloader.Texture;
+
 import org.lwjgl.util.vector.Vector3f;
+//import org.newdawn.slick.opengl.TextureLoader;
+//import org.newdawn.slick.util.ResourceLoader;
+
 
 public class MTLLoader {
 	public static void loadMaterial(Model m, String file)throws FileNotFoundException, IOException{
@@ -40,6 +45,9 @@ public class MTLLoader {
 				ma.setRefraction(Float.valueOf(line.split(" ")[1]));
 			}else if(line.startsWith("d ")){
 				ma.setAlpha(Float.valueOf(line.split(" ")[1]));
+			}else if(line.startsWith("map_Kd ")){
+				ma.texture = Texture.loadTexture(line.split(" ")[1]);
+			//	ma.texture = TextureLoader.getTexture("TGA", ResourceLoader.getResourceAsStream("src/resources/" + line.split(" ")[1]));
 			}
 		}
 		m.materials.put(ma.name, ma);
