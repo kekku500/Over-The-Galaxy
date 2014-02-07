@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import controller.Camera;
 import game.RenderState;
 import game.world.World;
 import game.world.entities.Entity;
@@ -22,6 +23,8 @@ public class UpdateRequest implements Request{
 	
 	private Request waitFor;
 	
+	private Camera cam;
+	
 	public UpdateRequest(Entity e){
 		type = Type.ENTITY;
 		entity = e;
@@ -29,12 +32,15 @@ public class UpdateRequest implements Request{
 	
 	public <T> UpdateRequest(Action action, T t){
 		this.action = action;
-		if(t instanceof Entity){
+		if(t instanceof Entity && !(t instanceof Camera)){
 			type = Type.ENTITY;
 			entity = (Entity)t;
 		}else if(t instanceof Component){
 			type = Type.COMPONENT;
 			component = (Component)t;
+		}else if(t instanceof Camera){
+			type = Type.CAMERA;
+			cam = (Camera)t;
 		}
 		typeUpdated();
 	}
@@ -72,6 +78,11 @@ public class UpdateRequest implements Request{
 				//System.out.println("waitfor idle");
 				return Status.IDLE;
 			}
+		if(getAction() == Action.CAMERAFOCUS){
+			if(getEntity().getWorld() == null){
+				return Status.IDLE;
+			}
+		}
 		if(getAction() == Action.UPDATE)
 			return Status.FINAL;
 		if(changedWorlds.contains(world.getUniqueID())){
@@ -98,6 +109,10 @@ public class UpdateRequest implements Request{
 		return entity;
 	}
 	
+	public Camera getCamera(){
+		return cam;
+	}
+	
 	public Action getAction(){
 		return action;
 	}
@@ -107,7 +122,7 @@ public class UpdateRequest implements Request{
 	}
 	
 	public String toString(){
-		return "UpdateRequest: " + getType() + " at " + getEntity();
+		return "UpdateRequest: " + getType() + " " + getAction();
 	}
 
 }

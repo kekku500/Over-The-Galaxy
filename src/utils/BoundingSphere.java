@@ -1,6 +1,7 @@
-package math;
+package utils;
 
-import org.lwjgl.util.vector.Vector3f;
+import javax.vecmath.Vector3f;
+
 
 public class BoundingSphere {
 	

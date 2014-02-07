@@ -1,12 +1,20 @@
 package game.world.entities;
 
 import static org.lwjgl.opengl.GL11.*;
-import math.BoundingAxis;
-import math.BoundingSphere;
-import math.Vector3fc;
+
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector3f;
+
+import game.vbotemplates.CuboidVBO;
+import game.vbotemplates.PointVBO;
+import game.world.entities.AbstractEntity;
+import game.world.entities.Entity;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.util.vector.Vector3f;
+
+import utils.BoundingAxis;
+import utils.BoundingSphere;
 
 public class Point extends AbstractEntity{
 	
@@ -15,49 +23,24 @@ public class Point extends AbstractEntity{
 	@Override
 	public Entity copy(){
 		Point newPoint = new Point();
-		newPoint.boundingSphere = boundingSphere;
-
 		return copy2(newPoint);
 	}
 
-	public Point(Vector3fc pos) {
-		this.pos = pos;
-		
-		//Create Vertex Buffer
-		vertices = BufferUtils.createFloatBuffer(3 * 2);
-		vertices.put(new float[]
-				{0, 0, 0});
-		vertices.rewind();
+	public Point(Vector3f pos) {
+		motionState.set(new Matrix4f(new Quat4f(0,0,0,1),pos, 1.0f));
+		calcBoundingSphere();
+
 	}
 	
 	@Override
-	public Vector3fc getToMidPoint(){
-		return new Vector3fc();
+	public void calcBoundingSphere(){
+		boundingSphere = new BoundingSphere(motionState.origin, 0);
 	}
-	
+
 	@Override
-	public BoundingAxis getBoundingAxis() {
+	public Vector3f getPosToMid() {
+		// TODO Auto-generated method stub
 		return null;
-	}
-	
-	@Override
-	public BoundingSphere getBoundingSphere(){
-		if(!sleeping){
-			Vector3f pos = getPos();
-			boundingSphere = new BoundingSphere(pos, 0);
-		}
-		return boundingSphere;
-
-	}
-
-	@Override
-	public void renderDraw() {
-		glDrawArrays(GL_POINTS, 0, 1);
-	}
-
-	@Override
-	public Vector3fc getPosToMid() {
-		return new Vector3fc();
 	}
 
 	@Override
@@ -67,7 +50,13 @@ public class Point extends AbstractEntity{
 	}
 
 	@Override
-	public void midUpdate(float dt) {
+	public void startRender() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void endRender() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -77,4 +66,13 @@ public class Point extends AbstractEntity{
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void calcBoundingAxis() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+
 }

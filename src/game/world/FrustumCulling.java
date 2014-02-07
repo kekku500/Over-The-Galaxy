@@ -1,14 +1,16 @@
 package game.world;
 
+import javax.vecmath.Vector3f;
+
 import game.Game;
 import game.world.entities.Entity;
-import math.BoundingAxis;
-import math.BoundingSphere;
-import math.Vector3fc;
 
 import org.lwjgl.opengl.Display;
-import org.lwjgl.util.vector.Vector3f;
 
+import utils.BoundingAxis;
+import utils.BoundingSphere;
+import utils.Utils;
+import utils.math.Vector3;
 import controller.Camera;
 
 public class FrustumCulling {
@@ -18,7 +20,7 @@ public class FrustumCulling {
 	}
 	
 	private Camera camera;
-	private Vector3fc X, Y, Z, camPos;
+	private Vector3 X, Y, Z, camPos;
 	
 	private float tang;
 	private float ratio;
@@ -48,10 +50,14 @@ public class FrustumCulling {
 	}
 	
 	public void update(){
-		Z = camera.getViewRay();
-		X = camera.getRightVector();
-		Y =  camera.getUpVector();
-		camPos = camera.getPos();
+		Vector3f viewRay = camera.getViewRay();
+		Z = new Vector3(viewRay.x, viewRay.y, viewRay.z);
+		Vector3f rightVector = camera.getRightVector();
+		X = new Vector3(rightVector.x, rightVector.y, rightVector.z);
+		Vector3f upVector = camera.getUpVector();
+		Y = new Vector3(upVector.x, upVector.y, upVector.z);
+		Vector3f cam = camera.getPos();
+		camPos = new Vector3(cam.x, cam.y, cam.z);
 	}
 	
 	//http://www.lighthouse3d.com/tutorials/view-frustum-culling/radar-approach-implementation-ii/
@@ -67,7 +73,7 @@ public class FrustumCulling {
 	
 	private Frustum sphereLocation(BoundingSphere sphere){
 		if(sphere == null) //No sphere found
-			return Frustum.INSIDE; //Just assume object is in view
+			return Frustum.INTERSECT; //Just assume object is in view
 		
 		Vector3f vertex = sphere.pos; //Sphere midpoint
 		float radius = sphere.radius;
@@ -79,7 +85,7 @@ public class FrustumCulling {
 		Vector3f v = new Vector3f(vertex.x-camPos.x, vertex.y-camPos.y, vertex.z-camPos.z); //Vector that points from pos to vertex
 		
 		//Compute and test the Z coordinate
-		az = Vector3f.dot(v, Z);
+		az = v.dot(Z);
 		if(az > Game.zFar+radius || az < Game.zNear-radius){
 			return Frustum.OUTSIDE; 
 		}
@@ -87,7 +93,7 @@ public class FrustumCulling {
 			result = Frustum.INTERSECT;
 		
 		//Compute and test the Y coordinate
-		ay = Vector3f.dot(v, Y);
+		ay =  v.dot(Y);
 		d = radius * sphereFactorY;
 		az *= tang; //Frustum far plane height
 		if(ay > az+d || ay < -az-d){
@@ -97,7 +103,7 @@ public class FrustumCulling {
 			result = Frustum.INTERSECT;
 		
 		//Compute and test the X coordinate
-		ax = Vector3f.dot(v, X);
+		ax =  v.dot(X);
 		az *= ratio; //Frustum far plane width
 		d = radius * sphereFactorX;
 		if(ax > az+d || ax < -az-d){
@@ -113,9 +119,10 @@ public class FrustumCulling {
 		if(ob == null)
 			return Frustum.INSIDE;
 
-		Vector3fc[] fb = getFrustumBox();
-		Vector3fc fmin = fb[0];
-		Vector3fc fmax = fb[1];
+		Vector3f[] fb = getFrustumBox();
+		Vector3f fmin = fb[0];
+		Vector3f fmax = fb[1];
+		//System.out.println(fmin + " " + fmax);
 		
 		if(fmin.x > ob.getMax().x || fmax.x < ob.getMin().x ||
 				fmin.y > ob.getMax().y || fmax.y < ob.getMin().y ||
@@ -130,12 +137,16 @@ public class FrustumCulling {
 		}
 	}
 
-	public Vector3fc[] getFrustumBox(){
-		Vector3fc fc = camPos.getAdd(Z.getMultiply(Game.zFar)); //temp variable
-		Vector3fc ftl = fc.getAdd(Y.getMultiply(Hfar/2f)).getAdd(X.getMultiply(Wfar/2f).getNegate()); //frustum to left corner
-		Vector3fc fbr = fc.getAdd(Y.getMultiply(Hfar/2f).getNegate()).getAdd(X.getMultiply(Wfar/2f)); //frustum bottom right corner
+	public Vector3f[] getFrustumBox(){
+		Vector3 fc = camPos.getAdd(Z.getMultiply(Game.zFar)); //temp variable
+		Vector3 ftl = fc.getAdd(Y.getMultiply(Hfar/2f)).getAdd(X.getMultiply(Wfar/2f).getNegate()); //frustum to left corner
+		Vector3 fbr = fc.getAdd(Y.getMultiply(Hfar/2f).getNegate()).getAdd(X.getMultiply(Wfar/2f)); //frustum bottom right corner
 		
-		return Vector3fc.getMinMaxVectors(ftl, fbr, camPos);
+		Vector3 ftr = fc.getAdd(Y.getMultiply(Hfar/2f)).getAdd(X.getMultiply(Wfar/2f)); //frustum to left corner
+		Vector3 fbl = fc.getAdd(Y.getMultiply(Hfar/2f).getNegate()).getAdd(X.getMultiply(Wfar/2f).getNegate()); //frustum bottom right corner
+		
+		return Utils.getMinMaxVectors(ftl, fbr, camPos, ftr, fbl);
+
 	}
 
 }

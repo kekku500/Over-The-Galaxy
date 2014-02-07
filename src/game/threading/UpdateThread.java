@@ -14,10 +14,15 @@ import main.Main;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
+import utils.Utils;
+
 public class UpdateThread implements Runnable{
 	
 	private ThreadManager threadManager;
 	private float accumulator;
+	
+
+	public static boolean SLOWDOWNALERT = false;
 	
 	public UpdateThread(ThreadManager threadManager){
 		this.threadManager = threadManager;
@@ -39,6 +44,7 @@ public class UpdateThread implements Runnable{
 		}
 		
 		Main.debugPrint("Starting updateThread loop");
+		
 		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			//Check if state has changed
 			if(threadManager.getActiveStateId() != activeState.getId()){
@@ -55,17 +61,20 @@ public class UpdateThread implements Runnable{
 			
 
 			oldestState.setUpdating(true);
-			oldestState.copyFrom(latestState);
 			oldestState.setFrameCount(latestState.getFrameCount()+1);
-
 
 			accumulator += dt; //How much time must be updated
 			if(accumulator > Game.targetStep){ //Behind from real time, no time for thread sleep
 				int framesBehind = (int)(accumulator / (Game.targetStep)); // How many frames is simulation behind
 				//System.out.println(framesBehind + " <- " + accumulator);
+				if(framesBehind >= 10)
+					SLOWDOWNALERT = true;
+				else
+					SLOWDOWNALERT = false;
 				activeState.update(Game.targetStep*framesBehind);
 				accumulator -= Game.targetStep*framesBehind;
 			}else{ //Can update simulation ahead from real time and let update thread sleep
+				SLOWDOWNALERT = false;
 				activeState.update(Game.targetStep);
 				accumulator -= Game.targetStep;		
 			}
@@ -73,9 +82,10 @@ public class UpdateThread implements Runnable{
 			oldestState.setUpdating(false);
 			activeState.setStuffToRender(true);
 			//Updating done
-			
+			//System.out.println("Done updating " + oldestState.getId());
 			//Main.debugPrint("New stuff to render at " + Main.getTime());
 			Display.sync(Game.fps); //Sleep until during the free time which is left from updating
+
 		}
 		
 		//Display has been closed

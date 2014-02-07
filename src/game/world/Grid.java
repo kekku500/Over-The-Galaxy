@@ -2,16 +2,17 @@ package game.world;
 
 import java.util.ArrayList;
 
-import math.Vector3fc;
+import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector3f;
 
+import game.vbotemplates.LineVBO;
 import game.world.entities.Line;
+import game.world.entities.Entity.Motion;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
-import game.world.sync.SyncManager;
+import game.world.sync.RequestManager;
 
 public class Grid {
 	
@@ -30,16 +31,26 @@ public class Grid {
 	public Grid(World world){
 		this.world = world;
 		//add x lines
-		SyncManager sync = world.getState().getSyncManager();
+		RequestManager sync = world.getState().getSyncManager();
+		
 		for(int i=0;i<(int)(zsize/gap);i++){
-			Line l = new Line(new Vector3fc(0,0,0), new Vector3fc(xsize,0,0));
+			LineVBO lineVBO = new LineVBO(new Vector3f(xsize,0,0));
+			Line l = new Line();
+			l.setMotion(Motion.STATIC);
+			l.setModel(lineVBO);
+			l.setLength(xsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);
 			sync.add(request);
 			xlines.add(l);
 		}
 		//add z lines
+		
 		for(int i=0;i<(int)(xsize/gap);i++){
-			Line l = new Line(new Vector3fc(0,0,0), new Vector3fc(0,0,zsize));
+			LineVBO lineVBO = new LineVBO(new Vector3f(0,0,zsize));
+			Line l = new Line();
+			l.setMotion(Motion.STATIC);
+			l.setModel(lineVBO);
+			l.setLength(zsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);
 			sync.add(request);
 			zlines.add(l);
@@ -62,7 +73,7 @@ public class Grid {
 		Vector3f cam = getCamPos();
 		int i = (int)(cam.z-zsize/2)/gap;
 		for(Line xline: xlines){
-			Vector3f pos = xline.getPos();
+			Vector3f pos = xline.getMotionState().origin;
 			int zpos = i*gap;
 			if(boldZeroAxisLines)
 				if(zpos == 0)
@@ -75,7 +86,7 @@ public class Grid {
 		}
 		i = (int)(cam.x-xsize/2)/gap;
 		for(Line zline: zlines){
-			Vector3f pos = zline.getPos();
+			Vector3f pos = zline.getMotionState().origin;
 			int xpos = i*gap;
 			if(boldZeroAxisLines)
 				if(xpos == 0)
@@ -93,12 +104,10 @@ public class Grid {
 	public void render(){
 		GL11.glColor3f(1f, 1f, 1f);
 		for(Line l: xlines){
-			if(l.isVisible())
-				l.render();
+			l.render();
 		}
 		for(Line l: zlines){
-			if(l.isVisible())
-				l.render();
+			l.render();
 		}
 	}
 	

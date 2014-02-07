@@ -1,6 +1,8 @@
 package test.OBJloader;
 
 import org.lwjgl.util.vector.Vector3f;
+import test.OBJloader.Texture;
+//import org.newdawn.slick.opengl.Texture;
 
 public class Material {
 	public Vector3f diffuse = new Vector3f();
@@ -10,6 +12,7 @@ public class Material {
 	public float shininess;
 	public float alpha;
 	public String name;
+	public Texture texture;
 	
 	public void setName(String name){
 		this.name = name;

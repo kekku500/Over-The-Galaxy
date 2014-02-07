@@ -9,6 +9,7 @@ public interface Request {
 		MOVE, //Change motion static/dynamic/physics
 		UPDATE, //Updates only next world
 		UPDATEALL, //Updates all worlds
+		CAMERAFOCUS,
 		CREATEVBO;} //Creates vbo for object
 	
 	public enum Status{
@@ -18,6 +19,7 @@ public interface Request {
 	
 	public enum Type{
 		ENTITY,
+		CAMERA,
 		COMPONENT;
 	}
 	

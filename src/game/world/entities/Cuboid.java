@@ -2,119 +2,76 @@ package game.world.entities;
 
 import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
+import game.vbotemplates.AbstractVBO;
+import game.vbotemplates.CuboidVBO;
 import game.world.World;
+import game.world.entities.AbstractEntity;
+import game.world.entities.Entity;
 
 import java.nio.FloatBuffer;
 
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector3f;
+
 import org.lwjgl.BufferUtils;
 
-import math.BoundingAxis;
-import math.Point;
-import math.BoundingSphere;
-import math.Vector3fc;
+import utils.BoundingAxis;
+import utils.BoundingSphere;
+
+import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.Transform;
 
 public class Cuboid extends AbstractEntity{
 	
-	public float w, h, d;
+	public Cuboid(){}
 	
-	public Cuboid() {}
-	
-	/**
-	* @param pos Position is set at the most negative spot (coordinates) of the box.
-	* @param w Size in x coordinates. (width)
-	* @param h Size in y coordinates. (height)
-	* @param d Size in z coordinates. (depth)
-	*/
-	public Cuboid(Vector3fc pos, float w, float h, float d){
-		this.pos = pos;
-		this.w = w;
-		this.h = h;
-		this.d = d;
-		
-		//Create Vertex Buffer
-		vertices = BufferUtils.createFloatBuffer(3 * 6 * 4); //(x,y,z)*(4 vertices on a side)*(6 sides)
-		vertices.put(new float[]
-				{0,h,0,	w,h,0,	w,0,0,	0,0,0,	
-				0,0,d,	w,0,d,	w,h,d,	0,h,d,
-				0,0,0,	0,0,d,	0,h,d,	0,h,0,
-				w,h,0,	w,h,d,	w,0,d,	w,0,0,
-				0,0,0,	w,0,0,	w,0,d,	0,0,d,
-				0,h,d,	w,h,d,	w,h,0,	0,h,0,		
-				});
-		vertices.rewind();
-		
-		toCenter = new Vector3fc(w/2, h/2, d/2);
-		radius = toCenter.length();
-	}
-
-	public void midUpdate(float dt){
-
-	}
-
-	@Override
-	public void renderDraw(){
-		glDrawArrays(GL_QUADS, 0, 6 * 4);
+	public Cuboid(Vector3f pos, float w, float h, float d){
+		modelShape = new CuboidVBO(w,h,d);
+		motionState.set(new Matrix4f(
+				new Quat4f(0,0,0,1), 
+				pos, 1.0f));
+		calcBoundingSphere();
 	}
 	
 	@Override
-	public BoundingAxis getBoundingAxis() {
-		if(!sleeping){
-			Vector3fc pos = getPos();
-			Vector3fc vectorToCenter = toCenter;
-			
-			Vector3fc height = Vector3fc.rotateVector(new Vector3fc(0,h,0), pitch, yaw, roll);
-			Vector3fc width = Vector3fc.rotateVector(new Vector3fc(w,0,0), pitch, yaw, roll);
-			Vector3fc depth = Vector3fc.rotateVector(new Vector3fc(0,0,d), pitch, yaw, roll);
-
-			Vector3fc rotatedToCenter = Vector3fc.rotateVector(vectorToCenter, pitch, yaw, roll);
-			Vector3fc newPos = pos.getAdd(vectorToCenter).getAdd(rotatedToCenter.getNegate());
-			Vector3fc newPos2 = pos.getAdd(vectorToCenter).getAdd(rotatedToCenter);
-			
-			boundingAxis = new BoundingAxis(newPos, newPos2, newPos.getAdd(width), newPos.getAdd(depth), newPos.getAdd(height), 
-					newPos2.getAdd(width.getNegate()),newPos2.getAdd(depth.getNegate()), newPos2.getAdd(height.getNegate()));
-		}
-		return boundingAxis;
+	public void lastUpdate(float dt) {
 	}
 	
 	@Override
-	public BoundingSphere getBoundingSphere() {
-		if(!sleeping){
-			boundingSphere = new BoundingSphere(pos.getAdd(toCenter), radius);
-		}
-		return boundingSphere;
-
+	public void calcBoundingSphere(){
+		Vector3f midPos = motionState.origin;
+		midPos = new Vector3f(midPos.x, midPos.y, midPos.z);
+		boundingSphere = new BoundingSphere(midPos, getRadius());
 	}
 
-	public float getWidth(){
-		return w;
-	}
-	
-	public float getHeight(){
-		return h;
-	}
-	
-	public float getDepth(){
-		return d;
-	}
-	
-	@Override
-	public Vector3fc getPosToMid() {
-		return toCenter;
-	}
-	
 	@Override
 	public Entity copy(){
 		Cuboid newCube = new Cuboid();
-		newCube.w = w;
-		newCube.h = h;
-		newCube.d = d;
-		newCube.radius = radius;
 		newCube.boundingSphere = boundingSphere;
 		newCube.boundingAxis = boundingAxis;
-		newCube.toCenter = toCenter;
-		newCube.sleeping = sleeping;
 		
 		return copy2(newCube);
+	}
+	
+	public float getWidth(){
+		CuboidVBO c = (CuboidVBO)modelShape;
+		return c.getWidth();
+	}
+	
+	public float getHeight(){
+		CuboidVBO c = (CuboidVBO)modelShape;
+		return c.getHeight();
+	}
+	
+	public float getDepth(){
+		CuboidVBO c = (CuboidVBO)modelShape;
+		return c.getDepth();
+	}
+	
+	public float getRadius(){
+		CuboidVBO c = (CuboidVBO)modelShape;
+		return c.getRadius();
 	}
 
 	@Override
@@ -123,10 +80,30 @@ public class Cuboid extends AbstractEntity{
 		
 	}
 
+
+
+
 	@Override
-	public void lastUpdate(float dt) {
+	public void startRender() {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	@Override
+	public void endRender() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Vector3f getPosToMid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void calcBoundingAxis() {
 	}
 	
 }

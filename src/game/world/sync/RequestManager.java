@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 import game.world.entities.Entity;
 
-public class SyncManager{
+public class RequestManager{
 	
 	LinkedList<UpdateRequest> updateRequests = new LinkedList<UpdateRequest>();
 	LinkedList<RenderRequest> renderRequests = new LinkedList<RenderRequest>();

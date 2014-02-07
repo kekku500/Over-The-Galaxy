@@ -34,8 +34,10 @@ public class RenderThread implements Runnable{
 	    try{
 	    	Main.debugPrint("Setting up display");
 	        Display.setDisplayMode(new DisplayMode(0, 0));
+	        //Display.setVSyncEnabled(true);
 	        Display.create();
 	        setDisplayMode(Game.width, Game.height, Game.fullscreen);
+	        Display.setLocation(0, 0);
 	        Display.setResizable(true);
 	    }catch (LWJGLException e){
 	        e.printStackTrace();
@@ -45,6 +47,13 @@ public class RenderThread implements Runnable{
 	    Main.debugPrint("Setting up OpenGL");
 	    
 	    //Setup OpenGL
+	    //GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+	    
+	    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	    //GL11.glDepthMask(true);
+	    glEnable(GL_COLOR_MATERIAL);
+	    GL11.glColorMaterial(GL11.GL_FRONT_AND_BACK, GL_DIFFUSE);
+	    GL11.glEnable(GL_DEPTH_TEST); //foreground objects are not behind background ones
 	    perspective3D(); //Starting perspective
 	    
 	    //Initialize graphics class
@@ -57,8 +66,8 @@ public class RenderThread implements Runnable{
 	
 	public static void perspective3D(){
 		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		//GL11.glEnable(GL_CULL_FACE);
+		//glCullFace(GL_BACK);
 	    //glViewport(0,0,Display.getWidth(), Display.getHeight());
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();

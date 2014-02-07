@@ -3,10 +3,12 @@ package game;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.bulletphysics.dynamics.DynamicsWorld;
+
 import controller.Camera;
 import game.world.World;
 import game.world.gui.graphics.Graphics;
-import game.world.sync.SyncManager;
+import game.world.sync.RequestManager;
 
 public abstract class State {
 	
@@ -15,12 +17,31 @@ public abstract class State {
 	
 	//Multithreading rendering handling (synchronizing update and render threads)
 	RenderState[] renderStates = new RenderState[3];
-	private SyncManager syncManager = new SyncManager();
+	private RequestManager syncManager = new RequestManager();
 	
 	public State(){
 		renderStates[0] = new RenderState(this, 0, 0);
 		renderStates[1] = new RenderState(this, 1, -1);
 		renderStates[2] = new RenderState(this, 2, -1);
+		linkWorlds(renderStates[0].getWorld(), renderStates[1].getWorld(), renderStates[2].getWorld());
+	}
+	
+	private void linkWorlds(World...worlds){
+		boolean first = true;
+		World mainWorld = null;
+		Camera mainCam = null;
+		for(World w: worlds){
+			if(first){
+				mainWorld = w;
+				w.setUpPhysics();
+				mainCam = w.getCamera();
+				mainCam.createCamera();
+				first = false;
+				continue;
+			}
+			w.setCamera(mainCam);
+			w.setDynamicsWorld(mainWorld.getDynamicsWorld());
+		}
 	}
 	
 	//ABSTRACT
@@ -88,7 +109,7 @@ public abstract class State {
 		return Arrays.toString(counts);
 	}
 	
-	public SyncManager getSyncManager(){
+	public RequestManager getSyncManager(){
 		return syncManager;
 	}
 	

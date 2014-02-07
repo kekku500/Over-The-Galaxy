@@ -1,20 +1,49 @@
 package game.world.entities;
 
+import game.vbotemplates.AbstractVBO;
 import game.world.World;
 
 import java.nio.FloatBuffer;
 
-import math.BoundingAxis;
-import math.BoundingSphere;
-import math.Vector3fc;
+import javax.vecmath.Vector3f;
 
-import org.lwjgl.util.vector.Vector3f;
+import utils.BoundingAxis;
+import utils.BoundingSphere;
+
+import com.bulletphysics.dynamics.RigidBody;
+import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
+import com.bulletphysics.linearmath.Transform;
 
 public interface Entity {
 	
 	public enum Motion {
-		STATIC, DYNAMIC, PHYSICS;
+		STATIC, DYNAMIC;
 	}
+	/**
+	 * @return Success of setting object static.
+	 */
+	public boolean setStatic();
+	
+	/**
+	 * @return Success of setting object dynamic.
+	 */
+	public boolean setDynamic();
+	
+	public void setRigidBody(RigidBody rigidShape);
+	
+	public RigidBody getRigidBody();
+	
+	public RigidBodyConstructionInfo getRigidBodyConstructionInfo();
+	
+	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r);
+
+	public void setModel(AbstractVBO modelShape);
+	
+	public AbstractVBO getModel();
+	
+	public AbstractVBO getVBOOBject();
+	
+	public void setVBOObject(AbstractVBO o);
 	
 	public void update(float dt);
 	
@@ -24,23 +53,17 @@ public interface Entity {
 	
 	public void createVBO();
 	
-	public void addRoll(float r);
+	public void setMotionState(Transform t);
 	
-	public void addPitch(float p);
-	
-	public void addYaw(float y);
+	public Transform getMotionState();
 	
 	public void setMotion(Motion m);
 	
 	public Motion getMotion();
 	
-	public void setVBOVertexId(int i);
+	public void setPos(Vector3f v);
 	
-	public int getVBOVertexId();
-	
-	public void setPos(Vector3fc v);
-	
-	public Vector3fc getPos();
+	public Vector3f getPos();
 	
 	public void setVisible(boolean b);
 	
@@ -54,27 +77,11 @@ public interface Entity {
 	
 	public World getWorld();
 	
-	public void setPitch(float i);
-	
-	public float getPitch();
-	
-	public void setYaw(float i);
-	
-	public float getYaw();
+	public Vector3f getPosToMid();
 
-	public void setRoll(float i);
-	
-	public float getRoll();
-	
-	public Vector3fc getPosToMid();
-
-	public Vector3fc getToMidPoint();
-	
 	public BoundingSphere getBoundingSphere();
 	
 	public BoundingAxis getBoundingAxis();
-	
-	public boolean isSleeping();
 
 	public Entity copy();
 

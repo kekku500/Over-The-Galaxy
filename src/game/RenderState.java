@@ -2,7 +2,6 @@ package game;
 
 import game.world.World;
 import game.world.entities.Entity;
-import game.world.subworlds.DynamicWorld;
 
 public class RenderState {
 	
@@ -29,12 +28,6 @@ public class RenderState {
 	
 	public World getWorld(){
 		return world;
-	}
-	
-	public void copyFrom(RenderState state){
-		World betterWorld = state.getWorld();
-		world.setCamera(betterWorld.getCamera().copy());
-		//world.getStaticWorld().setEntities(betterWorld.getStaticWorld().getCopiedEntities());
 	}
 	
 	public void setWorld(World w){

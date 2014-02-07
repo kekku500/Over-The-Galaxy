@@ -7,122 +7,207 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+import game.RenderState;
+import game.vbotemplates.AbstractVBO;
 import game.world.World;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
+import game.world.sync.RequestManager;
+import game.world.sync.UpdateRequest;
 import game.world.sync.Request.Action;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
-import math.BoundingAxis;
-import math.BoundingSphere;
-import math.Vector3fc;
+import javax.vecmath.AxisAngle4f;
+import javax.vecmath.Matrix3f;
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector3f;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
-import org.lwjgl.util.vector.Quaternion;
-import org.lwjgl.util.vector.Vector3f;
+
+import utils.BoundingAxis;
+import utils.BoundingSphere;
+import utils.Utils;
+
+import com.bulletphysics.collision.dispatch.CollisionFlags;
+import com.bulletphysics.collision.shapes.BoxShape;
+import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.dynamics.RigidBody;
+import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
+import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.MotionState;
+import com.bulletphysics.linearmath.Transform;
 
 public abstract class AbstractEntity implements Entity{
 	
-	protected Vector3fc pos;
-	protected Vector3fc toCenter;
-	protected float pitch, yaw, roll;
-	protected boolean visible = true; //in camera
-	protected boolean sleeping = false; //object has moved
+	protected Transform motionState = new Transform(new Matrix4f(new Quat4f(0,0,0,1),new Vector3f(0,0,0), 1.0f));
 	
+	protected AbstractVBO modelShape; //visual object
+	protected RigidBody rigidShape; //physics object
+	protected RigidBodyConstructionInfo rigidInfo;
+	
+	protected boolean visible = true; //in camera
+
 	protected Motion motion = Motion.STATIC;
 	
 	protected World world;
 	protected int id;
 	
-	protected int vboVertexID;
-	protected FloatBuffer vertices;
-	
 	protected BoundingAxis boundingAxis;
 	protected BoundingSphere boundingSphere;
 	protected float radius;
 	
-	private float old_pitch = Float.NaN, old_yaw = Float.NaN, old_roll = Float.NaN;
-	private Vector3fc oldPos = new Vector3fc(Float.NaN, Float.NaN, Float.NaN);
+	public boolean setStatic(){
+		if(rigidShape == null) //no physics shape, can't set static
+			return false;
+		if(world != null){
+			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
+		}
+		rigidShape.setMassProps(0f, new Vector3f(0,0,0)); //remove mass
+		rigidShape.updateInertiaTensor();
+		rigidShape.setLinearVelocity(new Vector3f(0,0,0)); //zero velocity
+		rigidShape.setAngularVelocity(new Vector3f(0,0,0)); //zero angular velocity
+		rigidShape.getMotionState().getWorldTransform(motionState); //update motionstate to the latest
+		if(world != null){
+			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
+		}
+		motion = Motion.STATIC;
+		if(world != null){ //update other worlds aswell
+			RequestManager sync = getWorld().getState().getSyncManager();
+			sync.add(new UpdateRequest(Action.MOVE, this));
+		}
+		return true;
+	}
+	
+	/**
+	 * In order to set object dynamic, RigidBodyConstructionInfo must be available in this class.
+	 */
+	public boolean setDynamic(){
+		if(rigidShape == null || rigidInfo == null) //no physics shape, can't set dynamic then
+			return false;
+		if(world != null) //added to the world, then remove it before changing anything
+			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
+		
+		reconstructRigidBody();
+
+		if(world != null){ //add it back to the world
+			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
+			rigidShape.activate();
+		}
+		motion = Motion.DYNAMIC;
+		if(world != null){ //update other worlds as well
+			RequestManager sync = getWorld().getState().getSyncManager();
+			sync.add(new UpdateRequest(Action.MOVE, this));
+		}
+		return true;
+	}
+	
+	private void reconstructRigidBody(){
+		rigidInfo.motionState = rigidShape.getMotionState();
+		rigidShape = new RigidBody(rigidInfo);
+	}
+	
+	protected Transform oldMotionState = new Transform();
 	@Override
 	public void update(float dt){
 		firstUpdate(dt);
-		midUpdate(dt);
-		lastUpdate(dt);
-		sleeping = true;
-		if(!oldPos.equals(pos) || old_pitch != pitch || old_yaw != yaw || old_roll != roll){ 
-			oldPos = pos.copy();
-			old_pitch = pitch;
-			old_yaw = yaw;
-			old_roll = roll;
-			sleeping = false;
+		
+		//update model motion state
+		if(rigidShape != null){
+			if(rigidShape.isActive()){
+				rigidShape.getMotionState().getWorldTransform(motionState); //update position
+				
+				Vector3f min = new Vector3f();
+				Vector3f max = new Vector3f();
+				rigidShape.getAabb(min, max);
+				boundingAxis = new BoundingAxis(min, max);
+				
+				calcBoundingSphere();
+
+				///not required if only updating motionState
+				/*RequestManager sync = getWorld().getState().getSyncManager();
+				sync.addCheck(new UpdateRequest(Action.UPDATEALL, this, id));*/
+			}
 		}
+		lastUpdate(dt);
+	}
+	@Override
+	public void setRigidBody(RigidBody rigidShape){
+		this.rigidShape = rigidShape;
 	}
 	
-	public abstract void firstUpdate(float dt);
+	@Override
+	public RigidBody getRigidBody(){
+		return rigidShape;
+	}
 	
-	public abstract void midUpdate(float dt);
+	@Override
+	public void setModel(AbstractVBO model){
+		this.modelShape = model;
+	}
 	
-	public abstract void lastUpdate(float dt);
+	@Override
+	public AbstractVBO getModel(){
+		return modelShape;
+	}
+	
+	@Override
+	public RigidBodyConstructionInfo getRigidBodyConstructionInfo(){
+		return rigidInfo;
+	}
+	
+	@Override
+	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r){
+		rigidInfo = r;
+	}
+	
+
 	
 	@Override
 	public void render(){
-		if(!isVisible())
+		if(modelShape == null)
 			return;
-		//Get object center
-		Vector3f toMidPoint = getToMidPoint();
+		if(!isVisible()){
+			return;
+		}
+		startRender();
 		
 		glPushMatrix(); //save current transformations
 		
-		glTranslatef(pos.x, pos.y, pos.z);
-		glTranslatef(toMidPoint.x, toMidPoint.y, toMidPoint.z); //midpoint rotate
-    	glRotatef(roll, 0.0f,0.0f,1.0f);
-    	glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-        glRotatef(pitch, 1.0f, 0.0f, 0.0f);
-		glTranslatef(-toMidPoint.x, -toMidPoint.y, -toMidPoint.z); //back to start pos
-        
-		// Bind the vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-	    
-	    glEnableClientState(GL_VERTEX_ARRAY);
-	    
-		renderDraw();
+		//Transform t = new Transform();
+		float[] f = new float[16];
+		//body.getMotionState().getWorldTransform(t);
+
+		motionState.getOpenGLMatrix(f);
 		
-	    glDisableClientState(GL_VERTEX_ARRAY);
+		FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+		fb.put(f);
+		fb.rewind();
+		
+		glMultMatrix(fb);
+
+
+		modelShape.render();
 	    
 	    glPopMatrix(); //reset transformations
+	    
+	    endRender();
 	}
-	
-	public abstract void renderDraw();
 	
 	@Override
 	public void dispose(){
-	    glDeleteBuffers(vboVertexID);
+		if(modelShape != null)
+			modelShape.dispose();
 	}
 	
 	@Override
 	public void createVBO() {
-		vboVertexID = glGenBuffers();
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-	
-	@Override
-	public void addRoll(float i) {
-		roll += i;
-	}
-	
-	@Override
-	public void addYaw(float i) {
-		yaw += i;
-	}
-
-	@Override
-	public void addPitch(float i) {
-		pitch += i;
+		if(modelShape != null)
+			modelShape.prepareVBO();
 	}
 	
 	@Override
@@ -134,56 +219,15 @@ public abstract class AbstractEntity implements Entity{
 	public Motion getMotion(){
 		return motion;
 	}
-
-
+	
 	@Override
-	public void setVBOVertexId(int i){
-		vboVertexID = i;
+	public void setPos(Vector3f v){
+		motionState.transform(v);
 	}
 	
 	@Override
-	public int getVBOVertexId(){
-		return vboVertexID;
-	}
-	
-	@Override
-	public void setPos(Vector3fc v){
-		pos = v;
-	}
-	
-	@Override
-	public Vector3fc getPos() {
-		return pos;
-	}
-	
-	@Override
-	public void setPitch(float i) {
-		pitch = i;
-	}
-	
-	@Override
-	public float getPitch() {
-		return pitch;
-	}
-	
-	@Override
-	public void setYaw(float i) {
-		yaw = i;
-	}
-	
-	@Override
-	public float getYaw() {
-		return yaw;
-	}
-
-	@Override
-	public void setRoll(float i) {
-		roll = i;
-	}
-	
-	@Override
-	public float getRoll() {
-		return roll;
+	public Vector3f getPos() {
+		return motionState.origin;
 	}
 	
 	@Override
@@ -217,36 +261,56 @@ public abstract class AbstractEntity implements Entity{
 	}
 	
 	@Override
+	public void setMotionState(Transform t){
+		motionState = t;
+	}
+	
+	@Override
+	public Transform getMotionState(){
+		return motionState;
+	}
+	
+	@Override
 	public BoundingSphere getBoundingSphere(){
 		return boundingSphere;
 	}
 	
 	@Override
 	public BoundingAxis getBoundingAxis(){
+
 		return boundingAxis;
-	}
-	
-	@Override
-	public Vector3fc getToMidPoint(){
-		return toCenter;
-	}
-	
-	@Override
-	public boolean isSleeping(){
-		return sleeping;
 	}
 
 	public Entity copy2(Entity e){
-		e.setPos(pos.copy());
-		e.setPitch(getPitch());
-		e.setYaw(getYaw());
-		e.setRoll(getRoll());
 		e.setVisible(isVisible());
 		e.setWorld(getWorld());
 		e.setId(getId());
-		e.setVBOVertexId(getVBOVertexId());
 		e.setMotion(getMotion());
+		e.setVBOObject(modelShape);
+		e.getMotionState().set(motionState);
+		e.setRigidBody(rigidShape);
+		e.setRigidBodyConstructionInfo(rigidInfo);
 		return e;
+	}	
+	
+	public AbstractVBO getVBOOBject(){
+		return modelShape;
 	}
+	
+	public void setVBOObject(AbstractVBO o){
+		modelShape = o;
+	}
+	
+	public abstract void lastUpdate(float dt);
+	
+	public abstract void firstUpdate(float dt);
+	
+	public abstract void startRender();
+	
+	public abstract void endRender();
+	
+	public abstract void calcBoundingSphere();
+	
+	public abstract void calcBoundingAxis();
 
 }

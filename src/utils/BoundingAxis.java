@@ -1,12 +1,14 @@
-package math;
+package utils;
+
+import javax.vecmath.Vector3f;
 
 public class BoundingAxis {
 	
-	private Vector3fc min;
-	private Vector3fc max;
+	private Vector3f min;
+	private Vector3f max;
 	
-	public BoundingAxis(Vector3fc...vectors){
-		Vector3fc[] minmax = Vector3fc.getMinMaxVectors(vectors);
+	public BoundingAxis(Vector3f...vectors){
+		Vector3f[] minmax = Utils.getMinMaxVectors(vectors);
 		min = minmax[0];
 		max = minmax[1];
 	}
@@ -24,12 +26,13 @@ public class BoundingAxis {
 		return false;
 	}
 	
-	public Vector3fc getMax(){
+	public Vector3f getMax(){
 		return max;
 	}
 	
-	public Vector3fc getMin(){
+	public Vector3f getMin(){
 		return min;
 	}
+
 
 }
