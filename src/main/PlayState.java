@@ -100,10 +100,10 @@ public class PlayState extends State{
 		
 		world.addEntity(player);
 		
-		Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
-		getSyncManager().add(request);
+		/*Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
+		getSyncManager().add(request);*/
 
-		//world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));*/
+		world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
 		
 		
 		Entity testObject = new DefaultEntity();

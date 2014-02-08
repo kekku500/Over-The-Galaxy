@@ -1,6 +1,7 @@
 package game.world;
 
 import game.State;
+import game.threading.RenderThread;
 import game.threading.UpdateThread;
 import game.world.FrustumCulling.Frustum;
 import game.world.entities.Cuboid;
@@ -24,6 +25,8 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import javax.vecmath.Vector3f;
+
+import org.newdawn.slick.Color;
 
 import utils.Utils;
 import main.Main;
@@ -72,7 +75,8 @@ public class World{
 		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
 		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
+		
+		dynamicsWorld.setGravity(new Vector3f(0, 0, 0));
 	}
 
 	public World(State state, int id){
@@ -264,6 +268,7 @@ public class World{
 	    
 	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
 
+	    
 	    g.setFontSize(20);
 	    
 	    g.drawString(100, 50, "DEFAULT" + 50);
@@ -271,6 +276,7 @@ public class World{
 	    //Back to 3D
 	    RenderThread.perspective3D(); //reset perspective to 3d
 	    */
+	    
 	}
 	
 	public void addComponent(Component c){

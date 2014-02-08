@@ -36,7 +36,10 @@ import utils.math.Vector3;
 import com.bulletphysics.collision.broadphase.BroadphaseProxy;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
+import com.bulletphysics.collision.dispatch.CollisionWorld;
+import com.bulletphysics.collision.dispatch.CollisionWorld.ClosestConvexResultCallback;
 import com.bulletphysics.collision.dispatch.CollisionWorld.ConvexResultCallback;
+import com.bulletphysics.collision.dispatch.GhostObject;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -97,7 +100,6 @@ public class Camera extends DefaultEntity{
     	rightVector = betterCam.getRightVector().copy();
     	pitch = betterCam.pitch;
     	yaw = betterCam.yaw;
-    	
     }
     
     public void setImportant(Camera fromHere){
@@ -141,6 +143,7 @@ public class Camera extends DefaultEntity{
 		//AbstractVBO testModel = new CuboidVBO(5,5,15);
     	AbstractVBO testModel = new SphereVBO(camRadius, 30, 30);
 		setModel(testModel);
+    	//ConvexShape shape = new SphereShape(camRadius);
     	ConvexShape shape = new SphereShape(camRadius);
 		//CollisionShape shape = new BoxShape(new Vector3f(5/2, 5/2, 15/2));
 
@@ -219,7 +222,7 @@ public class Camera extends DefaultEntity{
 				
 				//Dont wanna look directly from behind
 				Quat4f qRotatedy = new Quat4f();
-				QuaternionUtil.setRotation(qRotatedy, new Vector3(1,0,0), Utils.rads(25));
+				QuaternionUtil.setRotation(qRotatedy, new Vector3(1,0,0), Utils.rads(-25));
 				qRotatedy.mul(orientation);
 				orientation = qRotatedy;
 				
@@ -323,13 +326,8 @@ public class Camera extends DefaultEntity{
 		
 		rotation(dt);
 		
-		Transform cameraFrom = new Transform();
-		rigidShape.getWorldTransform(cameraFrom);
-		
 		translation(dt);
-		
-		Transform cameraTo = new Transform();
-		rigidShape.getWorldTransform(cameraTo);
+
 		
     	UpdateRequest req = new UpdateRequest(Action.UPDATE, this);
     	world.getState().getSyncManager().add(req);
