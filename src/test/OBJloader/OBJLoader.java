@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
@@ -14,7 +15,10 @@ import test.OBJloader.Face;
 import test.OBJloader.Model;
 
 public class OBJLoader{
-	public static Model loadModel(File f) throws FileNotFoundException, IOException{
+	public static Model loadModel(String pathf) throws FileNotFoundException, IOException{
+		File f = new File(pathf);
+		f = new File(f.getAbsolutePath());
+		String path = f.getAbsolutePath().replace(f.getName(), "");
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 		Model m = new Model();
 		String line;
@@ -23,8 +27,7 @@ public class OBJLoader{
 		int i = -1;
 		while((line = reader.readLine()) != null){
 			if(line.startsWith("mtllib ")){
-				MTLLoader.loadMaterial(m, "D:\\Programming\\eclipse\\workspaces\\java\\github\\Over-The-Galaxy\\src\\resources\\" +line.split(" ")[1]  + ".mtl");
-				//MTLLoader.loadMaterial(m, "src/" +line.split(" ")[1]);
+				MTLLoader.loadMaterial(m, path + line.split(" ")[1]);
 			}else if(line.startsWith("o ")){
 				i++;
 				if(i == 0){
@@ -67,9 +70,10 @@ public class OBJLoader{
 				
 			}
 		}
+		System.out.println("done!!");
 		reader.close();
 		m.faces.add(face);
-		m.prepareVBO();
+		//m.prepareVBO();
 		return m;
 	}
 }

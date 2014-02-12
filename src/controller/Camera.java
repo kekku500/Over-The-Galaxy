@@ -162,7 +162,7 @@ public class Camera extends DefaultEntity{
 		body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
 		setRigidBody(body);
 		
-		body.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT);
+		body.setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
 		
 		world.getDynamicsWorld().addRigidBody(body);
 		body.setGravity(new Vector3f(0,0,0));

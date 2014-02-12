@@ -16,8 +16,10 @@ import game.world.sync.RequestManager;
 import game.world.sync.UpdateRequest;
 import game.world.sync.Request.Action;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.vecmath.AxisAngle4f;
 import javax.vecmath.Matrix3f;
@@ -32,10 +34,18 @@ import org.lwjgl.util.glu.GLU;
 import utils.BoundingAxis;
 import utils.BoundingSphere;
 import utils.Utils;
+import blender.model.Model;
+import blender.model.Triangle;
 
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.shapes.BoxShape;
+import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.collision.shapes.IndexedMesh;
+import com.bulletphysics.collision.shapes.StridingMeshInterface;
+import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
+import com.bulletphysics.collision.shapes.TriangleMeshShape;
+import com.bulletphysics.collision.shapes.TriangleShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
@@ -51,6 +61,7 @@ public abstract class AbstractEntity implements Entity{
 	protected RigidBodyConstructionInfo rigidInfo;
 	
 	protected boolean visible = true; //in camera
+	protected boolean createPhysicsModel = false;
 
 	protected Motion motion = Motion.STATIC;
 	
@@ -163,6 +174,22 @@ public abstract class AbstractEntity implements Entity{
 	@Override
 	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r){
 		rigidInfo = r;
+	}
+	
+	@Override
+	public void preparePhysicsModel(){
+		if(createPhysicsModel){
+			if(modelShape != null){
+				if(modelShape instanceof Model){
+					//Doesnt work yet
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void createPhysicsModel(){
+		createPhysicsModel = true;
 	}
 	
 

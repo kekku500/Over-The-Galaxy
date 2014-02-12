@@ -76,7 +76,7 @@ public class World{
 		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		
-		dynamicsWorld.setGravity(new Vector3f(0, 0, 0));
+		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
 	}
 
 	public World(State state, int id){
@@ -234,6 +234,7 @@ public class World{
 					if(req.getType() == Type.ENTITY){
 						Entity e = req.getEntity();
 						e.createVBO();
+						e.preparePhysicsModel();
 						req.done();
 					}else if(req.getType() == Type.COMPONENT){
 						Component c = req.getComponent();

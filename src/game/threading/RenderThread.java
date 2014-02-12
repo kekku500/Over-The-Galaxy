@@ -47,12 +47,9 @@ public class RenderThread implements Runnable{
 	    Main.debugPrint("Setting up OpenGL");
 	    
 	    //Setup OpenGL
-	    //GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
-	    
-	    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	    //GL11.glDepthMask(true);
+	    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    glEnable(GL_COLOR_MATERIAL);
-	    GL11.glColorMaterial(GL11.GL_FRONT_AND_BACK, GL_DIFFUSE);
+	    GL11.glColorMaterial(GL11.GL_FRONT, GL_DIFFUSE);
 	    GL11.glEnable(GL_DEPTH_TEST); //foreground objects are not behind background ones
 	    perspective3D(); //Starting perspective
 	    

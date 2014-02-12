@@ -84,5 +84,9 @@ public interface Entity {
 	public BoundingAxis getBoundingAxis();
 
 	public Entity copy();
+	
+	public void createPhysicsModel();
+	
+	public void preparePhysicsModel();
 
 }

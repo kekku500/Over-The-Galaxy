@@ -74,7 +74,7 @@ public class Model {
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }*/
 	
-	public void Render(){
+	public void render(){
 	//	textured = false;
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
@@ -112,105 +112,6 @@ public class Model {
 		}
 	}
 	
-	/*public void prepareVBO()
-    {
-        // Create the handles
-        vboNormalID = glGenBuffers();
-        vboVertexID = glGenBuffers();
-        vboColorID = glGenBuffers();
-        vboTextureID = glGenBuffers();
-        for(int i = 0; i < faces.size(); i++){
-			total += faces.get(i).size();
-		}
-
-        // Create the buffers
-        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(9 * total);
-        FloatBuffer normalBuffer = BufferUtils.createFloatBuffer(9 * total);
-        FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(9 * total);
-        FloatBuffer textureBuffer = BufferUtils.createFloatBuffer(6 * total);
-
-        // Iterate over each face in the model and add them to the VBO
-        for(int i = 0; i < faces.size(); i++){
-			for(Face face : faces.get(i))
-        {
-            // Retrieve the material of the face
-            Material material = face.material;
-
-            // Get the first vertex of the face
-            Vector3f v1 = vertices.get((int) face.vertex.x - 1);
-            vertexBuffer.put(v1.x).put(v1.y).put(v1.z);
-            // Get the color of the vertex
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
-
-            // Get the second vertex of the face
-            Vector3f v2 = vertices.get((int) face.vertex.y - 1);
-            vertexBuffer.put(v2.x).put(v2.y).put(v2.z);
-            // Get the color of the face
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
-
-            // Get the third vertex of the face
-            Vector3f v3 = vertices.get((int) face.vertex.z - 1);
-            vertexBuffer.put(v3.x).put(v3.y).put(v3.z);
-            // Get the color of the face
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
-
-            // Get the first normal of the face
-            Vector3f n1 = normals.get((int) face.normal.x - 1);
-            normalBuffer.put(n1.x).put(n1.y).put(n1.z);
-
-            // Get the second normal of the face
-            Vector3f n2 = normals.get((int) face.normal.y - 1);
-            normalBuffer.put(n2.x).put(n2.y).put(n2.z);
-
-            // Get the third normal of the face
-            Vector3f n3 = normals.get((int) face.normal.z - 1);
-            normalBuffer.put(n3.x).put(n3.y).put(n3.z);
-            
-            Vector2f t1 = texture.get((int) face.texture.x - 1);
-            textureBuffer.put(t1.x).put(1 - t1.y);
-
-            // Get the second texCoords of the face
-            Vector2f t2 = texture.get((int) face.texture.y - 1);
-            textureBuffer.put(t2.x).put(1 - t2.y);
-
-            // Get the third texCoords of the face
-            Vector2f t3 = texture.get((int) face.texture.z - 1);
-            textureBuffer.put(t3.x).put(1 - t3.y);
-        }
-        }
-
-        // Rewind the buffers
-        vertexBuffer.rewind();
-        normalBuffer.rewind();
-        colorBuffer.rewind();
-        textureBuffer.rewind();
-
-        // Create the vertex VBO
-        glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-        glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Create the normal VBO
-        glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
-        glBufferData(GL_ARRAY_BUFFER, normalBuffer, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Create the color VBO
-        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
-        glBufferData(GL_ARRAY_BUFFER, colorBuffer, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vboTextureID);
-        glBufferData(GL_ARRAY_BUFFER, textureBuffer, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }*/
-	
 	public void prepareVBO(){
 		vboIndeciesID = glGenBuffers();
 		vboVertexID = glGenBuffers();
@@ -229,12 +130,14 @@ public class Model {
 			for(Face face : faces.get(i)){
 				Material material = face.material;
 				indeciesBuffer.put((int) (face.vertex.x - 1)).put((int) (face.vertex.y - 1)).put((int) (face.vertex.z - 1));
-
+				
 				
 				x = (int) face.vertex.x - 1;
 				Vector3f v1 = vertices.get((int) face.vertex.x - 1);
 				Vector3f n1 = normals.get((int) face.normal.x - 1);
-				Vector2f t1 = texture.get((int) face.texture.x - 1);
+				Vector2f t1 = null;
+				if(textured)
+					t1 = texture.get((int) face.texture.x - 1);
 				buffer[e*x] = v1.x;
 				buffer[e*x+1] = v1.y;
 				buffer[e*x+2] = v1.z;
@@ -244,13 +147,17 @@ public class Model {
 				buffer[e*x+6] = material.getDiffuse().x;
 				buffer[e*x+7] = material.getDiffuse().y;
 				buffer[e*x+8] = material.getDiffuse().z;
-				buffer[e*x+9] = t1.x;
-				buffer[e*x+10] = 1 - t1.y;
+				if(textured){
+					buffer[e*x+9] = t1.x;
+					buffer[e*x+10] = 1 - t1.y;
+				}
 				
 				x = (int) face.vertex.y - 1;
 				Vector3f v2 = vertices.get((int) face.vertex.y - 1);
 				Vector3f n2 = normals.get((int) face.normal.y - 1);
-				Vector2f t2 = texture.get((int) face.texture.y - 1);
+				Vector2f t2 = null;
+				if(textured)
+					t2 = texture.get((int) face.texture.y - 1);
 				buffer[e*x] = v2.x;
 				buffer[e*x+1] = v2.y;
 				buffer[e*x+2] = v2.z;
@@ -260,13 +167,18 @@ public class Model {
 				buffer[e*x+6] = material.getDiffuse().x;
 				buffer[e*x+7] = material.getDiffuse().y;
 				buffer[e*x+8] = material.getDiffuse().z;
-				buffer[e*x+9] = t2.x;
-				buffer[e*x+10] = 1 - t2.y;
+				if(textured){
+					buffer[e*x+9] = t2.x;
+					buffer[e*x+10] = 1 - t2.y;	
+				}
+
 				
 				x = (int) face.vertex.z -1;
 				Vector3f v3 = vertices.get((int) face.vertex.z - 1);
 				Vector3f n3 = normals.get((int) face.normal.z - 1);
-				Vector2f t3 = texture.get((int) face.texture.z - 1);
+				Vector2f t3 = null;
+				if(textured)
+					t3 = texture.get((int) face.texture.z - 1);
 				buffer[e*x] = v3.x;
 				buffer[e*x+1] = v3.y;
 				buffer[e*x+2] = v3.z;
@@ -276,8 +188,10 @@ public class Model {
 				buffer[e*x+6] = material.getDiffuse().x;
 				buffer[e*x+7] = material.getDiffuse().y;
 				buffer[e*x+8] = material.getDiffuse().z;
-				buffer[e*x+9] = t3.x;
-				buffer[e*x+10] = 1 - t3.y;
+				if(textured){
+					buffer[e*x+9] = t3.x;
+					buffer[e*x+10] = 1 - t3.y;
+				}
 
 			}			
 			koht.add(indeciesBuffer.position());

@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,8 +25,7 @@ public class Main {
 	
 	public static void main(String[] args){
 		Game game = new Game("Over-The-Galaxy v" + VERSION);
-		game.start();
-			
+		game.start();	
 	}
 	
 	/**

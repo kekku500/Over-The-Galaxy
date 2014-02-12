@@ -1,4 +1,4 @@
-package test.OBJloader;
+package blender.model;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 
 /**
 * An OpenGL Texture.
@@ -56,11 +57,8 @@ public class Texture
         BufferedImage bimg = null;
         try
         {	
-          System.out.println(name);
-          File f = new File("src\\resources\\" + name);
+          File f = new File(name);
           bimg = ImageIO.read(f);
-          //bimg = ImageIO.read(Texture.class.getClassLoader().getResourceAsStream(name));
-        //    bimg = ImageIO.read(getResourceAsStream("src/resources/CHRNPCICOHER101_DIFFUSE.tga"));
         }
         catch (IOException e)
         {
@@ -111,6 +109,10 @@ public class Texture
 
         // Return a new Texture.
         return new Texture(textureID, bimg.getWidth(), bimg.getHeight());
+    }
+    
+    public void dispose(){
+        glDeleteBuffers(id);
     }
 
 }
