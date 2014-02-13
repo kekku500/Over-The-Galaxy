@@ -1,6 +1,6 @@
 package blender.model;
 
-import game.vbotemplates.AbstractVBO;
+import game.vbo.ModelVBO;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
 
-public class Model extends AbstractVBO{
+public class Model extends ModelVBO{
 	
 	public List<SubModel> submodels = new ArrayList<SubModel>();
 	
@@ -37,6 +37,19 @@ public class Model extends AbstractVBO{
 	}
 	
 	public void render(){
+		if(initialMotion != null){
+			//Transform t = new Transform();
+			float[] f = new float[16];
+			//body.getMotionState().getWorldTransform(t);
+
+			initialMotion.getOpenGLMatrix(f);
+			
+			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+			fb.put(f);
+			fb.rewind();
+			
+			glMultMatrix(fb);
+		}
        for(SubModel m: submodels){
     	   m.render();
        }

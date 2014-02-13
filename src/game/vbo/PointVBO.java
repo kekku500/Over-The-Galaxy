@@ -1,4 +1,4 @@
-package game.vbotemplates;
+package game.vbo;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -8,7 +8,7 @@ import org.lwjgl.util.vector.Vector3f;
 import utils.BoundingAxis;
 import utils.BoundingSphere;
 
-public class PointVBO extends AbstractVBO{
+public class PointVBO extends ModelVBO{
 	
 	public PointVBO() {
 		vertices = BufferUtils.createFloatBuffer(3);

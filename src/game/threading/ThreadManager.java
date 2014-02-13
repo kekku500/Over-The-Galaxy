@@ -1,10 +1,9 @@
 package game.threading;
 
+import game.Game;
 import game.State;
 
 import java.util.ArrayList;
-
-import main.Main;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
@@ -21,50 +20,45 @@ public abstract class ThreadManager {
 	Thread renderThread = new Thread(new RenderThread(this));
 	
 	//True if threads are starting loop
-	private boolean renderThreadReady = false;
-	private boolean updateThreadReady = false;
+	private boolean renderThreadRunning = false;
+	private boolean updateThreadRunning = false;
 
 	public ThreadManager(String title){
-		System.out.println("threadmanager constructor");
 		//Initial window title
 		Display.setTitle(title);
 	}
 	
 	public void init(){
 		//Initialize states
-		Main.debugPrint("Initializing states");
+		Game.print("Initializing states");
 		initStates();
 	}
 	
 	//Contains main game loop
 	public void startThreads(){
-		Main.debugPrint("Game initialization");
+		Game.print("Game initialization");
 		init();
 		
 		//Starting threads
 		renderThread.start();
 		updateThread.start();
-		
 		//Create thread manager loop here!
 		//CODE BELOW IS JUST FOR TEsTING
-		while(!endGame){
+		while(!isRenderReady()){
 			try { //Wait for render thread to get ready
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+		while(!endGame){
 			//Change states
-			if(isRenderReady()){
-				if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
-					break;
-				}
-				if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD0) && getActiveStateId() != 0){
-					Main.debugPrint("Set state to 0");
-					enterState(0);
-				}else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD1) && getActiveStateId() != 1){
-					Main.debugPrint("Set state to 1");
-					enterState(1);
-				}
+			if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD0) && getActiveStateId() != 0){
+				Game.print("Set state to 0");
+				enterState(0);
+			}else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD1) && getActiveStateId() != 1){
+				Game.print("Set state to 1");
+				enterState(1);
 			}
 		}
 	}
@@ -92,11 +86,11 @@ public abstract class ThreadManager {
 	}
 	
 	public void setUpdateReady(boolean b){
-		updateThreadReady = b;
+		updateThreadRunning = b;
 	}
 	
 	public void setRenderReady(boolean b){
-		renderThreadReady = b;
+		renderThreadRunning = b;
 	}
 	
 	//GET
@@ -116,11 +110,11 @@ public abstract class ThreadManager {
 	}
 	
 	public boolean isUpdateReady(){
-		return updateThreadReady;
+		return updateThreadRunning;
 	}
 	
 	public boolean isRenderReady(){
-		return renderThreadReady;
+		return renderThreadRunning;
 	}
 	
 	public State getActiveState(){

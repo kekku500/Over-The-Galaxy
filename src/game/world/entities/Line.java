@@ -11,8 +11,8 @@ import static org.lwjgl.opengl.GL11.glTranslatef;
 import static org.lwjgl.opengl.GL11.glVertexPointer;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
-import game.vbotemplates.CuboidVBO;
-import game.vbotemplates.LineVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.LineVBO;
 import game.world.entities.AbstractEntity;
 import game.world.entities.Entity;
 

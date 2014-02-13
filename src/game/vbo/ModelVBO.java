@@ -1,4 +1,4 @@
-package game.vbotemplates;
+package game.vbo;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
@@ -19,13 +19,17 @@ import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Quaternion;
 import org.lwjgl.util.vector.Vector3f;
 
+import com.bulletphysics.linearmath.MotionState;
+import com.bulletphysics.linearmath.Transform;
+
 import utils.BoundingAxis;
 import utils.BoundingSphere;
 
-public abstract class AbstractVBO{
+public abstract class ModelVBO{
 	
 	protected int vboVertexID;
 	protected FloatBuffer vertices;
+	protected Transform initialMotion;
 	
 	public void render(){
 		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
@@ -51,6 +55,10 @@ public abstract class AbstractVBO{
 
 	public int getVBOVertexID(){
 		return vboVertexID;
+	}
+	
+	public void setInitialMotion(Transform t){
+		initialMotion = t;
 	}
 
 }

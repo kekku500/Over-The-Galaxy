@@ -1,6 +1,7 @@
 package main;
 
 import controller.Camera;
+import game.Game;
 import game.State;
 import game.world.gui.graphics.Graphics;
 
@@ -20,7 +21,7 @@ public class IntroState extends State{
 
 	@Override
 	public void init() {
-		Main.debugPrint("Init intro");
+		Game.print("Init intro");
 		
 	}
 

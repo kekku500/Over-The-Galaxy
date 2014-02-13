@@ -1,15 +1,18 @@
 package game;
 
-import main.IntroState;
-import main.Main;
-import main.PlayState;
-import game.Game;
 import game.threading.ThreadManager;
+import main.IntroState;
+import main.PlayState;
+
+import org.lwjgl.Sys;
 
 public class Game extends ThreadManager{
 	
+	public static boolean debug = true;
+	
+	public static final String VERSION = "0.53";
 
-	public static int fps = 60; //framerate
+	public static int fps = 60;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
 	public static int width = 800;
 	public static int height = 600;
@@ -22,14 +25,16 @@ public class Game extends ThreadManager{
 	private final int PLAYGAME = 0;
 	private final int INTRO = 1;
 	
-	public Game(String title){
-		super(title);
+	public Game(){
+		super("Over-The-Galaxy v" + VERSION);
+		
+		//Create states
 		addState(new PlayState(PLAYGAME));
 		addState(new IntroState(INTRO));
 	}
 	
 	public void start(){
-		Main.debugPrint("Starting the game");
+		Game.print("Starting the threads");
 		startThreads();
 	}
 	
@@ -37,6 +42,24 @@ public class Game extends ThreadManager{
 		getState(PLAYGAME).init();
 		getState(INTRO).init();
 		enterState(PLAYGAME);
+	}
+	
+	/**
+	* Get the time in seconds
+	*
+	* @return The system time in seconds
+	*/
+	public static float getTime(){
+		return Sys.getTime() * 1f / Sys.getTimerResolution() / 1f;
+	}
+	
+	/**
+	 * Prints t in console if Game.debug == true
+	 * @param t
+	 */
+	public static <T> void print(T t){
+		if(Game.debug)
+			System.out.println(t);
 	}
 
 }

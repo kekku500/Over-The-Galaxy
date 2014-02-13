@@ -1,5 +1,7 @@
 package game.world.gui.graphics;
 
+import game.Game;
+
 import java.awt.Font;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +37,7 @@ public class Graphics {
 				return true;
 			}
 		}
-		Main.debugPrint("ERROR: No font size " + size + " (create it in Graphics class)");
+		Game.print("ERROR: No font size " + size + " (create it in Graphics class)");
 		return false;
 	}
 	

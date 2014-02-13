@@ -6,9 +6,8 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
 
-import game.vbotemplates.LineVBO;
+import game.vbo.LineVBO;
 import game.world.entities.Line;
-import game.world.entities.Entity.Motion;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
@@ -36,7 +35,6 @@ public class Grid {
 		for(int i=0;i<(int)(zsize/gap);i++){
 			LineVBO lineVBO = new LineVBO(new Vector3f(xsize,0,0));
 			Line l = new Line();
-			l.setMotion(Motion.STATIC);
 			l.setModel(lineVBO);
 			l.setLength(xsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);
@@ -48,7 +46,6 @@ public class Grid {
 		for(int i=0;i<(int)(xsize/gap);i++){
 			LineVBO lineVBO = new LineVBO(new Vector3f(0,0,zsize));
 			Line l = new Line();
-			l.setMotion(Motion.STATIC);
 			l.setModel(lineVBO);
 			l.setLength(zsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);

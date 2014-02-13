@@ -4,9 +4,9 @@ import static org.lwjgl.opengl.GL11.glMultMatrix;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 import game.Game;
-import game.vbotemplates.AbstractVBO;
-import game.vbotemplates.CuboidVBO;
-import game.vbotemplates.SphereVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.ModelVBO;
+import game.vbo.SphereVBO;
 import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
@@ -63,7 +63,7 @@ public class Camera extends DefaultEntity{
     private float movementSpeed = 50.0f; //move 50 units per second
     private float shiftBoost = 10f; //x times faster
     public float pitch, yaw;
-    private enum CamType{FP, DOF6, LOCK}
+    private enum CamType{FP, _6DOF, LOCK}
     private CamType type = CamType.FP;
     
     private Entity following;
@@ -93,15 +93,6 @@ public class Camera extends DefaultEntity{
     	world = w;
     }
     
-    public void copyFrom(Camera betterCam){
-    	position = betterCam.getPos().copy();
-    	viewRay = betterCam.getViewRay().copy();
-    	upVector = betterCam.getUpVector().copy();
-    	rightVector = betterCam.getRightVector().copy();
-    	pitch = betterCam.pitch;
-    	yaw = betterCam.yaw;
-    }
-    
     public void setImportant(Camera fromHere){
     	rigidShape = fromHere.getRigidBody();
     	modelShape = fromHere.getModel();
@@ -110,7 +101,6 @@ public class Camera extends DefaultEntity{
     
     private float camRadius;
     public void createCamera(){
-    	setMotion(Motion.DYNAMIC);
     	//for helpz
     	Vector3 up = new Vector3(0,1,0);
     	Vector3 ray = new Vector3(0,0,-1);
@@ -141,7 +131,7 @@ public class Camera extends DefaultEntity{
     	vertices.add(nbl);
     	CollisionShape shape = new ConvexHullShape(vertices);*/
 		//AbstractVBO testModel = new CuboidVBO(5,5,15);
-    	AbstractVBO testModel = new SphereVBO(camRadius, 30, 30);
+    	ModelVBO testModel = new SphereVBO(camRadius, 30, 30);
 		setModel(testModel);
     	//ConvexShape shape = new SphereShape(camRadius);
     	ConvexShape shape = new SphereShape(camRadius);
@@ -171,7 +161,7 @@ public class Camera extends DefaultEntity{
     private void rotation(float dt){
 		float dx = Mouse.getDX() * mouseSensitivity;
 		float dy = Mouse.getDY() * mouseSensitivity;
-		if(type == CamType.DOF6){
+		if(type == CamType._6DOF){
 			Transform t = new Transform();
 			rigidShape.getWorldTransform(t);
 			
@@ -327,10 +317,6 @@ public class Camera extends DefaultEntity{
 		rotation(dt);
 		
 		translation(dt);
-
-		
-    	UpdateRequest req = new UpdateRequest(Action.UPDATE, this);
-    	world.getState().getSyncManager().add(req);
     }
     
     public Vector3 getPos(){

@@ -45,17 +45,14 @@ import controller.Camera;
 
 public class World{
 	
-	DynamicsWorld dynamicsWorld; //physics calc
+	DynamicsWorld dynamicsWorld; //Physics World
 	
-	//Store objects
+	//Store entities
 	Set<Entity> dynamicEntities = new HashSet<Entity>();
 	Set<Entity> staticEntities = new HashSet<Entity>();
 	
 	//GUI
 	public Container container;
-
-	private int entityIdCounter = 0;
-	private int componentIdCounter = 0;
 	
 	//Camera stuff
 	private FrustumCulling frustum;
@@ -67,7 +64,10 @@ public class World{
 	
 	private int uniqueID;
 	private int id;
+	
 	private static int idCounter = 0;
+	private int entityIdCounter = 0;
+	private int componentIdCounter = 0;
 		
 	public void setUpPhysics(){
 		BroadphaseInterface broadphase = new DbvtBroadphase();
@@ -97,18 +97,19 @@ public class World{
 			Status status = req.requestStatus(this);
 			//System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
 			if(status == Status.IDLE)
-				continue; //skip, request must be handled later
+				continue; //skip, request must be handled later or done in this world
 			if(req.getType() == Type.ENTITY){
 				Entity e = req.getEntity();
-				if(e.getMotion() == Motion.STATIC){
+				if(e.isDynamic()){
 					if(req.getAction() == Action.ADD){
-						//System.out.println("added " + e + " to staticentities");
 						getStaticEntities().add(e); //not copying, reference to all
-					}else if(req.getAction() == Action.MOVE){
-						removeDynamicEntity(e);
+					}else if(req.getAction() == Action.MOVE){ //moving object to static
+						removeEntity(e, getDynamicEntities());
 						getStaticEntities().add(e);
+					}else if(req.getAction() == Action.REMOVE){
+						removeEntity(e, getStaticEntities());
 					}
-				}else if(e.getMotion() == Motion.DYNAMIC){
+				}else if(e.isStatic()){
 					if(req.getAction() == Action.ADD){
 						Entity addThis = e.copy();
 						e.setWorld(this);
@@ -118,10 +119,12 @@ public class World{
 					}else if(req.getAction() == Action.UPDATE || req.getAction() == Action.UPDATEALL){
 						replace(getDynamicEntities(), e.copy());
 					}else if(req.getAction() == Action.MOVE){
-						Entity moveE = removeStaticEntity(e);
+						Entity moveE = removeEntity(e, getStaticEntities());
 						getDynamicEntities().add(moveE.copy());
+					}else if(req.getAction() == Action.REMOVE){
+						removeEntity(e, getDynamicEntities());
 					}else if(req.getAction() == Action.CAMERAFOCUS){
-						Entity focusThis = getDynamicEntityByID(e.getId());
+						Entity focusThis = getEntityByID(e.getId(), getDynamicEntities());
 						camera.setFollowing(focusThis);
 					}
 				}
@@ -129,11 +132,6 @@ public class World{
 				Component c = req.getComponent();
 				if(req.getAction() == Action.ADD){
 					container.addComponent(c);
-				}
-			}else if(req.getType() ==Type.CAMERA){
-				if(req.getAction() == Action.UPDATE){
-					Camera betterCam = req.getCamera();
-					camera.copyFrom(betterCam);
 				}
 			}
 			if(status == Status.FINAL){
@@ -147,11 +145,7 @@ public class World{
 		//Check for added entities
 		updateRequests();
 		
-		
-
 		grid.update();
-		
-		//Dynamic
 		
 		for(Entity e: getDynamicEntities()){
 			e.update(dt);
@@ -161,18 +155,11 @@ public class World{
 		
 		dynamicsWorld.stepSimulation(dt);
 		
-		
-		
-		//checkFrustum();
+		checkFrustum();
 	}
 	
-	/**
-	 * 
-	 * @param rem
-	 * @return Removed entity
-	 */
-	public Entity removeStaticEntity(Entity rem){
-		for(Entity e: getStaticEntities()){
+	public Entity removeEntity(Entity rem, Set<Entity> list){
+		for(Entity e: list){
 			if(e.getId() == rem.getId()){
 				getStaticEntities().remove(e);
 				return e;
@@ -181,23 +168,8 @@ public class World{
 		return null;
 	}
 	
-	/**
-	 * 
-	 * @param rem
-	 * @return Removed entity
-	 */
-	public Entity removeDynamicEntity(Entity rem){
-		for(Entity e: getDynamicEntities()){
-			if(e.getId() == rem.getId()){
-				getDynamicEntities().remove(e);
-				return e;
-			}
-		}
-		return null;
-	}
-	
-	public Entity getDynamicEntityByID(int id){
-		for(Entity e: getDynamicEntities()){
+	public Entity getEntityByID(int id, Set<Entity> list){
+		for(Entity e: list){
 			if(e.getId() == id)
 				return e;
 		}
@@ -232,10 +204,12 @@ public class World{
 			if(stat == Status.FINAL){
 				if(req.getAction() == Action.CREATEVBO){
 					if(req.getType() == Type.ENTITY){
-						Entity e = req.getEntity();
-						e.createVBO();
-						e.preparePhysicsModel();
-						req.done();
+						if(req.getAction() == Action.CREATEVBO){
+							Entity e = req.getEntity();
+							e.createVBO();
+							e.preparePhysicsModel();
+							req.done();
+						}
 					}else if(req.getType() == Type.COMPONENT){
 						Component c = req.getComponent();
 						c.createVBO();
@@ -261,8 +235,8 @@ public class World{
 		}
 		
 	    //Render 2D stuff
-	    /*RenderThread.perspective2D();
-	    
+	    RenderThread.perspective2D();
+	    //just TESting some stuff
 	    container.render();
 	    
 	    g.setFontSize(18);
@@ -276,7 +250,7 @@ public class World{
 	    
 	    //Back to 3D
 	    RenderThread.perspective3D(); //reset perspective to 3d
-	    */
+	    
 	    
 	}
 	
@@ -372,10 +346,8 @@ public class World{
 		return camera;
 	}
 	
-	public void setCamera(Camera cam){
+	public void linkCamera(Camera cam){
 		camera.setImportant(cam);
-		//camera = cam;
-		//frustum = new FrustumCulling(camera);
 	}
 	
 	public int getID(){

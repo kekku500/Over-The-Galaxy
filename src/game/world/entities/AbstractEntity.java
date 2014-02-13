@@ -8,8 +8,9 @@ import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.RenderState;
-import game.vbotemplates.AbstractVBO;
+import game.vbo.ModelVBO;
 import game.world.World;
+import game.world.entities.Entity.Motion;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.RequestManager;
@@ -35,7 +36,6 @@ import utils.BoundingAxis;
 import utils.BoundingSphere;
 import utils.Utils;
 import blender.model.Model;
-import blender.model.Triangle;
 
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.shapes.BoxShape;
@@ -56,14 +56,14 @@ public abstract class AbstractEntity implements Entity{
 	
 	protected Transform motionState = new Transform(new Matrix4f(new Quat4f(0,0,0,1),new Vector3f(0,0,0), 1.0f));
 	
-	protected AbstractVBO modelShape; //visual object
+	protected ModelVBO modelShape; //visual object
 	protected RigidBody rigidShape; //physics object
-	protected RigidBodyConstructionInfo rigidInfo;
+	protected RigidBodyConstructionInfo rigidInfo; //for changing object static/dynamic
 	
 	protected boolean visible = true; //in camera
 	protected boolean createPhysicsModel = false;
-
-	protected Motion motion = Motion.STATIC;
+	
+	private boolean isStatic = true;
 	
 	protected World world;
 	protected int id;
@@ -75,7 +75,7 @@ public abstract class AbstractEntity implements Entity{
 	public boolean setStatic(){
 		if(rigidShape == null) //no physics shape, can't set static
 			return false;
-		if(world != null){
+		if(world != null){ //remove from world before changing
 			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
 		}
 		rigidShape.setMassProps(0f, new Vector3f(0,0,0)); //remove mass
@@ -86,7 +86,7 @@ public abstract class AbstractEntity implements Entity{
 		if(world != null){
 			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
 		}
-		motion = Motion.STATIC;
+		isStatic = true;
 		if(world != null){ //update other worlds aswell
 			RequestManager sync = getWorld().getState().getSyncManager();
 			sync.add(new UpdateRequest(Action.MOVE, this));
@@ -100,16 +100,13 @@ public abstract class AbstractEntity implements Entity{
 	public boolean setDynamic(){
 		if(rigidShape == null || rigidInfo == null) //no physics shape, can't set dynamic then
 			return false;
-		if(world != null) //added to the world, then remove it before changing anything
+		if(world != null){ //added to the world, then remove it before changing anything
 			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
-		
-		reconstructRigidBody();
-
-		if(world != null){ //add it back to the world
+			reconstructRigidBody();
 			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
 			rigidShape.activate();
 		}
-		motion = Motion.DYNAMIC;
+		isStatic = false;
 		if(world != null){ //update other worlds as well
 			RequestManager sync = getWorld().getState().getSyncManager();
 			sync.add(new UpdateRequest(Action.MOVE, this));
@@ -131,17 +128,12 @@ public abstract class AbstractEntity implements Entity{
 		if(rigidShape != null){
 			if(rigidShape.isActive()){
 				rigidShape.getMotionState().getWorldTransform(motionState); //update position
-				
 				Vector3f min = new Vector3f();
 				Vector3f max = new Vector3f();
 				rigidShape.getAabb(min, max);
 				boundingAxis = new BoundingAxis(min, max);
 				
 				calcBoundingSphere();
-
-				///not required if only updating motionState
-				/*RequestManager sync = getWorld().getState().getSyncManager();
-				sync.addCheck(new UpdateRequest(Action.UPDATEALL, this, id));*/
 			}
 		}
 		lastUpdate(dt);
@@ -157,12 +149,12 @@ public abstract class AbstractEntity implements Entity{
 	}
 	
 	@Override
-	public void setModel(AbstractVBO model){
+	public void setModel(ModelVBO model){
 		this.modelShape = model;
 	}
 	
 	@Override
-	public AbstractVBO getModel(){
+	public ModelVBO getModel(){
 		return modelShape;
 	}
 	
@@ -238,16 +230,6 @@ public abstract class AbstractEntity implements Entity{
 	}
 	
 	@Override
-	public void setMotion(Motion m){
-		motion = m;
-	}
-	
-	@Override
-	public Motion getMotion(){
-		return motion;
-	}
-	
-	@Override
 	public void setPos(Vector3f v){
 		motionState.transform(v);
 	}
@@ -307,12 +289,20 @@ public abstract class AbstractEntity implements Entity{
 
 		return boundingAxis;
 	}
+	
+	@Override
+	public boolean isDynamic() {
+		return !isStatic;
+	}
+
+	@Override
+	public boolean isStatic() {
+		return isStatic;
+	}
 
 	public Entity copy2(Entity e){
-		e.setVisible(isVisible());
 		e.setWorld(getWorld());
 		e.setId(getId());
-		e.setMotion(getMotion());
 		e.setVBOObject(modelShape);
 		e.getMotionState().set(motionState);
 		e.setRigidBody(rigidShape);
@@ -320,11 +310,11 @@ public abstract class AbstractEntity implements Entity{
 		return e;
 	}	
 	
-	public AbstractVBO getVBOOBject(){
+	public ModelVBO getVBOOBject(){
 		return modelShape;
 	}
 	
-	public void setVBOObject(AbstractVBO o){
+	public void setVBOObject(ModelVBO o){
 		modelShape = o;
 	}
 	

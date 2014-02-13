@@ -1,14 +1,12 @@
 package game;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import com.bulletphysics.dynamics.DynamicsWorld;
-
-import controller.Camera;
 import game.world.World;
 import game.world.gui.graphics.Graphics;
 import game.world.sync.RequestManager;
+
+import java.util.Arrays;
+
+import controller.Camera;
 
 public abstract class State {
 	
@@ -26,6 +24,10 @@ public abstract class State {
 		linkWorlds(renderStates[0].getWorld(), renderStates[1].getWorld(), renderStates[2].getWorld());
 	}
 	
+	/**
+	 * Gives all worlds same dynamic world and camera
+	 * @param worlds
+	 */
 	private void linkWorlds(World...worlds){
 		boolean first = true;
 		World mainWorld = null;
@@ -39,7 +41,7 @@ public abstract class State {
 				first = false;
 				continue;
 			}
-			w.setCamera(mainCam);
+			w.linkCamera(mainCam);
 			w.setDynamicsWorld(mainWorld.getDynamicsWorld());
 		}
 	}

@@ -8,8 +8,6 @@ import game.world.gui.graphics.Graphics;
 
 import java.util.ArrayList;
 
-import main.Main;
-
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -18,6 +16,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
 public class RenderThread implements Runnable{
+	
+	public static boolean cullFace = false;
+	public static boolean polygonMode = false; //cant change midgame
 	
 	private ThreadManager threadManager;
 	
@@ -32,7 +33,7 @@ public class RenderThread implements Runnable{
 	 */
 	private void setupOpenGL(){
 	    try{
-	    	Main.debugPrint("Setting up display");
+	    	Game.print("Setting up display");
 	        Display.setDisplayMode(new DisplayMode(0, 0));
 	        //Display.setVSyncEnabled(true);
 	        Display.create();
@@ -44,17 +45,15 @@ public class RenderThread implements Runnable{
 	        System.exit(-1); 
 	    }
 	    
-	    Main.debugPrint("Setting up OpenGL");
+	    Game.print("Setting up OpenGL");
 	    
-	    //Setup OpenGL
-	    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    glEnable(GL_COLOR_MATERIAL);
 	    GL11.glColorMaterial(GL11.GL_FRONT, GL_DIFFUSE);
 	    GL11.glEnable(GL_DEPTH_TEST); //foreground objects are not behind background ones
 	    perspective3D(); //Starting perspective
 	    
 	    //Initialize graphics class
-	    g = new Graphics();
+	    g = new Graphics(); //used for texts
 	    g.init();
 	    
 	    //hide the mouse
@@ -62,10 +61,13 @@ public class RenderThread implements Runnable{
 	}
 	
 	public static void perspective3D(){
-		GL11.glDisable(GL11.GL_BLEND);
-		//GL11.glEnable(GL_CULL_FACE);
-		//glCullFace(GL_BACK);
-	    //glViewport(0,0,Display.getWidth(), Display.getHeight());
+		glDisable(GL11.GL_BLEND);
+		if(cullFace){
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+		}
+		if(polygonMode)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
 	    GLU.gluPerspective((float) Game.fov, Game.width / Game.height, Game.zNear, Game.zFar);
@@ -80,8 +82,9 @@ public class RenderThread implements Runnable{
 	    glMatrixMode(GL_MODELVIEW);
 	    glLoadIdentity();
 	    
-	    GL11.glEnable(GL11.GL_BLEND); //For font
-	    //GL11.glDisable(GL_CULL_FACE);
+	    glEnable(GL11.GL_BLEND); //For font
+	    if(cullFace)
+	    	glDisable(GL_CULL_FACE);
 	}
 
 	@Override
@@ -92,7 +95,7 @@ public class RenderThread implements Runnable{
 		State activeState = threadManager.getActiveState();
 		
 		//Rendering loop
-		Main.debugPrint("Starting renderThread loop");
+		Game.print("Starting renderThread loop");
 		threadManager.setRenderReady(true);
 		while(!Thread.interrupted()){
 			//Display fps
@@ -114,9 +117,9 @@ public class RenderThread implements Runnable{
 			RenderState latestState = activeState.getLatestState();
 			//System.out.println("Rendering " + latestState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")" + " at " + Main.getTime());
 			int renderingFrame = latestState.getFrameCount();
-			//Main.debugPrint("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
+			//Game.print("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
 			latestState.setRendering(true); //Must not modify a state that is being rendered
-			//Main.debugPrint("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
+			//Game.print("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
 			
 			activeState.render(g); //RENDER
 			
@@ -125,7 +128,7 @@ public class RenderThread implements Runnable{
 				
 			//Check if got something new to render || sleep while not
 			if(activeState.getLatestState().getFrameCount() == renderingFrame){
-				//Main.debugPrint("No new stuff to render at " + Main.getTime());
+				//Game.print("No new stuff to render at " + Main.getTime());
 				activeState.setStuffToRender(false);
 			}
 			while(!Thread.interrupted() && //Thread can still run
@@ -145,7 +148,7 @@ public class RenderThread implements Runnable{
 	}
 	
 	public void endGame(){
-		Main.debugPrint("Ending game");
+		Game.print("Ending game");
 		dispose(); //Clean up GPU
 		Display.destroy();
 		System.exit(0);
@@ -165,12 +168,12 @@ public class RenderThread implements Runnable{
 	}
 	
 	//Display fps counter
-	private float lastFPS = Main.getTime();
+	private float lastFPS = Game.getTime();
 	private int fps = 0;
 	private ArrayList<Integer> allFps = new ArrayList<Integer>();
 	private int howManyFirstSkip = 5; //Skip first few fps to get better average accuracy
 	private void updateDisplayFps(){
-		if(Main.getTime() - lastFPS > 1){
+		if(Game.getTime() - lastFPS > 1){
 			allFps.add(fps);
 			if(allFps.size() > howManyFirstSkip){
 				int average = 0;

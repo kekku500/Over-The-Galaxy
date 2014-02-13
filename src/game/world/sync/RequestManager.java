@@ -2,17 +2,10 @@ package game.world.sync;
 
 import java.util.LinkedList;
 
-import game.world.entities.Entity;
-
 public class RequestManager{
 	
 	LinkedList<UpdateRequest> updateRequests = new LinkedList<UpdateRequest>();
 	LinkedList<RenderRequest> renderRequests = new LinkedList<RenderRequest>();
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	
 	public LinkedList<UpdateRequest> getUpdateRequests(){
 		return updateRequests;

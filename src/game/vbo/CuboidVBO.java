@@ -1,4 +1,4 @@
-package game.vbotemplates;
+package game.vbo;
 
 import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
@@ -7,7 +7,7 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
 
-public class CuboidVBO extends AbstractVBO{
+public class CuboidVBO extends ModelVBO{
 	
 	public float w, h, d;
 	public float radius;

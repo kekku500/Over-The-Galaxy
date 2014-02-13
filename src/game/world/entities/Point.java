@@ -6,8 +6,8 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
 
-import game.vbotemplates.CuboidVBO;
-import game.vbotemplates.PointVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.PointVBO;
 import game.world.entities.AbstractEntity;
 import game.world.entities.Entity;
 

@@ -1,4 +1,4 @@
-package game.vbotemplates;
+package game.vbo;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_LINES;
@@ -24,7 +24,7 @@ import org.lwjgl.util.vector.Quaternion;
 import utils.BoundingAxis;
 import utils.BoundingSphere;
 
-public class LineVBO extends AbstractVBO{
+public class LineVBO extends ModelVBO{
 	
 	private Vector3f arrow;
 	private float radius;

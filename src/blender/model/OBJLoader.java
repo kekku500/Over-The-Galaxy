@@ -50,6 +50,7 @@ public class OBJLoader {
 				m.texCoords.add(texCoord);
 			}else if(line.startsWith("usemtl ")){
                 material = m.materials.get(line.replaceAll("usemtl ", "").trim());
+                
 			}else if(line.startsWith("f ")){ //this goest to subM!!!!!!!!!!!!!!!!!, before get usemtl plane (line 12066)
                 String[] values = line.split("\\s+");
                 float v1 = Float.parseFloat(values[1].split("/")[0]);

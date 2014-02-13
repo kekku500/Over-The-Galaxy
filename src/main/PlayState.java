@@ -1,13 +1,13 @@
 package main;
 
+import game.Game;
 import game.State;
-import game.vbotemplates.AbstractVBO;
-import game.vbotemplates.CuboidVBO;
-import game.vbotemplates.PointVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.ModelVBO;
+import game.vbo.PointVBO;
 import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
-import game.world.entities.Entity.Motion;
 import game.world.entities.Player;
 import game.world.entities.Point;
 import game.world.gui.Rectangle;
@@ -51,7 +51,7 @@ public class PlayState extends State{
 	
 	@Override
 	public void init() {
-		Main.debugPrint("PlayState init");
+		Game.print("PlayState init");
 		World world = this.getUpToDateState().getWorld();
 
 		player = new Player(25,20,15);
@@ -69,8 +69,7 @@ public class PlayState extends State{
 		//AbstractVBO testModel = new CuboidVBO(2,4,2);
 		//testObject.setModel(testModel);
 		try {
-			AbstractVBO model2 = new Model("src\\resources\\mees.obj");
-			System.out.println("created model " + model2);
+			ModelVBO model2 = new Model("src\\resources\\mees.obj");
 			testObject.setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -90,14 +89,11 @@ public class PlayState extends State{
 		testBody = new RigidBody(testConstructionInfo);
 		testObject.setRigidBody(testBody);
 		testObject.setRigidBodyConstructionInfo(testConstructionInfo);
-		//testObject.setStatic();
-		testObject.setDynamic();
 		testObject.createPhysicsModel();
 		world.addEntity(testObject);
 		
 		
 		Entity testGround = new DefaultEntity();
-		testGround.setMotion(Motion.STATIC);
 		CollisionShape groundShape = new StaticPlaneShape(new Vector3f(0,1,0), 0.25f);
 		MotionState groundMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1), 
@@ -111,7 +107,7 @@ public class PlayState extends State{
 		world.addEntity(testGround);
 
 		//Add random points
-		int totalPoints = 200;
+		/*int totalPoints = 200;
 		
 		int width = 400; //pixels
 		
@@ -127,16 +123,14 @@ public class PlayState extends State{
 		//First
 		Point p = new Point(new Vector3f((rand.nextFloat() - 0.5f)*width,starty+(rand.nextFloat())*height,rand.nextInt(depth) - (int)(depth/2)));
 		p.setModel(oneVBO);
-		p.setMotion(Motion.STATIC);
 		Request req = world.addEntity(p);
 
 		//Other
 		for(int i=0;i<totalPoints;i++){
 			p = new Point(new Vector3f((rand.nextFloat() - 0.5f)*width,starty+(rand.nextFloat())*height,rand.nextInt(depth) - (int)(depth/2)));
 			p.setModel(oneVBO);
-			p.setMotion(Motion.STATIC);
 			world.addEntity(p, req);
-		}
+		}*/
 	}
 
 	@Override

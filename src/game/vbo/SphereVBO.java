@@ -1,4 +1,4 @@
-package game.vbotemplates;
+package game.vbo;
 
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
@@ -9,7 +9,7 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 
 import org.lwjgl.util.glu.Sphere;
 
-public class SphereVBO extends AbstractVBO{
+public class SphereVBO extends ModelVBO{
 	
 	private Sphere sphere;
 	private float radius;

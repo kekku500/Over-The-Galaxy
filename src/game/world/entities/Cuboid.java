@@ -2,8 +2,8 @@ package game.world.entities;
 
 import static org.lwjgl.opengl.GL11.GL_QUADS;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
-import game.vbotemplates.AbstractVBO;
-import game.vbotemplates.CuboidVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.ModelVBO;
 import game.world.World;
 import game.world.entities.AbstractEntity;
 import game.world.entities.Entity;
@@ -105,5 +105,7 @@ public class Cuboid extends AbstractEntity{
 	@Override
 	public void calcBoundingAxis() {
 	}
+
+
 	
 }

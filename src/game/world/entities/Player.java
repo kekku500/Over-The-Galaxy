@@ -1,8 +1,8 @@
 package game.world.entities;
 
-import game.vbotemplates.AbstractVBO;
-import game.vbotemplates.CuboidVBO;
-import game.vbotemplates.SphereVBO;
+import game.vbo.CuboidVBO;
+import game.vbo.ModelVBO;
+import game.vbo.SphereVBO;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
@@ -13,7 +13,9 @@ import org.lwjgl.input.Mouse;
 
 import utils.Utils;
 import utils.math.Vector3;
+import blender.model.Model;
 
+import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -29,7 +31,7 @@ import com.bulletphysics.linearmath.Transform;
  * This is temporary.
  */
 
-public class Player extends Cuboid{
+public class Player extends DefaultEntity{
 	
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
@@ -38,10 +40,25 @@ public class Player extends Cuboid{
 	public Player(){}
 
 	public Player(float x, float y, float z) {
-		super(new Vector3f(x,y,z), 5, 5, 15);
-		motion = Motion.DYNAMIC;
+		//super(new Vector3f(x,y,z), 5, 5, 15);
+		try {
+			ModelVBO model2 = new Model("src\\resources\\F-35_Lightning_II\\F-35_Lightning_II.obj");
+			Quat4f quat = new Quat4f();
+			QuaternionUtil.setRotation(quat, new Vector3(1,0,0), Utils.rads(-90));
+			Quat4f quat2 = new Quat4f();
+			QuaternionUtil.setRotation(quat2, new Vector3(0,0,1), Utils.rads(180));
+			quat.mul(quat2); 
+			quat.normalize();
+			Transform t = new Transform(new Matrix4f(
+					quat,
+					new Vector3f(0,0,0), 1.0f));
+			model2.setInitialMotion(t);
+			setModel(model2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		//physics
-		CollisionShape testShape = new BoxShape(new Vector3f(5/2, 5/2, 15/2));
+		CollisionShape testShape = new BoxShape(new Vector3f(12/2, 3/2, 15/2));
 		MotionState testMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1),
 				new Vector3f(x,y,z), 1.0f)));
@@ -55,6 +72,8 @@ public class Player extends Cuboid{
 		testBody = new RigidBody(testConstructionInfo);
 		testBody.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
 		//controlBall.setLinearVelocity(new Vector3f(0,0,0));
+		//testBody.setCollisionFlags(CollisionFlags.KINEMATIC_OBJECT);
+		setDynamic();
 		rigidShape = testBody;	
 	}
 	
@@ -76,7 +95,7 @@ public class Player extends Cuboid{
 	
 	@Override
 	public void firstUpdate(float dt){
-		rigidShape.setGravity(new Vector3f(0,0,0));
+		//rigidShape.setGravity(new Vector3f(0,0,0));
 		if(Mouse.isButtonDown(0)){
 			applyForce = true;
 		}else{
@@ -166,9 +185,8 @@ public class Player extends Cuboid{
 		}
 		if(createNewShape){
 			Entity testObject = new DefaultEntity();
-			testObject.setMotion(Motion.DYNAMIC);
 			//visual
-			AbstractVBO testModel = new SphereVBO(3.0f,30,30);
+			ModelVBO testModel = new SphereVBO(3.0f,30,30);
 			testObject.setModel(testModel);
 			
 			CollisionShape shape = new SphereShape(3.0f);
@@ -181,8 +199,8 @@ public class Player extends Cuboid{
 			constructionInfo.restitution = 0.75f;
 			constructionInfo.angularDamping = 0.95f;
 			RigidBody body = new RigidBody(constructionInfo);
+			setDynamic();
 			testObject.setRigidBody(body);
-			
 			getWorld().addEntity(testObject);
 			createNewShape = false;
 		}
@@ -191,9 +209,8 @@ public class Player extends Cuboid{
 			float I = 2f;
 			float impluseForce = 100;
 			Entity testObject = new DefaultEntity();
-			testObject.setMotion(Motion.DYNAMIC);
 			//visual
-			AbstractVBO testModel = new CuboidVBO(w,h,d);
+			ModelVBO testModel = new CuboidVBO(w,h,d);
 			testObject.setModel(testModel);
 			
 			CollisionShape shape = new BoxShape(new Vector3f(w/2, h/2, d/2));
@@ -206,6 +223,7 @@ public class Player extends Cuboid{
 			constructionInfo.restitution = 0.75f;
 			constructionInfo.friction = 0.95f;
 			RigidBody body = new RigidBody(constructionInfo);
+			setDynamic();
 			body.activate();
 			body.applyCentralImpulse(new Vector3f(viewRay.x*impluseForce, viewRay.y*impluseForce, viewRay.z*impluseForce));
 			

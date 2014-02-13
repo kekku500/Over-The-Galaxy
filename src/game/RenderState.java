@@ -1,7 +1,6 @@
 package game;
 
 import game.world.World;
-import game.world.entities.Entity;
 
 public class RenderState {
 	
@@ -9,16 +8,15 @@ public class RenderState {
 	private boolean rendering = false; //while rendering
 	private boolean updating = false; //while being updated, not usable for rendering
 
-	public static int updatingId = -1; //These variables are changed and used for calculations.
-	public static int upToDateId = 0; //The most up to date variables, used for copying upToDate variables to updating.
-	public static int renderingId = -1; //Used for rendering
+	public static int updatingId = -1; 
+	public static int upToDateId = 0;
+	public static int renderingId = -1;
 	
-	//How many times has been updated
-	private int frame;
+	private int frame; //update counter
 	
 	private int id;
 	
-	private World world;
+	private World world; //the most important part
 	
 	public RenderState(State state, int id, int frame){
 		world = new World(state, 0);
@@ -34,8 +32,6 @@ public class RenderState {
 		world = w;
 	}
 	
-
-
 	public void setRendering(boolean b){
 		if(b)
 			renderingId = id;

@@ -75,7 +75,6 @@ public class UpdateRequest implements Request{
 	public Status requestStatus(World world){
 		if(waitFor != null)
 			if(!waitFor.isDone()){
-				//System.out.println("waitfor idle");
 				return Status.IDLE;
 			}
 		if(getAction() == Action.CAMERAFOCUS){

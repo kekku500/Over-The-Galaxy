@@ -1,27 +1,18 @@
 package game.threading;
 
 
-import java.util.List;
-
 import game.Game;
 import game.RenderState;
 import game.State;
-import game.world.World;
-import game.world.entities.Entity;
-import game.world.entities.Player;
-import main.Main;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
-
-import utils.Utils;
 
 public class UpdateThread implements Runnable{
 	
 	private ThreadManager threadManager;
 	private float accumulator;
 	
-
 	public static boolean SLOWDOWNALERT = false;
 	
 	public UpdateThread(ThreadManager threadManager){
@@ -31,7 +22,7 @@ public class UpdateThread implements Runnable{
 	@Override
 	public void run(){
 		//Get active State
-		State activeState = threadManager.getActiveState();
+		State activeGameState = threadManager.getActiveState();
 		
 		//Wait for render thread to be ready
 		threadManager.setUpdateReady(true);
@@ -43,22 +34,20 @@ public class UpdateThread implements Runnable{
 			}
 		}
 		
-		Main.debugPrint("Starting updateThread loop");
+		Game.print("Starting updateThread loop");
 		
 		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			//Check if state has changed
-			if(threadManager.getActiveStateId() != activeState.getId()){
-				activeState = threadManager.getActiveState();
+			if(threadManager.getActiveStateId() != activeGameState.getId()){
+				activeGameState = threadManager.getActiveState();
 			}
 			float dt = getDelta();
 
-			RenderState oldestState = activeState.getOldestState();
-			RenderState latestState = activeState.getLatestState();
+			RenderState oldestState = activeGameState.getOldestState();
+			RenderState latestState = activeGameState.getLatestState();
 
 			//System.out.println("Updating " + oldestState.getId() + " " + activeState.getStatesCounts() + 
 			//		" (" + oldestState.getFrameCount() + "->" + (latestState.getFrameCount()+1) + ")" + " at " + Main.getTime());
-			//Main.debugPrint("Updating RenderState " + oldestState.getId() + " at " + Main.getTime());
-			
 
 			oldestState.setUpdating(true);
 			oldestState.setFrameCount(latestState.getFrameCount()+1);
@@ -71,19 +60,19 @@ public class UpdateThread implements Runnable{
 					SLOWDOWNALERT = true;
 				else
 					SLOWDOWNALERT = false;
-				activeState.update(Game.targetStep*framesBehind);
+				activeGameState.update(Game.targetStep*framesBehind);
 				accumulator -= Game.targetStep*framesBehind;
 			}else{ //Can update simulation ahead from real time and let update thread sleep
 				SLOWDOWNALERT = false;
-				activeState.update(Game.targetStep);
+				activeGameState.update(Game.targetStep);
 				accumulator -= Game.targetStep;		
 			}
 			//System.out.println("realTime " + realTime + " updatedTime " + updatedTime + " framesBehind");
 			oldestState.setUpdating(false);
-			activeState.setStuffToRender(true);
+			activeGameState.setStuffToRender(true);
 			//Updating done
 			//System.out.println("Done updating " + oldestState.getId());
-			//Main.debugPrint("New stuff to render at " + Main.getTime());
+			//Game.print("New stuff to render at " + Main.getTime());
 			Display.sync(Game.fps); //Sleep until during the free time which is left from updating
 
 		}
@@ -94,17 +83,17 @@ public class UpdateThread implements Runnable{
 	
 	//Currently not in use
 	private boolean firstRun = true;
-	private float lastFrame = Main.getTime();
+	private float lastFrame = Game.getTime();
 	/**
 	 * @return Returns time last frame took updating in getTime metric system
 	 */
 	public float getDelta(){
 		if(firstRun){
-			lastFrame = Main.getTime();
+			lastFrame = Game.getTime();
 			firstRun = false;
 			return 0;
 		}
-		float time = Main.getTime();
+		float time = Game.getTime();
 		float delta = (time - lastFrame);
 		lastFrame = time;
 		return delta;

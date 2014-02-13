@@ -1,6 +1,6 @@
 package game.world.entities;
 
-import game.vbotemplates.AbstractVBO;
+import game.vbo.ModelVBO;
 import game.world.World;
 
 import java.nio.FloatBuffer;
@@ -19,6 +19,7 @@ public interface Entity {
 	public enum Motion {
 		STATIC, DYNAMIC;
 	}
+	
 	/**
 	 * @return Success of setting object static.
 	 */
@@ -37,13 +38,17 @@ public interface Entity {
 	
 	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r);
 
-	public void setModel(AbstractVBO modelShape);
+	public void setModel(ModelVBO modelShape);
 	
-	public AbstractVBO getModel();
+	public ModelVBO getModel();
 	
-	public AbstractVBO getVBOOBject();
+	public boolean isDynamic();
 	
-	public void setVBOObject(AbstractVBO o);
+	public boolean isStatic();
+	
+	public ModelVBO getVBOOBject();
+	
+	public void setVBOObject(ModelVBO o);
 	
 	public void update(float dt);
 	
@@ -56,10 +61,6 @@ public interface Entity {
 	public void setMotionState(Transform t);
 	
 	public Transform getMotionState();
-	
-	public void setMotion(Motion m);
-	
-	public Motion getMotion();
 	
 	public void setPos(Vector3f v);
 	
