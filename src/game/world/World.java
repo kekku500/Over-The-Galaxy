@@ -1,10 +1,12 @@
 package game.world;
 
+import static org.lwjgl.opengl.GL11.GL_LIGHT0;
+import static org.lwjgl.opengl.GL11.GL_POSITION;
+import static org.lwjgl.opengl.GL11.glLight;
 import game.State;
 import game.threading.RenderThread;
 import game.threading.UpdateThread;
 import game.world.FrustumCulling.Frustum;
-import game.world.entities.Cuboid;
 import game.world.entities.Entity;
 import game.world.entities.Entity.Motion;
 import game.world.gui.Component;
@@ -155,7 +157,7 @@ public class World{
 		
 		dynamicsWorld.stepSimulation(dt);
 		
-		checkFrustum();
+		//checkFrustum();
 	}
 	
 	public Entity removeEntity(Entity rem, Set<Entity> list){
@@ -228,6 +230,13 @@ public class World{
 		
 		camera.lookAt();
 		
+		
+		//let there be light
+		if(RenderThread.enableLighting){
+			Vector3f camPos = getCamera().getMotionState().origin;
+			glLight(GL_LIGHT0, GL_POSITION, Utils.asFloatBuffer(new float[]{50,50,50, 1f}));
+		}
+
 		grid.render();
 		
 		for(Entity e: getEntities()){

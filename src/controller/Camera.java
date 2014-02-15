@@ -1,60 +1,32 @@
 package controller;
 
-import static org.lwjgl.opengl.GL11.glMultMatrix;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
 import game.Game;
-import game.vbo.CuboidVBO;
-import game.vbo.ModelVBO;
-import game.vbo.SphereVBO;
 import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
-import game.world.sync.UpdateRequest;
-import game.world.sync.Request.Action;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.vecmath.AxisAngle4f;
-import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.glu.GLU;
 
 import utils.Utils;
 import utils.math.Vector3;
+import blender.model.Model;
+import blender.model.custom.Sphere;
 
-import com.bulletphysics.collision.broadphase.BroadphaseProxy;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.dispatch.CollisionWorld;
-import com.bulletphysics.collision.dispatch.CollisionWorld.ClosestConvexResultCallback;
-import com.bulletphysics.collision.dispatch.CollisionWorld.ConvexResultCallback;
-import com.bulletphysics.collision.dispatch.GhostObject;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.ConvexHullShape;
 import com.bulletphysics.collision.shapes.ConvexShape;
-import com.bulletphysics.collision.shapes.IndexedMesh;
 import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
-import com.bulletphysics.collision.shapes.TriangleMeshShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
-import com.bulletphysics.util.ObjectArrayList;
 
 public class Camera extends DefaultEntity{
 
@@ -131,7 +103,7 @@ public class Camera extends DefaultEntity{
     	vertices.add(nbl);
     	CollisionShape shape = new ConvexHullShape(vertices);*/
 		//AbstractVBO testModel = new CuboidVBO(5,5,15);
-    	ModelVBO testModel = new SphereVBO(camRadius, 30, 30);
+    	Model testModel = new Sphere(camRadius, 30, 30);
 		setModel(testModel);
     	//ConvexShape shape = new SphereShape(camRadius);
     	ConvexShape shape = new SphereShape(camRadius);

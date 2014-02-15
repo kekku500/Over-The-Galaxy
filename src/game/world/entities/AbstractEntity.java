@@ -8,7 +8,6 @@ import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.RenderState;
-import game.vbo.ModelVBO;
 import game.world.World;
 import game.world.entities.Entity.Motion;
 import game.world.sync.RenderRequest;
@@ -56,7 +55,7 @@ public abstract class AbstractEntity implements Entity{
 	
 	protected Transform motionState = new Transform(new Matrix4f(new Quat4f(0,0,0,1),new Vector3f(0,0,0), 1.0f));
 	
-	protected ModelVBO modelShape; //visual object
+	protected Model modelShape; //visual object
 	protected RigidBody rigidShape; //physics object
 	protected RigidBodyConstructionInfo rigidInfo; //for changing object static/dynamic
 	
@@ -149,12 +148,12 @@ public abstract class AbstractEntity implements Entity{
 	}
 	
 	@Override
-	public void setModel(ModelVBO model){
+	public void setModel(Model model){
 		this.modelShape = model;
 	}
 	
 	@Override
-	public ModelVBO getModel(){
+	public Model getModel(){
 		return modelShape;
 	}
 	
@@ -208,7 +207,6 @@ public abstract class AbstractEntity implements Entity{
 		fb.rewind();
 		
 		glMultMatrix(fb);
-
 
 		modelShape.render();
 	    
@@ -310,11 +308,11 @@ public abstract class AbstractEntity implements Entity{
 		return e;
 	}	
 	
-	public ModelVBO getVBOOBject(){
+	public Model getVBOOBject(){
 		return modelShape;
 	}
 	
-	public void setVBOObject(ModelVBO o){
+	public void setVBOObject(Model o){
 		modelShape = o;
 	}
 	

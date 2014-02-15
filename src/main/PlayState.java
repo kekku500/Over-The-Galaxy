@@ -2,14 +2,10 @@ package main;
 
 import game.Game;
 import game.State;
-import game.vbo.CuboidVBO;
-import game.vbo.ModelVBO;
-import game.vbo.PointVBO;
 import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 import game.world.entities.Player;
-import game.world.entities.Point;
 import game.world.gui.Rectangle;
 import game.world.gui.graphics.Graphics;
 import game.world.sync.Request;
@@ -69,7 +65,7 @@ public class PlayState extends State{
 		//AbstractVBO testModel = new CuboidVBO(2,4,2);
 		//testObject.setModel(testModel);
 		try {
-			ModelVBO model2 = new Model("src\\resources\\mees.obj");
+			Model model2 = new Model("src\\resources\\mees.obj");
 			testObject.setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -82,7 +78,7 @@ public class PlayState extends State{
 		Vector3f ballInertia = new Vector3f(0,0,0);
 		testShape.calculateLocalInertia(2.5f, ballInertia);
 		RigidBodyConstructionInfo testConstructionInfo = new RigidBodyConstructionInfo(2.5f, testMotionState, testShape, ballInertia);
-		testConstructionInfo.restitution = 0.5f;
+		testConstructionInfo.restitution = 0.1f;
 		testConstructionInfo.angularDamping = 0.95f;
 		testConstructionInfo.friction = 0.95f;
 		RigidBody testBody;
@@ -94,12 +90,23 @@ public class PlayState extends State{
 		
 		
 		Entity testGround = new DefaultEntity();
+		//visual
+		/*ModelVBO testModel = new CuboidVBO(200,.1f,200);
+		Transform initT = new Transform(new Matrix4f(
+				new Quat4f(0,0,0,1), 
+				new Vector3f(0,-2f,0), 1.0f));
+		testModel.setInitialMotion(initT);
+		testModel.setLighting(false);
+		
+		testObject.setModel(testModel);*/
+		
+		//physics
 		CollisionShape groundShape = new StaticPlaneShape(new Vector3f(0,1,0), 0.25f);
 		MotionState groundMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1), 
 				new Vector3f(0,0,0), 1.0f)));
 		RigidBodyConstructionInfo groundBodyConstructionInfo = new RigidBodyConstructionInfo(0, groundMotionState, groundShape, new Vector3f(0,0,0));
-		groundBodyConstructionInfo.restitution =  0.25f;
+		groundBodyConstructionInfo.restitution =  0.1f;
 		groundBodyConstructionInfo.friction = .8f;
 		RigidBody groundRigidBody = new RigidBody(groundBodyConstructionInfo);
 		

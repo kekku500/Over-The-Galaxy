@@ -1,58 +1,279 @@
 package blender.model;
 
-import javax.vecmath.Vector3f;
+import java.nio.*;
+import java.util.Arrays;
 
+import org.lwjgl.opengl.*;
+
+import utils.Utils;
+
+/**
+Copyright (c) 2008 2009 Mark Napier. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 public class Material {
-	public Vector3f diffuse = new Vector3f();
-	public Vector3f ambient = new Vector3f();
-	public Vector3f specularity = new Vector3f();
-	public float refraction;
-	public float shininess;
-	public float alpha;
-	public String name;
-	public Texture texture;
 	
-	public Material(){}
-	
-	public Material(String name){
-		this.name = name;
-	}
-	
-	public void setName(String name){
-		this.name = name;
-	}
-	
-	public Vector3f getDiffuse(){
-		return diffuse;
-	}
-	
-	public void setRefraction(float refraction){
-		this.refraction = refraction;
-	}
-	
-	public void setDiffuse(Vector3f diffuse){
-		this.diffuse = diffuse;
-	}
-	
-	public void setAmbient(Vector3f ambient){
-		this.ambient = ambient;
-	}
-	
-	public void setSpecualrity(Vector3f specularity){
-		this.specularity = specularity;
-	}
-	
-	public void setShininess(float shininess){
-		this.shininess = shininess;
-	}
-	
-	public void setAlpha(float alpha){
-		this.alpha = alpha;
-	}
-	
-	public String getName(){
-		return name;
-	}
-	
+    // A sampling of color values
+    public static final float colorNone[]           = {  0f,  0f,  0f,  1f}; // no color = black
+    public static final float colorDefaultDiffuse[] = { .8f, .8f, .8f,  1f}; // OpenGL default diffuse color
+    public static final float colorDefaultAmbient[] = { .2f, .2f, .2f,  1f}; // OpenGL default ambient color
+    public static final float minShine   = 0.0f;
+    public static final float maxShine   = 127.0f;
+
+    // Default material values
+    private static FloatBuffer defaultDiffuse = Utils.asFloatBuffer(colorDefaultDiffuse);
+    private static FloatBuffer defaultAmbient = Utils.asFloatBuffer(colorDefaultAmbient);
+    private static FloatBuffer defaultSpecular = Utils.asFloatBuffer(colorNone);
+    private static FloatBuffer defaultEmission = Utils.asFloatBuffer(colorNone);
+    private static FloatBuffer defaultShine = Utils.asFloatBuffer(new float[] {minShine,0,0,0}); // LWJGL requires four values, so include three extra zeroes
+
+    // The color values for this material
+    public FloatBuffer diffuse;      // color of the lit surface
+    public FloatBuffer ambient;      // color of the shadowed surface
+    public FloatBuffer specular;     // reflection color (typically this is a shade of gray)
+    public FloatBuffer emission;     // glow color
+    public FloatBuffer shininess;    // size of the reflection highlight
+
+    // hold name and texture values for this material
+    public String mtlname = "noname";  // name of this material in the .mtl and .obj files
+    public String textureFile = null;  // texture filename (null if no texture)
+    public int textureHandle;          // opengl handle to the texture (0 if no texture)
+    
+    public boolean transparent = false;
+
+
+    public Material() {
+        setDefaults();
+    }
+
+    public Material(float[] color) {
+        setDefaults();
+        setColor(color);
+    }
+
+	/**
+	 *  Set the material to OpenGL's default values (gray, with no reflection and no glow)
+	 */
+    public void setDefaults() {
+        setDiffuse(colorDefaultDiffuse);
+        setAmbient(colorDefaultAmbient);
+        setSpecular(colorNone);
+        setEmission(colorNone);
+        setShininess(minShine);
+    }
+    
+    public void loadTexture(){
+    	if(textureHandle == 0){
+        	Texture tex = Texture.loadTexture(textureFile);
+        	textureHandle = tex.id;
+    	}
+    }
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *
+	 * Functions to set the material properties
+	 *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	/**
+	 *  Set the diffuse material color.  This is the color of the material
+	 *  where it is directly lit.
+	 */
+    public void setDiffuse(float[] color) {
+        diffuse = Utils.asFloatBuffer(color);
+    }
+
+	/**
+	 *  Set the ambient material color.  This is the color of the material
+	 *  where it is lit by indirect light (light scattered off the environment).
+	 *  Ie. the shadowed side of an object.
+	 */
+    public void setAmbient(float[] color) {
+        ambient = Utils.asFloatBuffer(color);
+    }
+
+	/**
+	 *  Set the specular material color.  This controls how much light
+	 *  is reflected off a glossy surface.  This color value describes
+	 *  the brightness of the reflection and is typically a shade of gray.
+	 *  Pure black means that no light is reflected (ie. a very rough matte
+	 *  surface).  Pure white means that the surface is highly reflective,
+	 *
+	 *  see also:  setShininess()
+	 */
+    public void setSpecular(float[] color) {
+        specular = Utils.asFloatBuffer(color);
+    }
+
+	/**
+	 *  Set the emission material color.  This controls the "glow" of the material,
+	 *  and can be used to make a material that seems to be lit from inside.
+	 */
+    public void setEmission(float[] color) {
+        emission = Utils.asFloatBuffer(color);
+    }
+
+    /**
+     *  Set size of the reflection highlight.  Must also set the specular color for
+     *  shininess to have any effect:
+     *           setSpecular(GLMaterial.colorWhite);
+     *
+     * @param howShiny  How sharp reflection is: 0 - 127 (127=very sharp pinpoint)
+     */
+    public void setShininess(float howShiny) {
+        if (howShiny >= minShine && howShiny <= maxShine) {
+            float[] tmp = {howShiny,0,0,0};
+            shininess = Utils.asFloatBuffer(tmp);
+        }
+    }
+
+    /**
+     *  Call glMaterial() to activate these material properties in the OpenGL environment.
+     *  These properties will stay in effect until you change them or disable lighting.
+     */
+    public void apply() {
+    	// GL_FRONT: affect only front facing triangles
+    	GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, diffuse);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, ambient);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, specular);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_EMISSION, emission);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SHININESS, shininess);
+    }
+
+    /**
+     *  Reset all material settings to the default values.
+     */
+    public static void clear() {
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, defaultDiffuse);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, defaultAmbient);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, defaultSpecular);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_EMISSION, defaultEmission);
+        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SHININESS, defaultShine);
+    }
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *
+	 * The following functions provide a simpler way to use materials
+	 * that hides some of the complexity of the OpenGL functions.
+	 *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	/**
+	 *  Sets the material color to approximate a "real" surface color.
+	 *
+	 *  Use the same color for diffuse and ambient.  To create a
+	 *  shadowed effect you should lower the ambient value for the
+	 *  light sources and lower the overall ambient light.
+	 */
+    public void setColor(float[] color) {
+        setDiffuse(color);   // surface directly lit
+        setAmbient(color);   // surface in shadow
+    }
+
+    /**
+     *  Set the reflection properties.  Typically the reflection (specular color)
+     *  describes the brightness of the reflection, and is a shade of gray.
+     *  This function takes two params that describe the intensity
+     *  of the reflection, and the size of the highlight.
+     *
+     *  intensity - a float from 0-1 (0=no reflectivity, 1=maximum reflectivity)
+     *  highlight - a float from 0-1 (0=soft highlight, 1=sharpest highlight)
+     *
+     *  example: setReflection(1,1)  creates a bright, sharp reflection
+     *           setReflection(.5f,.5f)  creates a softer, wider reflection
+     */
+    public void setReflection(float intensity, float highlight) {
+		float[] color = {intensity,intensity,intensity,1}; // create a shade of gray
+        setSpecular(color);
+        setShininess((int)(highlight*127f)); // convert 0-1 to 0-127
+    }
+
+    /**
+     *  Make material appear to emit light
+     */
+    public void setGlowColor(float[] color) {
+        emission = Utils.asFloatBuffer(color);
+    }
+
+    /**
+     * alpha value is set in the diffuse material color.  Other material
+     * colors (ambient, specular) are not affected by alpha value.
+     * @param alphaVal  0 - 1
+     */
+    public void setAlpha(float alphaVal) {
+        diffuse.put(3, alphaVal);
+    }
+
+    /**
+     * alpha value is stored in the diffuse material color alpha.  Other material
+     * colors (ambient, specular) are not affected by alpha value.
+     * @return alphaVal  0 - 1
+     */
+    public float getAlpha() {
+        return diffuse.get(3);
+    }
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *
+	 * functions to add a texture to this material
+	 *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * Store a texture filename with the material.
+     */
+    public void setTextureFile(String s) {
+        textureFile = s;
+    }
+
+    /**
+     * Assign a texture handle to this material.
+     * @param txtrHandle
+     */
+    public void setTexture(int txtrHandle) {
+        textureHandle = txtrHandle;
+    }
+
+    public String getTextureFile() {
+        return textureFile;
+    }
+
+    public int getTexture() {
+        return textureHandle;
+    }
+
+    /**
+     * set the material name.  This is the name assigned to this texture in the .mtl file.
+     * It is NOT a filename.
+     * @param s
+     */
+    public void setName(String s) {
+        mtlname = s;
+    }
+
+    public String getName() {
+        return mtlname;
+    }
+
 }

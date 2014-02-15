@@ -8,6 +8,8 @@ import game.world.gui.graphics.Graphics;
 
 import java.util.ArrayList;
 
+import javax.vecmath.Vector4f;
+
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -15,10 +17,18 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
+import utils.Utils;
+
 public class RenderThread implements Runnable{
 	
-	public static boolean cullFace = false;
-	public static boolean polygonMode = false; //cant change midgame
+	public static boolean cullFace = true;
+	public static final boolean polygonMode = false; 
+	public static final boolean enableLighting = true;
+	
+	
+	public static final Vector4f globalAmbientLight = new Vector4f(0.05f, 0.05f, 0.05f, 1f);
+	public static final Vector4f diffuseLight = new Vector4f(1.5f, 1.5f, 1.5f, 1f);
+	public static final Vector4f specularLight = new Vector4f(1.5f, 1.5f, 1.5f, 1f);
 	
 	private ThreadManager threadManager;
 	
@@ -46,10 +56,31 @@ public class RenderThread implements Runnable{
 	    }
 	    
 	    Game.print("Setting up OpenGL");
+
+	    if(enableLighting){
+	    	glShadeModel(GL_SMOOTH);
+	    	//glEnable(GL_LIGHTING);
+	    	glEnable(GL_LIGHT0); 
+
+	    	
+	    	glLight(GL_LIGHT0, GL_SPECULAR, Utils.asFloatBuffer(new float[]{specularLight.x, specularLight.y, specularLight.z, specularLight.w}));
+	    	glLight(GL_LIGHT0, GL_DIFFUSE, Utils.asFloatBuffer(new float[]{diffuseLight.x, diffuseLight.y, diffuseLight.z, diffuseLight.w}));
+	    	glLightModel(GL_LIGHT_MODEL_AMBIENT, Utils.asFloatBuffer(new float[]{globalAmbientLight.x, globalAmbientLight.y, globalAmbientLight.z, globalAmbientLight.w}));
+	    }
 	    
-	    glEnable(GL_COLOR_MATERIAL);
-	    GL11.glColorMaterial(GL11.GL_FRONT, GL_DIFFUSE);
-	    GL11.glEnable(GL_DEPTH_TEST); //foreground objects are not behind background ones
+	    //Color and textures
+	    //glEnable(GL_COLOR_MATERIAL);
+	    glColorMaterial(GL11.GL_FRONT,  GL_AMBIENT_AND_DIFFUSE);
+    	//glMaterial(GL_FRONT, GL_SPECULAR, Utils.asFloatBuffer(new float[]{specularMaterial.x, specularMaterial.y, specularMaterial.z, specularMaterial.w})); 
+    	//glMaterialf(GL_FRONT, GL_SHININESS, shininessMaterial);   
+	    glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+	    
+	    //other
+	    GL11.glEnable(GL_DEPTH_TEST); 
+	    
+	    //NICE BLUE COLOR
+	    //glClearColor(0, 0.75f, 1, 1);
+	    
 	    perspective3D(); //Starting perspective
 	    
 	    //Initialize graphics class
@@ -68,6 +99,9 @@ public class RenderThread implements Runnable{
 		}
 		if(polygonMode)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	    if(enableLighting){
+	    	glEnable(GL_LIGHTING);
+	    }
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
 	    GLU.gluPerspective((float) Game.fov, Game.width / Game.height, Game.zNear, Game.zFar);
@@ -85,6 +119,9 @@ public class RenderThread implements Runnable{
 	    glEnable(GL11.GL_BLEND); //For font
 	    if(cullFace)
 	    	glDisable(GL_CULL_FACE);
+	    
+	    if(enableLighting)
+	    	glDisable(GL_LIGHTING);
 	}
 
 	@Override
@@ -110,9 +147,6 @@ public class RenderThread implements Runnable{
 			//Check if screen has been resized
 			if(Display.wasResized())
 				resized();
-			
-	        //set the modelview matrix back to the identity
-	        GL11.glLoadIdentity();
 		    
 			RenderState latestState = activeState.getLatestState();
 			//System.out.println("Rendering " + latestState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")" + " at " + Main.getTime());
@@ -120,6 +154,9 @@ public class RenderThread implements Runnable{
 			//Game.print("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
 			latestState.setRendering(true); //Must not modify a state that is being rendered
 			//Game.print("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
+			
+			//latestStat
+			
 			
 			activeState.render(g); //RENDER
 			

@@ -1,12 +1,14 @@
 package game.world;
 
+import static org.lwjgl.opengl.GL11.*;
+
 import java.util.ArrayList;
 
 import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
 
-import game.vbo.LineVBO;
+import game.threading.RenderThread;
 import game.world.entities.Line;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
@@ -14,6 +16,8 @@ import game.world.sync.Request.Action;
 import game.world.sync.RequestManager;
 
 public class Grid {
+	
+	private boolean enabled = true;
 	
 	//configure grid
 	private int xsize = 800; //Size of lines parallel to x axis
@@ -33,10 +37,10 @@ public class Grid {
 		RequestManager sync = world.getState().getSyncManager();
 		
 		for(int i=0;i<(int)(zsize/gap);i++){
-			LineVBO lineVBO = new LineVBO(new Vector3f(xsize,0,0));
+			blender.model.custom.Line lineVBO = new blender.model.custom.Line(new Vector3f(xsize,0,0));
 			Line l = new Line();
 			l.setModel(lineVBO);
-			l.setLength(xsize);
+ 			l.setLength(xsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);
 			sync.add(request);
 			xlines.add(l);
@@ -44,10 +48,10 @@ public class Grid {
 		//add z lines
 		
 		for(int i=0;i<(int)(xsize/gap);i++){
-			LineVBO lineVBO = new LineVBO(new Vector3f(0,0,zsize));
+			blender.model.custom.Line lineVBO = new blender.model.custom.Line(new Vector3f(0,0,zsize));
 			Line l = new Line();
 			l.setModel(lineVBO);
-			l.setLength(zsize);
+ 			l.setLength(zsize);
 			Request request = new RenderRequest(Action.CREATEVBO, l);
 			sync.add(request);
 			zlines.add(l);
@@ -66,6 +70,8 @@ public class Grid {
 	}
 	
 	public void update(){
+		if(!enabled)
+			return;
 		//set lines to correct pos
 		Vector3f cam = getCamPos();
 		int i = (int)(cam.z-zsize/2)/gap;
@@ -99,6 +105,10 @@ public class Grid {
 	}
 	
 	public void render(){
+		if(!enabled)
+			return;
+	    if(RenderThread.enableLighting)
+	    	glDisable(GL_LIGHTING);
 		GL11.glColor3f(1f, 1f, 1f);
 		for(Line l: xlines){
 			l.render();
@@ -106,6 +116,8 @@ public class Grid {
 		for(Line l: zlines){
 			l.render();
 		}
+	    if(RenderThread.enableLighting)
+	    	glEnable(GL_LIGHTING);
 	}
 	
 	public void dispose(){

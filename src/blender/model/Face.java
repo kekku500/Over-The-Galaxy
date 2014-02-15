@@ -16,26 +16,25 @@ public class Face
     private Vector3f normal;
     // TexCoord indices
     private Vector3f texCoords;
+    
+    Material material;
 
-    // The Material
-    private Material material;
 
     /**
      * Create a new Face with vertex indices, normal indices, texture indices
      * and material
      */
-    public Face(Vector3f vertex, Vector3f normal, Vector3f texCoords, Material material)
-    {
+    public Face(Vector3f vertex, Vector3f normal, Vector3f texCoords, Material m){
         this.vertex = vertex;
         this.normal = normal;
-        this.material = material;
         this.texCoords = texCoords;
+        
+        if(m == null){
+        	material = new Material();
+        	material.setDefaults();
+        }else
+        	material = m;
 
-        if (material == null)
-        {
-            // If there is no material, create a default one
-            material = new Material("Default");
-        }
     }
 
     /**
@@ -61,13 +60,9 @@ public class Face
     {
         return texCoords;
     }
-
-    /**
-     * @return The material of the face
-     */
-    public Material getMaterial()
-    {
-        return material;
+    
+    public Material getMaterial(){
+    	return material;
     }
-
+    
 }
