@@ -14,19 +14,22 @@ import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
 
 import test.OBJloader.ShaderProgram;
+import utils.Utils;
 
 public class SubModel {
 	
 	public List<Face> faces = new ArrayList<Face>();
     public boolean isTextured;
-    public Texture texture;
+    
+    private Material material = new Material();
 	
 	private int vboVertexID;
 	private int vboNormalID;
 	private int vboColorID;
-	private int vboTextureID;
+	private int vboTexVertexID;
 	
 	private Model masterModel;
 	
@@ -37,31 +40,30 @@ public class SubModel {
 	}
 	
 	public void render(){
-        // Enable client states
+		material.apply();
+		shaderProgram.bind();
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
-        
+ 
         if (isTextured){
-        	glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, texture.id);
-
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-            // Bind the texture buffer
-            glBindBuffer(GL_ARRAY_BUFFER, vboTextureID);
+        	glEnable(GL_TEXTURE_2D);   
+            
+            glBindTexture(GL_TEXTURE_2D, material.textureHandle);
+            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glTexCoordPointer(2, GL_FLOAT, 0, 0);
+        }else{
+            glEnableClientState(GL_COLOR_ARRAY);
+            glEnable(GL_COLOR_MATERIAL);
+            
+            glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
+            glColorPointer(3, GL_FLOAT, 0, 0);
         }
         
-        shaderProgram.bind();
         
         // Bind the normal buffer
         glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
         glNormalPointer(GL_FLOAT, 0, 0);
-
-        // Bind the color buffer
-        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
-        glColorPointer(3, GL_FLOAT, 0, 0);
 
         // Bind the vertex buffer
         glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
@@ -74,21 +76,29 @@ public class SubModel {
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
+        
+        glDisable(GL_COLOR_MATERIAL);
 
         if (isTextured){
             glDisable(GL_TEXTURE_2D);
-
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }else{
+        	glDisable(GL_COLOR_MATERIAL);
+            glDisableClientState(GL_COLOR_ARRAY);
         }
+        
+        Material.clear();
 	}
 	
 	public void prepareVBO(){
+		
 		vboVertexID = glGenBuffers();
 		vboNormalID = glGenBuffers();
 		vboColorID = glGenBuffers();
 		
 	    if (isTextured){
-	    	vboTextureID = glGenBuffers();
+	    	material.loadTexture();
+	    	vboTexVertexID = glGenBuffers();
 	    }
 		
 		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(9 * faces.size());
@@ -104,34 +114,30 @@ public class SubModel {
         List<Vector2f> texCoords = masterModel.texCoords;
 		for(Face face: faces){
             // Retrieve the material of the face
-            Material material = face.getMaterial();
-            if(texture == null){
-            	texture = material.texture;
-            }
             
             // Get the first vertex of the face
             Vector3f v1 = vertices.get((int) face.getVertex().x - 1);
             vertexBuffer.put(v1.x).put(v1.y).put(v1.z);
             // Get the color of the vertex
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
-
+            colorBuffer.put(material.diffuse.get(0))
+                       .put(material.diffuse.get(1))
+                       .put(material.diffuse.get(2));
+            
             // Get the second vertex of the face
             Vector3f v2 = vertices.get((int) face.getVertex().y - 1);
             vertexBuffer.put(v2.x).put(v2.y).put(v2.z);
             // Get the color of the face
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
+            colorBuffer.put(material.diffuse.get(0))
+            .put(material.diffuse.get(1))
+            .put(material.diffuse.get(2));
 
             // Get the third vertex of the face
             Vector3f v3 = vertices.get((int) face.getVertex().z - 1);
             vertexBuffer.put(v3.x).put(v3.y).put(v3.z);
             // Get the color of the face
-            colorBuffer.put(material.getDiffuse().x)
-                       .put(material.getDiffuse().y)
-                       .put(material.getDiffuse().z);
+            colorBuffer.put(material.diffuse.get(0))
+            .put(material.diffuse.get(1))
+            .put(material.diffuse.get(2));
 
             // Get the first normal of the face
             Vector3f n1 = normals.get((int) face.getNormal().x - 1);
@@ -186,7 +192,7 @@ public class SubModel {
         
         if (isTextured){
             // Create the texture VBO
-            glBindBuffer(GL_ARRAY_BUFFER, vboTextureID);
+            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glBufferData(GL_ARRAY_BUFFER, textureBuffer, GL_STATIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
@@ -198,13 +204,17 @@ public class SubModel {
 		shaderProgram.link();
 	}
 	
+	public void setMaterial(Material m){
+        material = m;
+	}
+	
 	public void dispose(){
 		glDeleteBuffers(vboVertexID);
 		glDeleteBuffers(vboNormalID);
         glDeleteBuffers(vboColorID);
         if (isTextured){
-            glDeleteBuffers(vboTextureID);
-            texture.dispose();
+            glDeleteBuffers(vboTexVertexID);
+            glDeleteBuffers(material.textureHandle);
         }
 	}
 

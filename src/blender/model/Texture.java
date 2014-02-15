@@ -96,9 +96,9 @@ public class Texture
         buffer.flip();
 
         // Generate a texture ID
-        int textureID = glGenTextures();
+        int vboTextureID = glGenTextures();
         // Bind the ID to the context
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, vboTextureID);
 
         // Setup texture scaling filtering
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -108,7 +108,7 @@ public class Texture
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, bimg.getWidth(), bimg.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 
         // Return a new Texture.
-        return new Texture(textureID, bimg.getWidth(), bimg.getHeight());
+        return new Texture(vboTextureID, bimg.getWidth(), bimg.getHeight());
     }
     
     public void dispose(){

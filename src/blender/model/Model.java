@@ -1,6 +1,6 @@
 package blender.model;
 
-import game.vbo.ModelVBO;
+import game.threading.RenderThread;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,7 +19,9 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
 
-public class Model extends ModelVBO{
+import com.bulletphysics.linearmath.Transform;
+
+public class Model{
 	
 	public List<SubModel> submodels = new ArrayList<SubModel>();
 	
@@ -30,33 +32,24 @@ public class Model extends ModelVBO{
     
     private String pathf;
     
+	protected Transform offset;
+	
+	private boolean enableLighting = true;
+    
     public Model(){}
 	
 	public Model(String pathf){
 		this.pathf = pathf;
+		loadModel();
 	}
 	
-	public void render(){
-		if(initialMotion != null){
-			//Transform t = new Transform();
-			float[] f = new float[16];
-			//body.getMotionState().getWorldTransform(t);
-
-			initialMotion.getOpenGLMatrix(f);
-			
-			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-			fb.put(f);
-			fb.rewind();
-			
-			glMultMatrix(fb);
-		}
-       for(SubModel m: submodels){
-    	   m.render();
-       }
+	public Model(String pathf, boolean load){
+		this.pathf = pathf;
+		if(load)
+			loadModel();
 	}
 	
-	public void prepareVBO(){
-		//create model
+	public void loadModel(){
 		try {
 			OBJLoader.loadModel(pathf, this);
 		} catch (FileNotFoundException e) {
@@ -64,6 +57,35 @@ public class Model extends ModelVBO{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void render(){
+		if(offset != null){
+			float[] f = new float[16];
+
+			offset.getOpenGLMatrix(f);
+			
+			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+			fb.put(f);
+			fb.rewind();
+			
+			glMultMatrix(fb);
+		}
+		if(RenderThread.enableLighting && !enableLighting)
+			glDisable(GL_LIGHTING);
+		renderDraw();
+		if(RenderThread.enableLighting && !enableLighting)
+			glEnable(GL_LIGHTING);
+
+	}
+	
+	public void renderDraw(){
+		for(SubModel m: submodels){
+			m.render();
+		}
+	}
+	
+	public void prepareVBO(){
 		for(SubModel m: submodels){
 			m.prepareVBO();
 		}
@@ -74,9 +96,13 @@ public class Model extends ModelVBO{
 			m.dispose();
 		}
 	}
-
-	@Override
-	protected void glDraw() {
+	
+	public void setOffset(Transform t){
+		offset = t;
+	}
+	
+	public void enableLighting(boolean b){
+		enableLighting = b;
 	}
 
 }

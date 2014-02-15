@@ -1,11 +1,16 @@
 package utils;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 
 import javax.vecmath.AxisAngle4f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
+import javax.vecmath.Vector4f;
+
+import org.lwjgl.BufferUtils;
 
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.Transform;
@@ -58,6 +63,20 @@ public class Utils {
 	
 	public static float rads(float degrees){
 		return (float)Math.toRadians(degrees);
+	}
+	
+	public static FloatBuffer asFloatBuffer(float[] values){
+		FloatBuffer fb = BufferUtils.createFloatBuffer(values.length);
+		fb.put(values);
+		fb.flip();
+		return fb;
+	}
+	
+	public static FloatBuffer asFloatBuffer(Vector4f v){
+		FloatBuffer fb = BufferUtils.createFloatBuffer(4);
+		fb.put(v.x).put(v.y).put(v.z).put(v.w);
+		fb.flip();
+		return fb;
 	}
 
 }

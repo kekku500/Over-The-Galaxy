@@ -1,10 +1,12 @@
 package game.world;
 
+import static org.lwjgl.opengl.GL11.GL_LIGHT0;
+import static org.lwjgl.opengl.GL11.GL_POSITION;
+import static org.lwjgl.opengl.GL11.glLight;
 import game.State;
 import game.threading.RenderThread;
 import game.threading.UpdateThread;
 import game.world.FrustumCulling.Frustum;
-import game.world.entities.Cuboid;
 import game.world.entities.Entity;
 import game.world.entities.Entity.Motion;
 import game.world.gui.Component;
@@ -26,6 +28,7 @@ import java.util.Set;
 
 import javax.vecmath.Vector3f;
 
+import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.Color;
 
 import utils.Utils;
@@ -155,7 +158,7 @@ public class World{
 		
 		dynamicsWorld.stepSimulation(dt);
 		
-		checkFrustum();
+		//checkFrustum();
 	}
 	
 	public Entity removeEntity(Entity rem, Set<Entity> list){
@@ -222,12 +225,22 @@ public class World{
 		}
 	}
 	
+	private Vector3f lightPosition = new Vector3f(50,50,50);
+	
 	public void render(Graphics g){
 		//Create objects
 		renderRequests();
 		
 		camera.lookAt();
 		
+		if(Keyboard.isKeyDown(Keyboard.KEY_R)){
+			Vector3f camPos = getCamera().getMotionState().origin;
+			lightPosition = Utils.copy(camPos);
+		}
+		if(RenderThread.enableLighting){
+			glLight(GL_LIGHT0, GL_POSITION, Utils.asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+		}
+
 		grid.render();
 		
 		for(Entity e: getEntities()){

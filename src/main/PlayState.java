@@ -2,14 +2,10 @@ package main;
 
 import game.Game;
 import game.State;
-import game.vbo.CuboidVBO;
-import game.vbo.ModelVBO;
-import game.vbo.PointVBO;
 import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 import game.world.entities.Player;
-import game.world.entities.Point;
 import game.world.gui.Rectangle;
 import game.world.gui.graphics.Graphics;
 import game.world.sync.Request;
@@ -27,6 +23,7 @@ import org.lwjgl.util.vector.Vector2f;
 
 import blender.model.Model;
 import blender.model.OBJLoader;
+import blender.model.custom.Quad;
 
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -69,7 +66,7 @@ public class PlayState extends State{
 		//AbstractVBO testModel = new CuboidVBO(2,4,2);
 		//testObject.setModel(testModel);
 		try {
-			ModelVBO model2 = new Model("src\\resources\\mees.obj");
+			Model model2 = new Model("src\\resources\\mees.obj");
 			testObject.setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -94,6 +91,17 @@ public class PlayState extends State{
 		
 		
 		Entity testGround = new DefaultEntity();
+		//visual
+		Quad testModel = new Quad(new Vector3f(100,0,100),
+								new Vector3f(100,0,-100),
+								new Vector3f(-100,0,-100),
+								new Vector3f(-100,0,100));
+		testModel.enableLighting(false);
+		testModel.setColor(new float[]{0,0.75f,.1f,1});
+		
+		testGround.setModel(testModel);
+
+		//physics
 		CollisionShape groundShape = new StaticPlaneShape(new Vector3f(0,1,0), 0.25f);
 		MotionState groundMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1), 

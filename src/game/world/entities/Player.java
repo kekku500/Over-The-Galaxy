@@ -1,9 +1,5 @@
 package game.world.entities;
 
-import game.vbo.CuboidVBO;
-import game.vbo.ModelVBO;
-import game.vbo.SphereVBO;
-
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
@@ -14,6 +10,8 @@ import org.lwjgl.input.Mouse;
 import utils.Utils;
 import utils.math.Vector3;
 import blender.model.Model;
+import blender.model.custom.Cuboid;
+import blender.model.custom.Sphere;
 
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
@@ -42,7 +40,7 @@ public class Player extends DefaultEntity{
 	public Player(float x, float y, float z) {
 		//super(new Vector3f(x,y,z), 5, 5, 15);
 		try {
-			ModelVBO model2 = new Model("src\\resources\\F-35_Lightning_II\\F-35_Lightning_II.obj");
+			Model model2 = new Model("src\\resources\\F-35_Lightning_II\\F-35_Lightning_II.obj");
 			Quat4f quat = new Quat4f();
 			QuaternionUtil.setRotation(quat, new Vector3(1,0,0), Utils.rads(-90));
 			Quat4f quat2 = new Quat4f();
@@ -52,7 +50,7 @@ public class Player extends DefaultEntity{
 			Transform t = new Transform(new Matrix4f(
 					quat,
 					new Vector3f(0,0,0), 1.0f));
-			model2.setInitialMotion(t);
+			model2.setOffset(t);
 			setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -186,7 +184,7 @@ public class Player extends DefaultEntity{
 		if(createNewShape){
 			Entity testObject = new DefaultEntity();
 			//visual
-			ModelVBO testModel = new SphereVBO(3.0f,30,30);
+			Model testModel = new Sphere(3.0f,30,30);
 			testObject.setModel(testModel);
 			
 			CollisionShape shape = new SphereShape(3.0f);
@@ -207,10 +205,10 @@ public class Player extends DefaultEntity{
 		if(shootBoxes){
 			float w = 5, h = 5, d = 5;
 			float I = 2f;
-			float impluseForce = 100;
+			float impluseForce = 10;
 			Entity testObject = new DefaultEntity();
 			//visual
-			ModelVBO testModel = new CuboidVBO(w,h,d);
+			Model testModel = new Cuboid(w,h,d);
 			testObject.setModel(testModel);
 			
 			CollisionShape shape = new BoxShape(new Vector3f(w/2, h/2, d/2));

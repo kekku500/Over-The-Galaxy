@@ -1,6 +1,5 @@
 package game.world.entities;
 
-import game.vbo.ModelVBO;
 import game.world.World;
 
 import java.nio.FloatBuffer;
@@ -9,6 +8,7 @@ import javax.vecmath.Vector3f;
 
 import utils.BoundingAxis;
 import utils.BoundingSphere;
+import blender.model.Model;
 
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
@@ -38,17 +38,17 @@ public interface Entity {
 	
 	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r);
 
-	public void setModel(ModelVBO modelShape);
+	public void setModel(Model modelShape);
 	
-	public ModelVBO getModel();
+	public Model getModel();
 	
 	public boolean isDynamic();
 	
 	public boolean isStatic();
 	
-	public ModelVBO getVBOOBject();
+	public Model getVBOOBject();
 	
-	public void setVBOObject(ModelVBO o);
+	public void setVBOObject(Model o);
 	
 	public void update(float dt);
 	

@@ -20,8 +20,8 @@ public class MTLLoader {
 		Material ma = new Material();
 		while((line = reader.readLine()) != null){
 			if(line.startsWith("newmtl ")){
-				if(ma.name != null){
-					m.materials.put(ma.name, ma);
+				if(ma.getName() != null){
+					m.materials.put(ma.getName(), ma);
 					ma = new Material();
 				}
 				ma.setName(line.split(" ")[1]);
@@ -31,27 +31,27 @@ public class MTLLoader {
 				float ar = Float.valueOf(line.split(" ")[1]);
 				float ag = Float.valueOf(line.split(" ")[2]);
 				float ab = Float.valueOf(line.split(" ")[3]);
-				ma.setAmbient(new Vector3f(ar,ag,ab));
+				ma.setAmbient(new float[]{ar,ag,ab,1f});
 			}else if(line.startsWith("Kd ")){
 				float dr = Float.valueOf(line.split(" ")[1]);
 				float dg = Float.valueOf(line.split(" ")[2]);
 				float db = Float.valueOf(line.split(" ")[3]);
-				ma.setDiffuse(new Vector3f(dr,dg,db));
+				ma.setDiffuse(new float[]{dr,dg,db, 1f});
 			}else if(line.startsWith("Ks ")){
 				float sr = Float.valueOf(line.split(" ")[1]);
 				float sg = Float.valueOf(line.split(" ")[2]);
 				float sb = Float.valueOf(line.split(" ")[3]);
-				ma.setSpecualrity(new Vector3f(sr,sg,sb));
+				ma.setSpecular(new float[]{sr,sg,sb, 1f});
 			}else if(line.startsWith("Ni ")){
-				ma.setRefraction(Float.valueOf(line.split(" ")[1]));
+				//ma.setRefraction(Float.valueOf(line.split(" ")[1]));
 			}else if(line.startsWith("d ")){
 				ma.setAlpha(Float.valueOf(line.split(" ")[1]));
 			}else if (line.startsWith("map_Kd ")){
 				String name = line.split("\\s+")[1];
-				ma.texture = Texture.loadTexture(path + name);
+				ma.textureFile = path + name;
 			}
 		}
-		m.materials.put(ma.name, ma);
+		m.materials.put(ma.getName(), ma);
 		reader.close();		
 	}
 }
