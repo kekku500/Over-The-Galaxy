@@ -5,7 +5,6 @@ import game.State;
 
 import java.util.ArrayList;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
 public abstract class ThreadManager {
@@ -44,7 +43,7 @@ public abstract class ThreadManager {
 		updateThread.start();
 		//Create thread manager loop here!
 		//CODE BELOW IS JUST FOR TEsTING
-		while(!isRenderReady()){
+		/*while(!isRenderReady()){
 			try { //Wait for render thread to get ready
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -60,7 +59,7 @@ public abstract class ThreadManager {
 				Game.print("Set state to 1");
 				enterState(1);
 			}
-		}
+		}*/
 	}
 	
 	public void endGame(){

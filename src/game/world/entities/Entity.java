@@ -1,13 +1,9 @@
 package game.world.entities;
 
 import game.world.World;
-
-import java.nio.FloatBuffer;
-
-import javax.vecmath.Vector3f;
-
 import utils.BoundingAxis;
 import utils.BoundingSphere;
+import utils.math.Vector3f;
 import blender.model.Model;
 
 import com.bulletphysics.dynamics.RigidBody;
@@ -40,6 +36,8 @@ public interface Entity {
 
 	public void setModel(Model modelShape);
 	
+	public void drawTexture(boolean b);
+	
 	public Model getModel();
 	
 	public boolean isDynamic();
@@ -53,6 +51,8 @@ public interface Entity {
 	public void update(float dt);
 	
 	public void render();
+	
+	public void render(boolean translate);
 	
 	public void dispose();
 	
@@ -89,5 +89,9 @@ public interface Entity {
 	public void createPhysicsModel();
 	
 	public void preparePhysicsModel();
+	
+	public boolean isGround();
+	
+	public void setGroud(boolean b);
 
 }

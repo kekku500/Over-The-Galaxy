@@ -1,66 +1,73 @@
 package blender.model;
 
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glColorPointer;
+import static org.lwjgl.opengl.GL11.glDisableClientState;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glNormalPointer;
+import static org.lwjgl.opengl.GL11.glTexCoordPointer;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glDeleteBuffers;
+import static org.lwjgl.opengl.GL15.glGenBuffers;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL13.*;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-
-import test.OBJloader.ShaderProgram;
-import utils.Utils;
 
 public class SubModel {
 	
 	public List<Face> faces = new ArrayList<Face>();
     public boolean isTextured;
     
-    private Material material = new Material();
+    public Material material = new Material();
 	
-	private int vboVertexID;
-	private int vboNormalID;
-	private int vboColorID;
-	private int vboTexVertexID;
+	public int vboVertexID;
+	public int vboNormalID;
+	public int vboColorID;
+	public int vboTexVertexID;
 	
 	private Model masterModel;
-	
-	ShaderProgram shaderProgram;
 	
 	public SubModel(Model master){
 		masterModel = master;
 	}
 	
-	public void render(){
+	public void render(boolean drawTexture){
 		material.apply();
-		shaderProgram.bind();
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
  
-        if (isTextured){
+        if (drawTexture && isTextured){
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        	glEnable(GL_TEXTURE_2D);   
-            
+            glActiveTexture(GL_TEXTURE0);  
             glBindTexture(GL_TEXTURE_2D, material.textureHandle);
             glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glTexCoordPointer(2, GL_FLOAT, 0, 0);
         }else{
-            glEnableClientState(GL_COLOR_ARRAY);
-            glEnable(GL_COLOR_MATERIAL);
-            
-            glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
-            glColorPointer(3, GL_FLOAT, 0, 0);
+        	//glActiveTexture(GL_TEXTURE0);
+        	//glBindTexture(GL_TEXTURE_2D, 0);
         }
-        
-        
+
         // Bind the normal buffer
         glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
         glNormalPointer(GL_FLOAT, 0, 0);
@@ -68,6 +75,10 @@ public class SubModel {
         // Bind the vertex buffer
         glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
         glVertexPointer(3, GL_FLOAT, 0, 0);
+        
+        //color
+        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
+        glColorPointer(3, GL_FLOAT, 0, 0);
 
         // Draw all the faces as triangles
         glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());
@@ -77,17 +88,19 @@ public class SubModel {
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
         
-        glDisable(GL_COLOR_MATERIAL);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        if (isTextured){
-            glDisable(GL_TEXTURE_2D);
+        if (drawTexture && isTextured){
+        	//glActiveTexture(GL_TEXTURE);
+        	glBindTexture(GL_TEXTURE_2D, 0);
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }else{
-        	glDisable(GL_COLOR_MATERIAL);
-            glDisableClientState(GL_COLOR_ARRAY);
+        	//glActiveTexture(GL_TEXTURE0);
+        	//glBindTexture(GL_TEXTURE_2D, 0);
         }
-        
+
         Material.clear();
+        
 	}
 	
 	public void prepareVBO(){
@@ -113,6 +126,7 @@ public class SubModel {
         List<Vector3f> normals = masterModel.normals;
         List<Vector2f> texCoords = masterModel.texCoords;
 		for(Face face: faces){
+			Material material = face.getMaterial();
             // Retrieve the material of the face
             
             // Get the first vertex of the face
@@ -196,12 +210,6 @@ public class SubModel {
             glBufferData(GL_ARRAY_BUFFER, textureBuffer, GL_STATIC_DRAW);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
-        
-		shaderProgram = new ShaderProgram();
-		shaderProgram.attachVertexShader("shader.vert");
-		shaderProgram.attachFragmentShader("shader.frag");
-		
-		shaderProgram.link();
 	}
 	
 	public void setMaterial(Material m){

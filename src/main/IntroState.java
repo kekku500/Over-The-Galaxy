@@ -1,11 +1,8 @@
 package main;
 
-import controller.Camera;
 import game.Game;
 import game.State;
-import game.world.gui.graphics.Graphics;
-
-import org.lwjgl.util.vector.Vector2f;
+import game.world.gui.graphics.Graphics2D;
 
 /**
  * A simple example of a state.
@@ -31,7 +28,7 @@ public class IntroState extends State{
 	}
 
 	@Override
-	public void render(Graphics g) {
+	public void render(Graphics2D g) {
 	}
 
 	@Override

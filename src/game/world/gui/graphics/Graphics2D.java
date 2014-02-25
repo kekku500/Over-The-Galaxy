@@ -1,28 +1,32 @@
 package game.world.gui.graphics;
 
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
 import game.Game;
 
 import java.awt.Font;
-import java.util.HashMap;
 import java.util.HashSet;
 
-import main.Main;
-
-import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 
-public class Graphics {
+public class Graphics2D {
 	
 	HashSet<UnicodeFont> fonts = new HashSet<UnicodeFont>();
 	private UnicodeFont font;
 	
-	public Graphics(){}
+	public Graphics2D(){}
 	
 	public void init(){
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA); //for fonts
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //for fonts
 
 		//Create fonts here
 		Font awtFont = new Font("Times New Roman", 0, 0);
@@ -58,21 +62,30 @@ public class Graphics {
 
 	
 	public void drawString(int x, int y, String text){
-	    GL11.glEnable(GL11.GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+	    glEnable(GL_TEXTURE_2D);
 		font.drawString(x, y, text);
-	    GL11.glDisable(GL11.GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_TEXTURE_2D);
+	    glDisable(GL_BLEND);
 	}
 	
 	public void drawString(int x, int y, String text, Color color){
-	    GL11.glEnable(GL11.GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+	    glEnable(GL_TEXTURE_2D);
 	    font.drawString(x, y, text, color);
-	    GL11.glDisable(GL11.GL_TEXTURE_2D);
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_TEXTURE_2D);
+	    glDisable(GL_BLEND);
 	}
 	
 	public void drawString(int x, int y, String text, Color color, int startIndex, int endIndex){
-	    GL11.glEnable(GL11.GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+	    glEnable(GL_TEXTURE_2D);
 		font.drawString(x, y, text, color, startIndex, endIndex);
-	    GL11.glDisable(GL11.GL_TEXTURE_2D);
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_TEXTURE_2D);
+	    glDisable(GL_BLEND);
 	}
 	
 	public UnicodeFont getFont(){

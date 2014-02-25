@@ -1,14 +1,14 @@
 package game.world.sync;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import controller.Camera;
 import game.RenderState;
 import game.world.World;
 import game.world.entities.Entity;
 import game.world.gui.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import controller.Camera;
 
 public class UpdateRequest implements Request{
 

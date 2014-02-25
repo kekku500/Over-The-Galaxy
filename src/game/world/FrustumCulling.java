@@ -1,16 +1,11 @@
 package game.world;
 
-import javax.vecmath.Vector3f;
-
 import game.Game;
 import game.world.entities.Entity;
-
-import org.lwjgl.opengl.Display;
-
 import utils.BoundingAxis;
 import utils.BoundingSphere;
 import utils.Utils;
-import utils.math.Vector3;
+import utils.math.Vector3f;
 import controller.Camera;
 
 public class FrustumCulling {
@@ -20,7 +15,7 @@ public class FrustumCulling {
 	}
 	
 	private Camera camera;
-	private Vector3 X, Y, Z, camPos;
+	private Vector3f X, Y, Z, camPos;
 	
 	private float tang;
 	private float ratio;
@@ -51,13 +46,13 @@ public class FrustumCulling {
 	
 	public void update(){
 		Vector3f viewRay = camera.getViewRay();
-		Z = new Vector3(viewRay.x, viewRay.y, viewRay.z);
+		Z = new Vector3f(viewRay.x, viewRay.y, viewRay.z);
 		Vector3f rightVector = camera.getRightVector();
-		X = new Vector3(rightVector.x, rightVector.y, rightVector.z);
+		X = new Vector3f(rightVector.x, rightVector.y, rightVector.z);
 		Vector3f upVector = camera.getUpVector();
-		Y = new Vector3(upVector.x, upVector.y, upVector.z);
+		Y = new Vector3f(upVector.x, upVector.y, upVector.z);
 		Vector3f cam = camera.getPos();
-		camPos = new Vector3(cam.x, cam.y, cam.z);
+		camPos = new Vector3f(cam.x, cam.y, cam.z);
 	}
 	
 	//http://www.lighthouse3d.com/tutorials/view-frustum-culling/radar-approach-implementation-ii/
@@ -138,12 +133,16 @@ public class FrustumCulling {
 	}
 
 	public Vector3f[] getFrustumBox(){
-		Vector3 fc = camPos.getAdd(Z.getMultiply(Game.zFar)); //temp variable
-		Vector3 ftl = fc.getAdd(Y.getMultiply(Hfar/2f)).getAdd(X.getMultiply(Wfar/2f).getNegate()); //frustum to left corner
-		Vector3 fbr = fc.getAdd(Y.getMultiply(Hfar/2f).getNegate()).getAdd(X.getMultiply(Wfar/2f)); //frustum bottom right corner
+		Vector3f Z = this.Z.copy();
+		Vector3f Y = this.Y.copy();
+		Vector3f X = this.X.copy();
+		Vector3f camPos = this.camPos.copy();
+		Vector3f fc = camPos.add(Z.mul(Game.zFar)); //temp variable
+		Vector3f ftl = fc.add(Y.mul(Hfar/2f)).add(X.mul(Wfar/2f).getNegate()); //frustum to left corner
+		Vector3f fbr = fc.add(Y.mul(Hfar/2f).getNegate()).add(X.mul(Wfar/2f)); //frustum bottom right corner
 		
-		Vector3 ftr = fc.getAdd(Y.getMultiply(Hfar/2f)).getAdd(X.getMultiply(Wfar/2f)); //frustum to left corner
-		Vector3 fbl = fc.getAdd(Y.getMultiply(Hfar/2f).getNegate()).getAdd(X.getMultiply(Wfar/2f).getNegate()); //frustum bottom right corner
+		Vector3f ftr = fc.add(Y.mul(Hfar/2f)).add(X.mul(Wfar/2f)); //frustum to left corner
+		Vector3f fbl = fc.add(Y.mul(Hfar/2f).getNegate()).add(X.mul(Wfar/2f).getNegate()); //frustum bottom right corner
 		
 		return Utils.getMinMaxVectors(ftl, fbr, camPos, ftr, fbl);
 

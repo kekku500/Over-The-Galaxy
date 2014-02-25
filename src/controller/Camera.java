@@ -7,14 +7,13 @@ import game.world.entities.Entity;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.glu.GLU;
 
 import utils.Utils;
-import utils.math.Vector3;
+import utils.math.Vector3f;
 import blender.model.Model;
 import blender.model.custom.Sphere;
 
@@ -42,10 +41,10 @@ public class Camera extends DefaultEntity{
     private float viewRadius = 30;
     
 	
-    private Vector3 viewRay = new Vector3(0,0,1); //Vector which points at the direction your'e looking at
-    private Vector3 upVector = new Vector3(0,1,0); //Points up
-    private Vector3 rightVector = new Vector3(1,0,0); //Cross product of viewRay and upVector
-    private Vector3 position = new Vector3();
+    private Vector3f viewRay = new Vector3f(0,0,1); //Vector which points at the direction your'e looking at
+    private Vector3f upVector = new Vector3f(0,1,0); //Points up
+    private Vector3f rightVector = new Vector3f(1,0,0); //Cross product of viewRay and upVector
+    private Vector3f position = new Vector3f();
     
 	public Entity copy(){
 		Camera cam = new Camera();
@@ -61,7 +60,7 @@ public class Camera extends DefaultEntity{
    
     World world;
     public Camera(float x, float y, float z, World w){
-    	position = new Vector3(x, y, z);
+    	position = new Vector3f(x, y, z);
     	world = w;
     }
     
@@ -74,9 +73,9 @@ public class Camera extends DefaultEntity{
     private float camRadius;
     public void createCamera(){
     	//for helpz
-    	Vector3 up = new Vector3(0,1,0);
-    	Vector3 ray = new Vector3(0,0,-1);
-    	Vector3 right = new Vector3(1,0,0);
+    	Vector3f up = new Vector3f(0,1,0);
+    	Vector3f ray = new Vector3f(0,0,-1);
+    	Vector3f right = new Vector3f(1,0,0);
     	
     	float zNear = Game.zNear;
     	float fov = Game.fov;
@@ -88,14 +87,14 @@ public class Camera extends DefaultEntity{
     	camRadius = zNear;
     	
     	//Frustum vertices
-    	/*Vector3 tip = new Vector3(0,0,0);
-    	Vector3 nc = tip.getAdd(ray.getMultiply(zNear));
-    	Vector3 ntl = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2).getNegate());
-    	Vector3 ntr = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2));
-    	Vector3 nbl = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2).getNegate());
-    	Vector3 nbr = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2));
+    	/*Vector3f tip = new Vector3f(0,0,0);
+    	Vector3f nc = tip.getAdd(ray.getMultiply(zNear));
+    	Vector3f ntl = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2).getNegate());
+    	Vector3f ntr = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2));
+    	Vector3f nbl = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2).getNegate());
+    	Vector3f nbr = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2));
 
-    	ObjectArrayList<Vector3f> vertices = new ObjectArrayList<Vector3f>();
+    	ObjectArrayList<Vector3ff> vertices = new ObjectArrayList<Vector3ff>();
     	vertices.add(tip);
     	vertices.add(ntl);
     	vertices.add(ntr);
@@ -107,10 +106,22 @@ public class Camera extends DefaultEntity{
 		setModel(testModel);
     	//ConvexShape shape = new SphereShape(camRadius);
     	ConvexShape shape = new SphereShape(camRadius);
-		//CollisionShape shape = new BoxShape(new Vector3f(5/2, 5/2, 15/2));
+		//CollisionShape shape = new BoxShape(new Vector3ff(5/2, 5/2, 15/2));
+    	
+		Quat4f orientation = new Quat4f(0,0,0,1);
+		
+		Quat4f qRotatedy = new Quat4f();
+		QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(-20));
+		qRotatedy.mul(orientation);
+		orientation = qRotatedy;
+		
+		Quat4f qRotatedx = new Quat4f();
+		QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(20));
+		orientation.mul(qRotatedx);
+		orientation.normalize();
 
 		DefaultMotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(
-				new Quat4f(0,0,0,1),
+				orientation,
 				position, 1)));
 		Vector3f intertia = new Vector3f();
 		shape.calculateLocalInertia(0f,  intertia);
@@ -141,12 +152,12 @@ public class Camera extends DefaultEntity{
 			t.getRotation(orientation);
 			
 			Quat4f qRotatedy = new Quat4f();
-			QuaternionUtil.setRotation(qRotatedy, new Vector3(1,0,0), Utils.rads(dy));
+			QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(dy));
 			qRotatedy.mul(orientation);
 			orientation = qRotatedy;
 			
 			Quat4f qRotatedx = new Quat4f();
-			QuaternionUtil.setRotation(qRotatedx, new Vector3(0,1,0), Utils.rads(dx));
+			QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(dx));
 			qRotatedx.mul(orientation); // vv
 			orientation = qRotatedx; //  this makes it DOF6
 			orientation.normalize();
@@ -161,12 +172,12 @@ public class Camera extends DefaultEntity{
 			t.getRotation(orientation);
 			
 			Quat4f qRotatedy = new Quat4f();
-			QuaternionUtil.setRotation(qRotatedy, new Vector3(1,0,0), Utils.rads(dy));
+			QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(dy));
 			qRotatedy.mul(orientation);
 			orientation = qRotatedy;
 			
 			Quat4f qRotatedx = new Quat4f();
-			QuaternionUtil.setRotation(qRotatedx, new Vector3(0,1,0), Utils.rads(dx));
+			QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(dx));
 			orientation.mul(qRotatedx); //this line makes it fps
 			orientation.normalize();
 			
@@ -184,7 +195,7 @@ public class Camera extends DefaultEntity{
 				
 				//Dont wanna look directly from behind
 				Quat4f qRotatedy = new Quat4f();
-				QuaternionUtil.setRotation(qRotatedy, new Vector3(1,0,0), Utils.rads(-25));
+				QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(-25));
 				qRotatedy.mul(orientation);
 				orientation = qRotatedy;
 				
@@ -200,13 +211,13 @@ public class Camera extends DefaultEntity{
 		motionState.getMatrix(viewMatrix);
 		float[] ray = new float[4];
 		viewMatrix.getRow(2, ray);
-		viewRay = new Vector3(ray[0], ray[1], ray[2]);
+		viewRay = new Vector3f(ray[0], ray[1], ray[2]);
 		float[] up = new float[4];
 		viewMatrix.getRow(1, up);
-		upVector = new Vector3(up[0], up[1], up[2]);
+		upVector = new Vector3f(up[0], up[1], up[2]);
 		float[] right = new float[4];
 		viewMatrix.getRow(0, right);
-		rightVector = new Vector3(right[0], right[1],right[2]);
+		rightVector = new Vector3f(right[0], right[1],right[2]);
     }
     
     private void translation(float dt){
@@ -218,11 +229,11 @@ public class Camera extends DefaultEntity{
 			rigidShape.getWorldTransform(tr);
 			Matrix4f mr = new Matrix4f();
 			tr.getMatrix(mr);
-			Vector3 delta = new Vector3();
+			Vector3f delta = new Vector3f();
 			if(Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_S)){
 				float[] ray = new float[4];
 				mr.getRow(2, ray);
-				Vector3 viewRay = new Vector3(ray[0], ray[1], ray[2]);
+				Vector3f viewRay = new Vector3f(ray[0], ray[1], ray[2]);
 				if(Keyboard.isKeyDown(Keyboard.KEY_W)){
 					delta.add(viewRay);
 				}
@@ -233,7 +244,7 @@ public class Camera extends DefaultEntity{
 			if(Keyboard.isKeyDown(Keyboard.KEY_A) || Keyboard.isKeyDown(Keyboard.KEY_D)){
 				float[] right = new float[4];
 				mr.getRow(0, right);
-				Vector3 rightVector = new Vector3(right[0], right[1], right[2]);
+				Vector3f rightVector = new Vector3f(right[0], right[1], right[2]);
 				if(Keyboard.isKeyDown(Keyboard.KEY_A)){
 					delta.add(rightVector);
 				}
@@ -245,7 +256,7 @@ public class Camera extends DefaultEntity{
 			if(Keyboard.isKeyDown(Keyboard.KEY_SPACE) || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)){
 				float[] up = new float[4];
 				mr.getRow(1, up);
-				Vector3 upVector = new Vector3(up[0], up[1], up[2]);
+				Vector3f upVector = new Vector3f(up[0], up[1], up[2]);
 				if(Keyboard.isKeyDown(Keyboard.KEY_SPACE)){
 					delta.add(upVector);
 				}
@@ -261,7 +272,7 @@ public class Camera extends DefaultEntity{
 				rigidShape.getWorldTransform(motionState);
 			}
 			
-			position = new Vector3(motionState.origin.x, motionState.origin.y, motionState.origin.z);
+			position = new Vector3f(motionState.origin.x, motionState.origin.y, motionState.origin.z);
 		}else{
 			Transform tcam = new Transform();
 			rigidShape.getWorldTransform(tcam);
@@ -269,7 +280,7 @@ public class Camera extends DefaultEntity{
 			Transform tfollow = new Transform();
 			following.getRigidBody().getWorldTransform(tfollow);
 			
-			Vector3 camPos = new Vector3();
+			Vector3f camPos = new Vector3f();
 			viewRay.normalize();
 			viewRay.scale(viewRadius);
 			camPos.add(tfollow.origin, viewRay.getNegate());
@@ -277,7 +288,7 @@ public class Camera extends DefaultEntity{
 			
 			rigidShape.setWorldTransform(tcam);
 			
-			position = new Vector3(tfollow.origin.x-viewRay.x, tfollow.origin.y-viewRay.y, tfollow.origin.z-viewRay.z);
+			position = new Vector3f(tfollow.origin.x-viewRay.x, tfollow.origin.y-viewRay.y, tfollow.origin.z-viewRay.z);
 		}
 
     }
@@ -291,7 +302,7 @@ public class Camera extends DefaultEntity{
 		translation(dt);
     }
     
-    public Vector3 getPos(){
+    public Vector3f getPos(){
     	return position;
     }
     
@@ -305,15 +316,15 @@ public class Camera extends DefaultEntity{
     	//render();
     }
     
-    public Vector3 getUpVector(){
+    public Vector3f getUpVector(){
     	return upVector;
     }
     
-    public Vector3 getRightVector(){
+    public Vector3f getRightVector(){
     	return rightVector;
     }
     
-    public Vector3 getViewRay(){
+    public Vector3f getViewRay(){
     	return viewRay;
     }
     

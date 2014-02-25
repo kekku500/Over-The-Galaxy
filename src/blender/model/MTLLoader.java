@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import javax.vecmath.Vector3f;
-
 
 public class MTLLoader {
 	

@@ -10,7 +10,7 @@ public class Cuboid extends Model{
 	private float radius;
 	
 	public Cuboid(float w, float h, float d){
-		super("src\\resources\\common\\cuboid.obj", false);
+		super("common\\cuboid.obj", false);
 		this.w = w;
 		this.h = h;
 		this.d = d;

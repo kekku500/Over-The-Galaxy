@@ -1,19 +1,16 @@
 package game.world;
 
-import static org.lwjgl.opengl.GL11.*;
+import game.world.entities.Line;
+import game.world.sync.RenderRequest;
+import game.world.sync.Request;
+import game.world.sync.Request.Action;
+import game.world.sync.RequestManager;
 
 import java.util.ArrayList;
 
 import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
-
-import game.threading.RenderThread;
-import game.world.entities.Line;
-import game.world.sync.RenderRequest;
-import game.world.sync.Request;
-import game.world.sync.Request.Action;
-import game.world.sync.RequestManager;
 
 public class Grid {
 	
@@ -22,7 +19,7 @@ public class Grid {
 	//configure grid
 	private int xsize = 800; //Size of lines parallel to x axis
 	private int zsize = 800; //Size of lines parallel to z axis
-	private int gap = 20; //Distance between two lines
+	private int gap = 25; //Distance between two lines
 	private boolean boldZeroAxisLines = true;
 	
 	private ArrayList<Line> xlines = new ArrayList<Line>();
@@ -107,8 +104,7 @@ public class Grid {
 	public void render(){
 		if(!enabled)
 			return;
-	    if(RenderThread.enableLighting)
-	    	glDisable(GL_LIGHTING);
+
 		GL11.glColor3f(1f, 1f, 1f);
 		for(Line l: xlines){
 			l.render();
@@ -116,8 +112,6 @@ public class Grid {
 		for(Line l: zlines){
 			l.render();
 		}
-	    if(RenderThread.enableLighting)
-	    	glEnable(GL_LIGHTING);
 	}
 	
 	public void dispose(){

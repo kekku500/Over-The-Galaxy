@@ -1,18 +1,13 @@
 package blender.model;
 
-import game.threading.RenderThread;
+import static org.lwjgl.opengl.GL11.glMultMatrix;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL13.*;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -32,9 +27,11 @@ public class Model{
     
     private String pathf;
     
-	protected Transform offset;
+	public Transform offset;
 	
 	private boolean enableLighting = true;
+	
+	private boolean drawTexture = true;
     
     public Model(){}
 	
@@ -47,6 +44,10 @@ public class Model{
 		this.pathf = pathf;
 		if(load)
 			loadModel();
+	}
+	
+	public void drawTexture(boolean b){
+		drawTexture = b;
 	}
 	
 	public void loadModel(){
@@ -71,24 +72,45 @@ public class Model{
 			
 			glMultMatrix(fb);
 		}
-		if(RenderThread.enableLighting && !enableLighting)
-			glDisable(GL_LIGHTING);
-		renderDraw();
-		if(RenderThread.enableLighting && !enableLighting)
-			glEnable(GL_LIGHTING);
 
+
+		renderDraw();
+		
+	}
+	
+	public void render(boolean translate){
+		if(translate)
+			if(offset != null){
+				float[] f = new float[16];
+				
+				offset.getOpenGLMatrix(f);
+				
+				FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+				fb.put(f);
+				fb.rewind();
+				
+				glMultMatrix(fb);
+			}
+
+		renderDraw();
+		
 	}
 	
 	public void renderDraw(){
 		for(SubModel m: submodels){
-			m.render();
+			m.render(drawTexture);
 		}
 	}
-	
+	public boolean isTextured = false;
 	public void prepareVBO(){
+		boolean allTex = true;
 		for(SubModel m: submodels){
 			m.prepareVBO();
+			if(!m.isTextured)
+				allTex = false;
 		}
+		if(allTex)
+			isTextured = true;
 	}
 	
 	public void dispose(){

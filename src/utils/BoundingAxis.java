@@ -1,6 +1,6 @@
 package utils;
 
-import javax.vecmath.Vector3f;
+import utils.math.Vector3f;
 
 public class BoundingAxis {
 	

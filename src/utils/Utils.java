@@ -1,21 +1,13 @@
 package utils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 
-import javax.vecmath.AxisAngle4f;
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
-
 import org.lwjgl.BufferUtils;
 
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.linearmath.Transform;
-
-import main.Main;
+import utils.math.Matrix4f;
+import utils.math.Vector3f;
+import utils.math.Vector4f;
 
 public class Utils {
 	
@@ -77,6 +69,36 @@ public class Utils {
 		fb.put(v.x).put(v.y).put(v.z).put(v.w);
 		fb.flip();
 		return fb;
+	}
+	
+    /**
+	* @param values the float values that are to be turned into a FloatBuffer
+	*
+	* @return a FloatBuffer readable to OpenGL (not to you!) containing values
+	*/
+    public static FloatBuffer asFlippedFloatBuffer(float... values) {
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(values.length);
+        buffer.put(values);
+        buffer.flip();
+        return buffer;
+    }
+    
+    public static Vector3f rotate(Vector3f v, float angle, Vector3f l){
+    	Vector4f vecPosMod = new Vector4f(v.x, v.y, v.z, 1.0f);
+    	
+    	Matrix4f transMat = new Matrix4f();
+    	transMat.rotate((float)Math.toRadians(angle), l);
+    	transMat.transform(vecPosMod);
+    	return new Vector3f(vecPosMod.x, vecPosMod.y, vecPosMod.z);
+    }
+    
+	public static FloatBuffer combineFloatBuffers(FloatBuffer...fbs){
+        FloatBuffer send = BufferUtils.createFloatBuffer(16*fbs.length);
+        for(FloatBuffer add: fbs){
+        	send.put(add);
+        }
+        send.flip();
+        return send;
 	}
 
 }

@@ -1,54 +1,27 @@
 package game.world.entities;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL15.glBufferData;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
-import game.RenderState;
+import static org.lwjgl.opengl.GL11.glMultMatrix;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
 import game.world.World;
-import game.world.entities.Entity.Motion;
-import game.world.sync.RenderRequest;
-import game.world.sync.Request;
+import game.world.sync.Request.Action;
 import game.world.sync.RequestManager;
 import game.world.sync.UpdateRequest;
-import game.world.sync.Request.Action;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.Arrays;
-import java.util.List;
 
-import javax.vecmath.AxisAngle4f;
-import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
 
 import utils.BoundingAxis;
 import utils.BoundingSphere;
-import utils.Utils;
+import utils.math.Vector3f;
 import blender.model.Model;
 
-import com.bulletphysics.collision.dispatch.CollisionFlags;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.IndexedMesh;
-import com.bulletphysics.collision.shapes.StridingMeshInterface;
-import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
-import com.bulletphysics.collision.shapes.TriangleMeshShape;
-import com.bulletphysics.collision.shapes.TriangleShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.linearmath.DefaultMotionState;
-import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 
 public abstract class AbstractEntity implements Entity{
@@ -61,6 +34,7 @@ public abstract class AbstractEntity implements Entity{
 	
 	protected boolean visible = true; //in camera
 	protected boolean createPhysicsModel = false;
+	protected boolean isGround = false;
 	
 	private boolean isStatic = true;
 	
@@ -70,6 +44,22 @@ public abstract class AbstractEntity implements Entity{
 	protected BoundingAxis boundingAxis;
 	protected BoundingSphere boundingSphere;
 	protected float radius;
+	
+	@Override
+	public boolean isGround() {
+		return isGround;
+	}
+
+	@Override
+	public void setGroud(boolean b) {
+		isGround = b;
+	}
+	
+	@Override
+	public void drawTexture(boolean b){
+		if(modelShape != null)
+			modelShape.drawTexture(b);
+	}
 	
 	public boolean setStatic(){
 		if(rigidShape == null) //no physics shape, can't set static
@@ -207,8 +197,39 @@ public abstract class AbstractEntity implements Entity{
 		fb.rewind();
 		
 		glMultMatrix(fb);
-
 		modelShape.render();
+	    
+	    glPopMatrix(); //reset transformations
+	    
+	    endRender();
+	}
+	
+	@Override
+	public void render(boolean translate){
+		if(modelShape == null)
+			return;
+		if(!isVisible()){
+			return;
+		}
+		startRender();
+		
+		glPushMatrix(); //save current transformations
+		
+		if(translate){
+			
+			//Transform t = new Transform();
+			float[] f = new float[16];
+			//body.getMotionState().getWorldTransform(t);
+
+			motionState.getOpenGLMatrix(f);
+			
+			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+			fb.put(f);
+			fb.rewind();
+			
+			glMultMatrix(fb);
+		}
+		modelShape.render(translate);
 	    
 	    glPopMatrix(); //reset transformations
 	    
@@ -234,7 +255,7 @@ public abstract class AbstractEntity implements Entity{
 	
 	@Override
 	public Vector3f getPos() {
-		return motionState.origin;
+		return (Vector3f)motionState.origin;
 	}
 	
 	@Override
@@ -305,6 +326,7 @@ public abstract class AbstractEntity implements Entity{
 		e.getMotionState().set(motionState);
 		e.setRigidBody(rigidShape);
 		e.setRigidBodyConstructionInfo(rigidInfo);
+		e.setGroud(isGround());
 		return e;
 	}	
 	

@@ -1,19 +1,17 @@
 package game.world.entities;
 
-import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import utils.Utils;
-import utils.math.Vector3;
+import utils.math.Matrix4f;
+import utils.math.Vector3f;
 import blender.model.Model;
 import blender.model.custom.Cuboid;
 import blender.model.custom.Sphere;
 
-import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -40,16 +38,18 @@ public class Player extends DefaultEntity{
 	public Player(float x, float y, float z) {
 		//super(new Vector3f(x,y,z), 5, 5, 15);
 		try {
-			Model model2 = new Model("src\\resources\\F-35_Lightning_II\\F-35_Lightning_II.obj");
+			Model model2 = new Model("F-35_Lightning_II\\F-35_Lightning_II.obj");
 			Quat4f quat = new Quat4f();
-			QuaternionUtil.setRotation(quat, new Vector3(1,0,0), Utils.rads(-90));
+			QuaternionUtil.setRotation(quat, new Vector3f(1,0,0), Utils.rads(-90));
 			Quat4f quat2 = new Quat4f();
-			QuaternionUtil.setRotation(quat2, new Vector3(0,0,1), Utils.rads(180));
+			QuaternionUtil.setRotation(quat2, new Vector3f(0,0,1), Utils.rads(180));
 			quat.mul(quat2); 
 			quat.normalize();
 			Transform t = new Transform(new Matrix4f(
 					quat,
 					new Vector3f(0,0,0), 1.0f));
+			Matrix4f ne = new Matrix4f();
+			t.getMatrix(ne);
 			model2.setOffset(t);
 			setModel(model2);
 		} catch (Exception e) {
@@ -205,7 +205,7 @@ public class Player extends DefaultEntity{
 		if(shootBoxes){
 			float w = 5, h = 5, d = 5;
 			float I = 2f;
-			float impluseForce = 10;
+			float impluseForce = 20;
 			Entity testObject = new DefaultEntity();
 			//visual
 			Model testModel = new Cuboid(w,h,d);
@@ -218,7 +218,7 @@ public class Player extends DefaultEntity{
 			Vector3f intertia = new Vector3f();
 			shape.calculateLocalInertia(I,  intertia);
 			RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(I, motionState, shape, intertia);
-			constructionInfo.restitution = 0.75f;
+			constructionInfo.restitution = 0.1f;
 			constructionInfo.friction = 0.95f;
 			RigidBody body = new RigidBody(constructionInfo);
 			setDynamic();

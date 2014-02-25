@@ -1,38 +1,24 @@
 package game.threading;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.glViewport;
 import game.Game;
 import game.RenderState;
 import game.State;
-import game.world.gui.graphics.Graphics;
+import game.world.graphics.Graphics3D;
+import game.world.gui.graphics.Graphics2D;
 
 import java.util.ArrayList;
-
-import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
-
-import utils.Utils;
 
 public class RenderThread implements Runnable{
 	
-	public static boolean cullFace = true;
-	public static final boolean polygonMode = false; 
-	public static final boolean enableLighting = true;
-	
-	public static final Vector4f globalAmbientLight = new Vector4f(0.05f, 0.05f, 0.05f, 1f);
-	public static final Vector4f diffuseLight = new Vector4f(1.5f, 1.5f, 1.5f, 1f);
-	public static final Vector4f specularLight = new Vector4f(1.5f, 1.5f, 1.5f, 1f);
-	
 	private ThreadManager threadManager;
 	
-	private Graphics g;
+	private Graphics2D graphics2D;
 	
 	public RenderThread(ThreadManager threadManager){
 		this.threadManager = threadManager;
@@ -41,11 +27,11 @@ public class RenderThread implements Runnable{
 	/**
 	 * OpenGL Initialization goes here.
 	 */
-	private void setupOpenGL(){
+	private void init(){
 	    try{
 	    	Game.print("Setting up display");
 	        Display.setDisplayMode(new DisplayMode(0, 0));
-	        //Display.setVSyncEnabled(true);
+	        Display.setVSyncEnabled(true);
 	        Display.create();
 	        setDisplayMode(Game.width, Game.height, Game.fullscreen);
 	        Display.setLocation(0, 0);
@@ -56,75 +42,20 @@ public class RenderThread implements Runnable{
 	    }
 	    
 	    Game.print("Setting up OpenGL");
-
-	    if(enableLighting){
-	    	glShadeModel(GL_SMOOTH);
-	    	//glEnable(GL_LIGHTING);
-	    	glEnable(GL_LIGHT0); 
-
-	    	glLight(GL_LIGHT0, GL_SPECULAR, Utils.asFloatBuffer(new float[]{specularLight.x, specularLight.y, specularLight.z, specularLight.w}));
-	    	glLight(GL_LIGHT0, GL_DIFFUSE, Utils.asFloatBuffer(new float[]{diffuseLight.x, diffuseLight.y, diffuseLight.z, diffuseLight.w}));
-	    	glLightModel(GL_LIGHT_MODEL_AMBIENT, Utils.asFloatBuffer(new float[]{globalAmbientLight.x, globalAmbientLight.y, globalAmbientLight.z, globalAmbientLight.w}));
-	    }
+	   	Graphics3D.init();
 	    
-	    //Color and textures
-	    //glEnable(GL_COLOR_MATERIAL);
-	    glColorMaterial(GL11.GL_FRONT,  GL_AMBIENT_AND_DIFFUSE);
-    	//glMaterial(GL_FRONT, GL_SPECULAR, Utils.asFloatBuffer(new float[]{specularMaterial.x, specularMaterial.y, specularMaterial.z, specularMaterial.w})); 
-    	//glMaterialf(GL_FRONT, GL_SHININESS, shininessMaterial);   
-	    
-	    //other
-	    GL11.glEnable(GL_DEPTH_TEST); 
-	    
-	    //NICE BLUE COLOR
-	    //glClearColor(0, 0.75f, 1, 1);
-	    
-	    perspective3D(); //Starting perspective
-	    
-	    //Initialize graphics class
-	    g = new Graphics(); //used for texts
-	    g.init();
+	    //Initialize 2d graphics class
+	    graphics2D = new Graphics2D(); //used for texts
+	    graphics2D.init();
 	    
 	    //hide the mouse
 	    Mouse.setGrabbed(true);
 	}
 	
-	public static void perspective3D(){
-		glDisable(GL11.GL_BLEND);
-		if(cullFace){
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_BACK);
-		}
-		if(polygonMode)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	    if(enableLighting){
-	    	glEnable(GL_LIGHTING);
-	    }
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-	    GLU.gluPerspective((float) Game.fov, Game.width / Game.height, Game.zNear, Game.zFar);
-	    glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	}
-	
-	public static void perspective2D(){   
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-	    GLU.gluOrtho2D(0.0f, (float)Game.width, (float)Game.height, 0.0f);
-	    glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	    
-	    glEnable(GL11.GL_BLEND); //For font
-	    if(cullFace)
-	    	glDisable(GL_CULL_FACE);
-	    
-	    if(enableLighting)
-	    	glDisable(GL_LIGHTING);
-	}
 
 	@Override
 	public void run(){
-		setupOpenGL();
+		init();
 		
 		//Get Active State
 		State activeState = threadManager.getActiveState();
@@ -138,10 +69,7 @@ public class RenderThread implements Runnable{
 			//Check if state has been changed
 			if(threadManager.getActiveStateId() != activeState.getId())
 				activeState = threadManager.getActiveState();
-			
-		    // Clear the color information.
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
+
 			//Check if screen has been resized
 			if(Display.wasResized())
 				resized();
@@ -153,10 +81,7 @@ public class RenderThread implements Runnable{
 			latestState.setRendering(true); //Must not modify a state that is being rendered
 			//Game.print("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
 			
-			//latestStat
-			
-			
-			activeState.render(g); //RENDER
+			activeState.render(graphics2D); //RENDER
 			
 			latestState.setRendering(false);
 			Display.update();

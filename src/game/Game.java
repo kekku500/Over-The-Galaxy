@@ -11,6 +11,10 @@ public class Game extends ThreadManager{
 	public static boolean debug = true;
 	
 	public static final String VERSION = "0.53";
+	
+	public static final String RESOURCESPATH = "res\\";
+	public static final String MODELPATH = "models\\";
+	public static final String SHADERPATH = "shaders\\";
 
 	public static int fps = 60;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
@@ -19,7 +23,8 @@ public class Game extends ThreadManager{
 	public static boolean fullscreen = false;
 	public static int fov = 45;
 	public static float zNear = 0.001f;
-	public static float zFar = 400;
+	public static float zFar = 1000;
+	public static float shadowZFar = 300;
 
 	//States
 	private final int PLAYGAME = 0;

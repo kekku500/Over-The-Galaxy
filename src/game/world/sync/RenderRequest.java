@@ -1,12 +1,8 @@
 package game.world.sync;
 
-import game.RenderState;
 import game.world.World;
 import game.world.entities.Entity;
 import game.world.gui.Component;
-import game.world.sync.Request.Status;
-import game.world.sync.Request.Action;
-import game.world.sync.Request.Type;
 
 import java.util.ArrayList;
 import java.util.List;

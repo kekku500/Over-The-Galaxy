@@ -1,8 +1,9 @@
 package game.world.entities;
 
-import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
+
+import utils.math.Vector3f;
 
 public class Line extends AbstractEntity{
 	

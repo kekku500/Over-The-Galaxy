@@ -1,7 +1,7 @@
 package game;
 
 import game.world.World;
-import game.world.gui.graphics.Graphics;
+import game.world.gui.graphics.Graphics2D;
 import game.world.sync.RequestManager;
 
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public abstract class State {
 	
 	public abstract void update(float dt);
 	
-	public abstract void render(Graphics g);
+	public abstract void render(Graphics2D g);
 	
 	public abstract void dispose();
 	

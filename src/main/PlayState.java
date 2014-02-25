@@ -7,12 +7,7 @@ import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 import game.world.entities.Player;
 import game.world.gui.Rectangle;
-import game.world.gui.graphics.Graphics;
-import game.world.sync.Request;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Random;
+import game.world.gui.graphics.Graphics2D;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
@@ -22,8 +17,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector2f;
 
 import blender.model.Model;
-import blender.model.OBJLoader;
-import blender.model.custom.Quad;
+import blender.model.custom.Cuboid;
+import blender.model.custom.Plane;
 
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -55,6 +50,29 @@ public class PlayState extends State{
 		
 		world.addEntity(player);
 		
+		//testing shadow
+		float w = 5, h = 5, d = 5;
+		Entity testBox = new DefaultEntity();
+		//visual
+		Model boxModel = new Cuboid(w,h,d);
+		testBox.setModel(boxModel);
+		
+		CollisionShape shape = new BoxShape(new Vector3f(w/2, h/2, d/2));
+		DefaultMotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(
+				new Quat4f(0,0,0,1),
+				new Vector3f(10,5f,10), 1)));
+		Vector3f intertia = new Vector3f();
+		shape.calculateLocalInertia(5f,  intertia);
+		RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(5f, motionState, shape, intertia);
+		constructionInfo.restitution = 0.1f;
+		constructionInfo.friction = 0.95f;
+		RigidBody body = new RigidBody(constructionInfo);
+		testBox.setDynamic();
+		body.activate();
+
+		testBox.setRigidBody(body);
+		world.addEntity(testBox);
+		
 		/*Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
 		getSyncManager().add(request);*/
 
@@ -66,7 +84,7 @@ public class PlayState extends State{
 		//AbstractVBO testModel = new CuboidVBO(2,4,2);
 		//testObject.setModel(testModel);
 		try {
-			Model model2 = new Model("src\\resources\\mees.obj");
+			Model model2 = new Model("superman\\mees.obj");
 			testObject.setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -75,7 +93,7 @@ public class PlayState extends State{
 		CollisionShape testShape = new BoxShape(new Vector3f(2/2, 4/2, 2/2));
 		MotionState testMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1),
-				new Vector3f(0,5,0), 1.0f)));
+				new Vector3f(0,10,0), 1.0f)));
 		Vector3f ballInertia = new Vector3f(0,0,0);
 		testShape.calculateLocalInertia(2.5f, ballInertia);
 		RigidBodyConstructionInfo testConstructionInfo = new RigidBodyConstructionInfo(2.5f, testMotionState, testShape, ballInertia);
@@ -91,13 +109,10 @@ public class PlayState extends State{
 		
 		
 		Entity testGround = new DefaultEntity();
+		testGround.setGroud(true);
 		//visual
-		Quad testModel = new Quad(new Vector3f(100,0,100),
-								new Vector3f(100,0,-100),
-								new Vector3f(-100,0,-100),
-								new Vector3f(-100,0,100));
-		testModel.enableLighting(false);
-		testModel.setColor(new float[]{0,0.75f,.1f,1});
+		Plane testModel = new Plane(500,0,500);
+		//testModel.enableLighting(false);
 		
 		testGround.setModel(testModel);
 
@@ -107,7 +122,7 @@ public class PlayState extends State{
 				new Quat4f(0,0,0,1), 
 				new Vector3f(0,0,0), 1.0f)));
 		RigidBodyConstructionInfo groundBodyConstructionInfo = new RigidBodyConstructionInfo(0, groundMotionState, groundShape, new Vector3f(0,0,0));
-		groundBodyConstructionInfo.restitution =  0.25f;
+		groundBodyConstructionInfo.restitution =  0.1f;
 		groundBodyConstructionInfo.friction = .8f;
 		RigidBody groundRigidBody = new RigidBody(groundBodyConstructionInfo);
 		
@@ -150,7 +165,7 @@ public class PlayState extends State{
 	}
 	
 	@Override
-	public void render(Graphics g){
+	public void render(Graphics2D g){
 		World world = getRenderingState().getWorld();
 		GL11.glColor4f(1,1,1,1);
 		world.render(g); 

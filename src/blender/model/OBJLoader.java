@@ -1,5 +1,7 @@
 package blender.model;
 
+import game.Game;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +14,7 @@ import javax.vecmath.Vector3f;
 public class OBJLoader {
 	
 	public static void loadModel(String pathf, Model m) throws FileNotFoundException, IOException{
-		File f = new File(pathf);
+		File f = new File(Game.RESOURCESPATH + Game.MODELPATH + pathf);
 		f = new File(f.getAbsolutePath());
 		String path = f.getAbsolutePath().replace(f.getName(), "");
 		BufferedReader reader = new BufferedReader(new FileReader(f));
@@ -78,9 +80,9 @@ public class OBJLoader {
 
                     Vector3f texCoords = new Vector3f(vt1, vt2, vt3);
 
-                    subM.faces.add(new Face(vertex, normal, texCoords));
+                    subM.faces.add(new Face(vertex, normal, texCoords, material));
                 }else{
-                	subM.faces.add(new Face(vertex, normal, null));
+                	subM.faces.add(new Face(vertex, normal, null, material));
                 }
                 finalStep = true;
 			}

@@ -1,6 +1,7 @@
 package game.world.entities;
 
-import javax.vecmath.Vector3f;
+import utils.math.Vector3f;
+
 
 public class DefaultEntity extends AbstractEntity{
 

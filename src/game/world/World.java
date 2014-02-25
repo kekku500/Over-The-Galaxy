@@ -1,17 +1,40 @@
 package game.world;
 
-import static org.lwjgl.opengl.GL11.GL_LIGHT0;
-import static org.lwjgl.opengl.GL11.GL_POSITION;
-import static org.lwjgl.opengl.GL11.glLight;
+import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glColorPointer;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glDisableClientState;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glMultMatrix;
+import static org.lwjgl.opengl.GL11.glNormalPointer;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glTexCoordPointer;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
 import game.State;
-import game.threading.RenderThread;
-import game.threading.UpdateThread;
 import game.world.FrustumCulling.Frustum;
 import game.world.entities.Entity;
-import game.world.entities.Entity.Motion;
+import game.world.graphics.DeferredLightPoints;
+import game.world.graphics.Graphics3D;
 import game.world.gui.Component;
 import game.world.gui.Container;
-import game.world.gui.graphics.Graphics;
+import game.world.gui.graphics.Graphics2D;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
@@ -20,6 +43,7 @@ import game.world.sync.Request.Type;
 import game.world.sync.RequestManager;
 import game.world.sync.UpdateRequest;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,11 +52,12 @@ import java.util.Set;
 
 import javax.vecmath.Vector3f;
 
-import org.lwjgl.input.Keyboard;
-import org.newdawn.slick.Color;
+import org.lwjgl.BufferUtils;
 
-import utils.Utils;
-import main.Main;
+import shader.GLSLProgram;
+import blender.model.Material;
+import blender.model.Model;
+import blender.model.SubModel;
 
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
@@ -59,7 +84,7 @@ public class World{
 	
 	//Camera stuff
 	private FrustumCulling frustum;
-	private Camera camera = new Camera(0,15,60, this);
+	private Camera camera = new Camera(15,15,-30, this);
 	
 	private State state;
 	
@@ -225,30 +250,21 @@ public class World{
 		}
 	}
 	
-	private Vector3f lightPosition = new Vector3f(50,50,50);
-	
-	public void render(Graphics g){
+	public void render(Graphics2D g){
 		//Create objects
 		renderRequests();
 		
-		camera.lookAt();
+		Graphics3D.updateMatrices(camera);
+		Graphics3D.render(getEntities(), this);
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_R)){
-			Vector3f camPos = getCamera().getMotionState().origin;
-			lightPosition = Utils.copy(camPos);
-		}
-		if(RenderThread.enableLighting){
-			glLight(GL_LIGHT0, GL_POSITION, Utils.asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
-		}
-
-		grid.render();
-		
-		for(Entity e: getEntities()){
-			e.render();
-		}
+		//Graphics3D.cameraPerspective();
+        //glEnable(GL_DEPTH_TEST);
+	    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //grid.render();
+		//glDisable(GL_DEPTH_TEST);
 		
 	    //Render 2D stuff
-	    RenderThread.perspective2D();
+	    /*Graphics3D.perspective2D();
 	    //just TESting some stuff
 	    container.render();
 	    
@@ -259,10 +275,8 @@ public class World{
 	    
 	    g.setFontSize(20);
 	    
-	    g.drawString(100, 50, "DEFAULT" + 50);
-	    
-	    //Back to 3D
-	    RenderThread.perspective3D(); //reset perspective to 3d
+	    g.drawString(100, 50, "DEFAULT" + 50);*/
+
 	    
 	    
 	}
@@ -318,6 +332,7 @@ public class World{
 		for(Entity e: getEntities()){
 			e.dispose();
 		}
+		Graphics3D.dispose();
 		container.dispose();
 	}
 	
