@@ -12,6 +12,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.util.vector.Vector3f;
 
+import test.OBJloader.HUD;
 import test.OBJloader.Model;
 import test.OBJloader.OBJLoader;
 import static org.lwjgl.opengl.GL11.*;
@@ -25,6 +26,7 @@ public class Controller {
 	private static Vector3f rotation = new Vector3f(0,0,0);
 	private static long lastFrame;
 	private Controller2 control;
+	private HUD hud;
 	
 	private static long getTime(){
 		return(Sys.getTime()* 1000) / Sys.getTimerResolution();
@@ -48,8 +50,9 @@ public class Controller {
 		
 		control = new Controller2(position, rotation);
 		Model m = null;
+		hud = new HUD();
 		try{
-			m = OBJLoader.loadModel(new File("src/mees.obj"));
+			m = OBJLoader.loadModel("src/mees.obj");
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			Display.destroy();
@@ -59,19 +62,17 @@ public class Controller {
 			Display.destroy();
 			System.exit(1);
 		}
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective((float) 30, 640f / 480f, 0.001f, 100);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glEnable(GL_ARRAY_BUFFER_BINDING);
+		make3D();
 
 		while(!Display.isCloseRequested()){
 			int delta = getDelta();			
 			
+			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 			m.Render();
+			make2D();
+			//hud.render();
+			make3D();
 			
 			glLoadIdentity();
 			glRotatef(rotation.x,1,0,0);
@@ -103,6 +104,24 @@ public class Controller {
 		}
 		Display.destroy();
 		System.exit(0);
+	}
+	
+	protected static void make2D(){
+		glEnable(GL_BLEND);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, 640,0, 480,-1, 1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+	}
+	
+	protected static void make3D(){
+		glDisable(GL_BLEND);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective((float) 30, 640f / 480f, 0.001f, 100);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
 	}
 	
 	

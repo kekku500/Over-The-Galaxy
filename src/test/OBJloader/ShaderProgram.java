@@ -1,6 +1,8 @@
 package test.OBJloader;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -82,9 +84,12 @@ public class ShaderProgram {
 	public static String readFromFile(String name){
 		StringBuilder source = new StringBuilder();
 		try{
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					ShaderProgram.class.getClassLoader()
-					.getResourceAsStream(name)));
+			File f = new File("src\\resources\\" + name);
+
+				        FileInputStream fis = new FileInputStream(f);
+
+						BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+
 			
 			String line;
 			while((line = reader.readLine()) != null){

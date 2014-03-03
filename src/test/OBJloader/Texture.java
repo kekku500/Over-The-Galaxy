@@ -1,6 +1,7 @@
 package test.OBJloader;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -55,10 +56,12 @@ public class Texture
         BufferedImage bimg = null;
         try
         {	
-          System.out.println(name);
-          bimg = ImageIO.read(Texture.class.getClassLoader().getResourceAsStream(name));
-        //    bimg = ImageIO.read(getResourceAsStream("src/resources/CHRNPCICOHER101_DIFFUSE.tga"));
-        }
+        	File f = new File("src\\resources\\" + name);
+
+        	          bimg = ImageIO.read(f);
+
+        	          //bimg = ImageIO.read(Texture.class.getClassLoader().getResourceAsStream(name));
+}
         catch (IOException e)
         {
             e.printStackTrace();

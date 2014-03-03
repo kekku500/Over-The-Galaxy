@@ -14,7 +14,10 @@ import test.OBJloader.Face;
 import test.OBJloader.Model;
 
 public class OBJLoader{
-	public static Model loadModel(File f) throws FileNotFoundException, IOException{
+	public static Model loadModel(String f) throws FileNotFoundException, IOException{
+		File fi = new File(f);
+		fi = new File(fi.getAbsolutePath());
+		String path = fi.getAbsolutePath().replace(fi.getName(), "");
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 		Model m = new Model();
 		String line;
@@ -23,7 +26,7 @@ public class OBJLoader{
 		int i = -1;
 		while((line = reader.readLine()) != null){
 			if(line.startsWith("mtllib ")){
-				MTLLoader.loadMaterial(m, "src/" +line.split(" ")[1]);
+				MTLLoader.loadMaterial(m, path +line.split(" ")[1]);
 			}else if(line.startsWith("o ")){
 				i++;
 				if(i == 0){

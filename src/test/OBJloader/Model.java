@@ -75,7 +75,7 @@ public class Model {
     }*/
 	
 	public void Render(){
-	//	textured = false;
+		//textured = false;
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
@@ -99,9 +99,9 @@ public class Model {
 			
 			
 		}
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndeciesID);
-		//glDrawElements(GL_TRIANGLES,koht.get(0), GL_UNSIGNED_INT,0);
-		
+	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndeciesID);
+	//	glDrawElements(GL_TRIANGLES,koht.get(0), GL_UNSIGNED_INT,0);
+	//	
 		//glDrawArrays(GL_TRIANGLES, 0, total);
 		ShaderProgram.unbind();
 		glDisableClientState(GL_VERTEX_ARRAY);
