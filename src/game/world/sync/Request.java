@@ -9,18 +9,12 @@ public interface Request {
 		UPDATE, //Updates only next world
 		UPDATEALL, //Updates all worlds
 		CAMERAFOCUS,
-		CREATEVBO;} //Creates vbo for object
+		INIT;} //Creates vbo for object
 	
 	public enum Status{
 		FINAL, //One more world left to update
 		IDLE, //Current world has done the request
 		CONTINUE} //Request not done yet (more worlds to update)
-	
-	public enum Type{
-		ENTITY,
-		CAMERA,
-		COMPONENT;
-	}
 	
 	public boolean isDone();
 	

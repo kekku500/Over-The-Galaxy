@@ -36,8 +36,6 @@ public interface Entity {
 
 	public void setModel(Model modelShape);
 	
-	public void drawTexture(boolean b);
-	
 	public Model getModel();
 	
 	public boolean isDynamic();

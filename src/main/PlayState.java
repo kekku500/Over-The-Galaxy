@@ -93,7 +93,7 @@ public class PlayState extends State{
 		CollisionShape testShape = new BoxShape(new Vector3f(2/2, 4/2, 2/2));
 		MotionState testMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1),
-				new Vector3f(0,10,0), 1.0f)));
+				new Vector3f(-30,10,0), 1.0f)));
 		Vector3f ballInertia = new Vector3f(0,0,0);
 		testShape.calculateLocalInertia(2.5f, ballInertia);
 		RigidBodyConstructionInfo testConstructionInfo = new RigidBodyConstructionInfo(2.5f, testMotionState, testShape, ballInertia);
@@ -108,11 +108,21 @@ public class PlayState extends State{
 		world.addEntity(testObject);
 		
 		
+		Entity testNormalMap = new DefaultEntity();
+		testNormalMap.getMotionState().origin.set(0,2,0);
+		try {
+			Model normalTest = new Model("normal_map_test\\brick01g.obj");
+			testNormalMap.setModel(normalTest);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		world.addEntity(testNormalMap);
+		
+		
 		Entity testGround = new DefaultEntity();
 		testGround.setGroud(true);
 		//visual
 		Plane testModel = new Plane(500,0,500);
-		//testModel.enableLighting(false);
 		
 		testGround.setModel(testModel);
 

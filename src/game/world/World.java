@@ -30,8 +30,9 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import game.State;
 import game.world.FrustumCulling.Frustum;
 import game.world.entities.Entity;
-import game.world.graphics.DeferredLightPoints;
-import game.world.graphics.Graphics3D;
+import game.world.entities.LightSource;
+import game.world.entities.Player;
+import game.world.graphics.RenderEngine3D;
 import game.world.gui.Component;
 import game.world.gui.Container;
 import game.world.gui.graphics.Graphics2D;
@@ -39,7 +40,6 @@ import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
 import game.world.sync.Request.Status;
-import game.world.sync.Request.Type;
 import game.world.sync.RequestManager;
 import game.world.sync.UpdateRequest;
 
@@ -50,11 +50,11 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-import javax.vecmath.Vector3f;
-
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Keyboard;
 
-import shader.GLSLProgram;
+import shader.Shader;
+import utils.math.Vector3f;
 import blender.model.Material;
 import blender.model.Model;
 import blender.model.SubModel;
@@ -73,11 +73,17 @@ import controller.Camera;
 
 public class World{
 	
+	public static RenderEngine3D renderEngine = new RenderEngine3D();
+	public static LightSource testLight = new LightSource(true);
+	//public static LightSource testLight2 = new LightSource();
+	private Player player;
+	
 	DynamicsWorld dynamicsWorld; //Physics World
 	
 	//Store entities
 	Set<Entity> dynamicEntities = new HashSet<Entity>();
 	Set<Entity> staticEntities = new HashSet<Entity>();
+	Set<LightSource> lightSources = new HashSet<LightSource>();
 	
 	//GUI
 	public Container container;
@@ -105,6 +111,13 @@ public class World{
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		
 		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
+		
+		///test cube light
+		testLight.setPos(new Vector3f(30, 70, 20));
+		addEntity(testLight);
+		
+		//testLight2.setPos(new Vector3f(-30, 10, 20));
+		//addEntity(testLight2);
 	}
 
 	public World(State state, int id){
@@ -119,15 +132,18 @@ public class World{
 	
 	public void updateRequests(){
 		RequestManager syncM = state.getSyncManager();
-		ListIterator<UpdateRequest> itr = syncM.getUpdateRequests().listIterator();
+		ListIterator<UpdateRequest<?>> itr = syncM.getUpdateRequests().listIterator();
 		while(itr.hasNext()){
-			UpdateRequest req = itr.next();
+			UpdateRequest<?> req = itr.next();
 			Status status = req.requestStatus(this);
 			//System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
 			if(status == Status.IDLE)
 				continue; //skip, request must be handled later or done in this world
-			if(req.getType() == Type.ENTITY){
-				Entity e = req.getEntity();
+			if(req.getItem() instanceof LightSource){
+				LightSource ls = (LightSource)req.getItem();
+				lightSources.add(ls);
+			}else if(req.getItem() instanceof Entity){
+				Entity e = (Entity) req.getItem();
 				if(e.isDynamic()){
 					if(req.getAction() == Action.ADD){
 						getStaticEntities().add(e); //not copying, reference to all
@@ -142,6 +158,9 @@ public class World{
 						Entity addThis = e.copy();
 						e.setWorld(this);
 						addThis.setWorld(this);
+						if(addThis instanceof Player){
+							player = (Player)addThis;
+						}
 						getDynamicEntities().add(addThis);
 						//System.out.println("added " + e + " to dynamicentities");
 					}else if(req.getAction() == Action.UPDATE || req.getAction() == Action.UPDATEALL){
@@ -156,8 +175,8 @@ public class World{
 						camera.setFollowing(focusThis);
 					}
 				}
-			}else if(req.getType() == Type.COMPONENT){
-				Component c = req.getComponent();
+			}else if(req.getItem() instanceof Component){
+				Component c = (Component) req.getItem();
 				if(req.getAction() == Action.ADD){
 					container.addComponent(c);
 				}
@@ -173,6 +192,8 @@ public class World{
 		//Check for added entities
 		updateRequests();
 		
+		checkInput();
+		
 		grid.update();
 		
 		for(Entity e: getDynamicEntities()){
@@ -183,7 +204,20 @@ public class World{
 		
 		dynamicsWorld.stepSimulation(dt);
 		
+		World.renderEngine.update(dt);
+		
 		//checkFrustum();
+	}
+	
+	public void checkInput(){
+		while(Keyboard.next()){
+			if(Keyboard.getEventKeyState()){
+				int a = Keyboard.getEventKey();
+				if(player != null)
+					player.checkInput(a);
+				World.renderEngine.checkInput(a);
+			}
+		}
 	}
 	
 	public Entity removeEntity(Entity rem, Set<Entity> list){
@@ -223,27 +257,28 @@ public class World{
 	
 	public void renderRequests(){
 		RequestManager syncM = state.getSyncManager();
-		ListIterator<RenderRequest> itr = syncM.getRenderRequests().listIterator();
+		ListIterator<RenderRequest<?>> itr = syncM.getRenderRequests().listIterator();
 		while(itr.hasNext()){
-			RenderRequest req = itr.next();
+			RenderRequest<?> req = itr.next();
 			Status stat = req.requestStatus(this);
 			//System.out.println(req + " Status " + stat + " at world " + getID());
 			
 			if(stat == Status.FINAL){
-				if(req.getAction() == Action.CREATEVBO){
-					if(req.getType() == Type.ENTITY){
-						if(req.getAction() == Action.CREATEVBO){
-							Entity e = req.getEntity();
-							e.createVBO();
-							e.preparePhysicsModel();
-							req.done();
-						}
-					}else if(req.getType() == Type.COMPONENT){
-						Component c = req.getComponent();
+				if(req.getAction() == Action.INIT){
+					if(req.getItem() instanceof LightSource){
+						LightSource ls = (LightSource)req.getItem();
+						ls.init();
+						req.done();
+					}else if(req.getItem() instanceof Entity){
+						Entity e = (Entity) req.getItem();
+						e.createVBO();
+						e.preparePhysicsModel();
+						req.done();
+					}else if(req.getItem() instanceof Component){
+						Component c = (Component) req.getItem();
 						c.createVBO();
 						req.done();
 					}
-
 				}
 				itr.remove();
 			}
@@ -254,8 +289,12 @@ public class World{
 		//Create objects
 		renderRequests();
 		
-		Graphics3D.updateMatrices(camera);
-		Graphics3D.render(getEntities(), this);
+		World.renderEngine.updateMatrices(camera);
+		World.renderEngine.updateLightSources(lightSources);
+		World.renderEngine.render(getEntities());
+		
+		/*Graphics3D.updateMatrices(camera);
+		Graphics3D.render(getEntities(), this);*/
 		
 		//Graphics3D.cameraPerspective();
         //glEnable(GL_DEPTH_TEST);
@@ -286,7 +325,7 @@ public class World{
 		c.setId(componentIdCounter);
 		//c.setWorld(this);
 		Request request = new UpdateRequest(Action.ADD, c);
-		Request request2 = new RenderRequest(Action.CREATEVBO, c);
+		Request request2 = new RenderRequest(Action.INIT, c);
 		request.waitFor(request2);
 		state.getSyncManager().add(request);
 		state.getSyncManager().add(request2);
@@ -295,9 +334,8 @@ public class World{
 	public Request addEntity(Entity e){
 		entityIdCounter++;
 		e.setId(entityIdCounter);
-		//e.setWorld(this);
-		Request request = new UpdateRequest(Action.ADD, e);
-		Request request2 = new RenderRequest(Action.CREATEVBO, e);
+		Request request = new UpdateRequest<Entity>(Action.ADD, e);
+		Request request2 = new RenderRequest<Entity>(Action.INIT, e);
 		if(e.getRigidBody() != null)
 			dynamicsWorld.addRigidBody(e.getRigidBody()); //add to physics world
 		
@@ -320,7 +358,6 @@ public class World{
 		state.getSyncManager().add(request);
 	}
 	
-	
 	public List<Entity> getEntities(){
 		List<Entity> allEntities = new ArrayList<Entity>();
 		allEntities.addAll(getDynamicEntities());
@@ -332,7 +369,10 @@ public class World{
 		for(Entity e: getEntities()){
 			e.dispose();
 		}
-		Graphics3D.dispose();
+		World.renderEngine.dispose();
+		for(LightSource e: lightSources){
+			e.dispose();
+		}
 		container.dispose();
 	}
 	

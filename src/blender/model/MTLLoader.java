@@ -47,6 +47,10 @@ public class MTLLoader {
 			}else if (line.startsWith("map_Kd ")){
 				String name = line.split("\\s+")[1];
 				ma.textureFile = path + name;
+			}else if(line.startsWith("map_bump ")){
+				System.out.println("map bump is " + line);
+				String name = line.split("\\s+")[1];
+				ma.normalFile = path + name;
 			}
 		}
 		m.materials.put(ma.getName(), ma);

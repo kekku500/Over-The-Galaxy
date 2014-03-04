@@ -79,7 +79,8 @@ public class Material {
     public String mtlname = "noname";  // name of this material in the .mtl and .obj files
     public String textureFile = null;  // texture filename (null if no texture)
     public int textureHandle;          // opengl handle to the texture (0 if no texture)
-
+    public String normalFile = null;
+    public int normalHandle;  
 
     public Material() {
         setDefaults();
@@ -128,6 +129,10 @@ public class Material {
     	if(textureHandle == 0){
         	Texture tex = Texture.loadTexture(textureFile);
         	textureHandle = tex.id;
+        	if(normalFile != null){ //got normal
+        		Texture tex2 = Texture.loadTexture(normalFile);
+        		normalHandle = tex2.id;
+        	}
     	}
     }
 

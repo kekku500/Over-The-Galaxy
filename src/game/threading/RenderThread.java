@@ -4,7 +4,7 @@ import static org.lwjgl.opengl.GL11.glViewport;
 import game.Game;
 import game.RenderState;
 import game.State;
-import game.world.graphics.Graphics3D;
+import game.world.World;
 import game.world.gui.graphics.Graphics2D;
 
 import java.util.ArrayList;
@@ -15,6 +15,8 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
 public class RenderThread implements Runnable{
+	
+	public static int displayWidth, displayHeight;
 	
 	private ThreadManager threadManager;
 	
@@ -31,7 +33,7 @@ public class RenderThread implements Runnable{
 	    try{
 	    	Game.print("Setting up display");
 	        Display.setDisplayMode(new DisplayMode(0, 0));
-	        Display.setVSyncEnabled(true);
+	        //Display.setVSyncEnabled(true);
 	        Display.create();
 	        setDisplayMode(Game.width, Game.height, Game.fullscreen);
 	        Display.setLocation(0, 0);
@@ -42,7 +44,6 @@ public class RenderThread implements Runnable{
 	    }
 	    
 	    Game.print("Setting up OpenGL");
-	   	Graphics3D.init();
 	    
 	    //Initialize 2d graphics class
 	    graphics2D = new Graphics2D(); //used for texts
@@ -50,6 +51,9 @@ public class RenderThread implements Runnable{
 	    
 	    //hide the mouse
 	    Mouse.setGrabbed(true);
+	    
+	    //Initialize graphics renderer
+	    World.renderEngine.init();
 	}
 	
 
@@ -71,8 +75,9 @@ public class RenderThread implements Runnable{
 				activeState = threadManager.getActiveState();
 
 			//Check if screen has been resized
-			if(Display.wasResized())
+			if(Display.wasResized()){
 				resized();
+			}
 		    
 			RenderState latestState = activeState.getLatestState();
 			//System.out.println("Rendering " + latestState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")" + " at " + Main.getTime());
@@ -124,7 +129,10 @@ public class RenderThread implements Runnable{
 	}
 	
 	public void resized(){
-		glViewport(0, 0, Display.getWidth(), Display.getHeight());
+		displayWidth = Display.getWidth();
+		displayHeight = Display.getHeight();
+		glViewport(0, 0, displayWidth, displayHeight);
+		//World.renderEngine.resize(displayWidth, displayHeight);
 	}
 	
 	//Display fps counter
@@ -215,7 +223,6 @@ public class RenderThread implements Runnable{
 	        System.out.println("Selected DisplayMode: " + targetDisplayMode.toString());
 
 	        // Generate a resized event
-	        resized();
 
 	        return true;
 	    }

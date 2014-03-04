@@ -103,7 +103,11 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 	}
 	
 	public float get(int i){
-		return getElement(i%4, i/4);
+		return getElement(i/4, i%4);
+	}
+	
+	public void set(int i, float val){
+		setElement(i/4, i%4, val);
 	}
 	
 	public Matrix4f setIdentityGet(){
@@ -144,6 +148,17 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		m.m02 = m02;		m.m12 = m12;		m.m22 = m22;		m.m32 = m32;
 		m.m03 = m03;		m.m13 = m13;		m.m23 = m23;		m.m33 = m33;
 		return m;
+	}
+	
+	public Vector4f mul(Vector4f u){
+		Vector4f v = new Vector4f();
+		
+		v.x = get(0) * u.x + get(4) * u.y + get(8) * u.z + get(12) * u.w;
+		v.y = get(1) * u.x + get(5) * u.y + get(9) * u.z + get(13) * u.w;
+		v.z = get(2) * u.x + get(6) * u.y + get(10) * u.z + get(14) * u.w;
+		v.w = get(3) * u.x + get(7) * u.y + get(11) * u.z + get(15) * u.w;
+		
+		return v;
 	}
 
 }

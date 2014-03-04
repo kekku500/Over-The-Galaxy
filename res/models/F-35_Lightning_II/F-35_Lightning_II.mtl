@@ -28,7 +28,6 @@ Ks 0.752941 0.752941 0.752941
 illum 2
 Ns 8
 map_Kd Glass_Cockpit.png
-map_bump 
 bump 
 map_opacity 
 map_d 
@@ -44,7 +43,6 @@ Ks 0.752941 0.752941 0.752941
 illum 2
 Ns 8
 map_Kd Eject_Seat.png
-map_bump 
 bump 
 map_opacity 
 map_d 
@@ -60,7 +58,6 @@ Ks 0.752941 0.752941 0.752941
 illum 2
 Ns 8
 map_Kd Pilot_usa.png
-map_bump 
 bump 
 map_opacity 
 map_d 

@@ -7,33 +7,23 @@ import game.world.gui.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RenderRequest implements Request{
+public class RenderRequest<T> implements Request{
 	
 	private Action action;
-	private Entity entity;
-	private Component component;
-	private Type type;
 	
 	private int id = -1;
 	
 	private boolean done;
 	
-	private List<Integer> changedWorlds = new ArrayList<Integer>();
+	private T item;
 	
 	public void done(){
 		done = true;
 	}
 	
-	public RenderRequest(Action t, Entity e){
-		type = Type.ENTITY;
+	public RenderRequest(Action t, T e){
+		item = e;
 		action = t;
-		entity = e;
-	}
-	
-	public RenderRequest(Action t, Component e){
-		type = Type.COMPONENT;
-		action = t;
-		component = e;
 	}
 	
 	public int getID(){
@@ -44,16 +34,8 @@ public class RenderRequest implements Request{
 		return Status.FINAL;
 	}
 	
-	public Entity getEntity(){
-		return entity;
-	}
-	
 	public Action getAction(){
 		return action;
-	}
-	
-	public Component getComponent(){
-		return component;
 	}
 
 	@Override
@@ -61,9 +43,10 @@ public class RenderRequest implements Request{
 		return done;
 	}
 	
-	public Type getType(){
-		return type;
+	public T getItem(){
+		return item;
 	}
+
 
 	@Override
 	public void waitFor(Request req) {
@@ -71,7 +54,7 @@ public class RenderRequest implements Request{
 	}
 	
 	public String toString(){
-		return "RenderRequest: " + getType() + " at " + getEntity();
+		return "RenderRequest: " + item;
 	}
 
 }

@@ -1,5 +1,7 @@
 package game.world.entities;
 
+import game.world.World;
+
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.input.Keyboard;
@@ -91,6 +93,19 @@ public class Player extends DefaultEntity{
 	boolean shootBoxes = false;
 	boolean switchMotion = false;
 	
+	public void checkInput(int a){
+		switch(a){
+		case Keyboard.KEY_G:
+			createNewShape = true; break;
+		case Keyboard.KEY_F:
+			resetControlBall = true; break;
+		case Keyboard.KEY_E:
+			shootBoxes = true; break;
+		case Keyboard.KEY_X:
+			switchMotion = true; break;
+		}
+	}
+	
 	@Override
 	public void firstUpdate(float dt){
 		//rigidShape.setGravity(new Vector3f(0,0,0));
@@ -99,21 +114,7 @@ public class Player extends DefaultEntity{
 		}else{
 			applyForce = false;
 		}
-		while(Keyboard.next()){
-			if(Keyboard.getEventKeyState()){
-				switch(Keyboard.getEventKey()){
-				case Keyboard.KEY_G:
-					createNewShape = true; break;
-				case Keyboard.KEY_F:
-					resetControlBall = true; break;
-				case Keyboard.KEY_E:
-					shootBoxes = true; break;
-				case Keyboard.KEY_X:
-					switchMotion = true; break;
-				}
-			}
-		}
-		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)){
+		/*if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)){
 			rotate = Rotate.RIGHT;
 		}else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)){
 			rotate = Rotate.LEFT;
@@ -122,11 +123,11 @@ public class Player extends DefaultEntity{
 			turn = Turn.UP;
 		}else if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)){
 			turn = Turn.DOWN;
-		}
+		}*/
 		Vector3f cam = getWorld().getCamera().getPos();
 		Vector3f cameraPosition = new Vector3f(cam.x , cam.y, cam.z);
 		Vector3f viewRay = getWorld().getCamera().getViewRay();
-		float changeby = 40*dt;
+		/*float changeby = 40*dt;
 		if(turn != Turn.NONE){
 			Transform t = new Transform();
 			rigidShape.getWorldTransform(t);
@@ -180,7 +181,7 @@ public class Player extends DefaultEntity{
 			//force strength
 			aim.scale(50);
 			rigidShape.applyForce(aim, getGoodPos);
-		}
+		}*/
 		if(createNewShape){
 			Entity testObject = new DefaultEntity();
 			//visual

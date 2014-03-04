@@ -16,14 +16,14 @@ public class Game extends ThreadManager{
 	public static final String MODELPATH = "models\\";
 	public static final String SHADERPATH = "shaders\\";
 
-	public static int fps = 60;
+	public static int fps = 500;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
 	public static int width = 800;
 	public static int height = 600;
 	public static boolean fullscreen = false;
 	public static int fov = 45;
-	public static float zNear = 0.001f;
-	public static float zFar = 1000;
+	public static float zNear = 1f;
+	public static float zFar = 3000;
 	public static float shadowZFar = 300;
 
 	//States

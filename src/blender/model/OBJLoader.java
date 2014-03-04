@@ -60,6 +60,9 @@ public class OBJLoader {
                 subM.setMaterial(material);
 			}else if(line.startsWith("f ")){ //this goest to subM!!!!!!!!!!!!!!!!!, before get usemtl plane (line 12066)
                 String[] values = line.split("\\s+");
+                for(int i = 1;i<values.length;i++){
+                	
+                }
                 float v1 = Float.parseFloat(values[1].split("/")[0]);
                 float v2 = Float.parseFloat(values[2].split("/")[0]);
                 float v3 = Float.parseFloat(values[3].split("/")[0]);

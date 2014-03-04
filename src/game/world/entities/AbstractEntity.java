@@ -55,12 +55,6 @@ public abstract class AbstractEntity implements Entity{
 		isGround = b;
 	}
 	
-	@Override
-	public void drawTexture(boolean b){
-		if(modelShape != null)
-			modelShape.drawTexture(b);
-	}
-	
 	public boolean setStatic(){
 		if(rigidShape == null) //no physics shape, can't set static
 			return false;
@@ -250,12 +244,12 @@ public abstract class AbstractEntity implements Entity{
 	
 	@Override
 	public void setPos(Vector3f v){
-		motionState.transform(v);
+		motionState.origin.set(v);
 	}
 	
 	@Override
 	public Vector3f getPos() {
-		return (Vector3f)motionState.origin;
+		return new Vector3f(motionState.origin);
 	}
 	
 	@Override

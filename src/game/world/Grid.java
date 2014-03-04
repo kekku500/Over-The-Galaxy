@@ -38,7 +38,7 @@ public class Grid {
 			Line l = new Line();
 			l.setModel(lineVBO);
  			l.setLength(xsize);
-			Request request = new RenderRequest(Action.CREATEVBO, l);
+			Request request = new RenderRequest(Action.INIT, l);
 			sync.add(request);
 			xlines.add(l);
 		}
@@ -49,7 +49,7 @@ public class Grid {
 			Line l = new Line();
 			l.setModel(lineVBO);
  			l.setLength(zsize);
-			Request request = new RenderRequest(Action.CREATEVBO, l);
+			Request request = new RenderRequest(Action.INIT, l);
 			sync.add(request);
 			zlines.add(l);
 		}

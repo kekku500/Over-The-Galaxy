@@ -1,5 +1,23 @@
 package shader;
 
+import static org.lwjgl.opengl.GL20.GL_VALIDATE_STATUS;
+import static org.lwjgl.opengl.GL20.glDeleteProgram;
+import static org.lwjgl.opengl.GL20.glDeleteShader;
+import static org.lwjgl.opengl.GL20.glDetachShader;
+import static org.lwjgl.opengl.GL20.glGetProgrami;
+import static org.lwjgl.opengl.GL20.glUseProgram;
+import static org.lwjgl.opengl.GL20.glValidateProgram;
+import game.Game;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+
+import org.lwjgl.opengl.ARBFragmentShader;
+import org.lwjgl.opengl.ARBShaderObjects;
+import org.lwjgl.opengl.ARBVertexShader;
+import org.lwjgl.opengl.GL11;
 import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
 import static org.lwjgl.opengl.GL20.GL_INFO_LOG_LENGTH;
@@ -19,78 +37,32 @@ import static org.lwjgl.opengl.GL20.glLinkProgram;
 import static org.lwjgl.opengl.GL20.glShaderSource;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glValidateProgram;
-import game.Game;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-
-import org.lwjgl.opengl.ARBShaderObjects;
-import org.lwjgl.opengl.GL11;
-
-public class GLSLProgram {
+/**
+* The vertex and fragment shaders are setup when the box object is
+* constructed. They are applied to the GL state prior to the box
+* being drawn, and released from that state after drawing.
+* @author Stephen Jones
+*/
+public class Shader {
 	
-	private String vertex;
-	private String fragment;
+	private String vertex, fragment;
 	private int vertShader, fragShader;
 	private int program;
 	public int[] uniformLocations;
-	
+	public int[] attribLocations;
+    
 	public boolean load(String vertex, String fragment){
 		this.vertex = vertex;
 		this.fragment = fragment;
-		createShader();
+		createShaderProgram(vertex, fragment);
 		if(program == 0)
 			return false;
 		return true;
 	}
 	
-	public int i(){
-		return program;
-	}
-	
 	public void createShader(){
-		program = createShaderProgram(vertex, fragment);
-	}
-	
-	public int createShaderProgram(String vertex, String fragment){
-    	try {
-            vertShader = createShader(vertex, GL_VERTEX_SHADER);
-            fragShader = createShader(fragment, GL_FRAGMENT_SHADER);
-    	}
-    	catch(Exception exc) {
-    		exc.printStackTrace();
-    		return 0;
-    	}
-    	finally {
-    		if(vertShader == 0 || fragShader == 0)
-    			return 0;
-    	}
-    	
-    	int program = glCreateProgram();
-
-    	
-    	if(program == 0)
-    		return 0;
-        
-        glAttachShader(program, vertShader);
-        glAttachShader(program, fragShader);
-        
-        glLinkProgram(program);
-        
-        if (glGetProgrami(program, GL_LINK_STATUS) == GL11.GL_FALSE) {
-            System.err.println(getLogInfo(program));
-            return 0;
-        }
-        return program;
-	}
-	
-	public void validate(){
-		glValidateProgram(program);
-        if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
-        	System.err.println(getLogInfo(program));
-        }
+		createShaderProgram(vertex, fragment);
 	}
 	
 	public void bind(){
@@ -107,8 +79,11 @@ public class GLSLProgram {
 		glDeleteShader(vertShader);
 		glDeleteShader(fragShader);
 		glDeleteProgram(program);
-		
 		setDefault();
+	}
+	
+	public int i(){
+		return program;
 	}
 	
 	private void setDefault(){
@@ -116,38 +91,93 @@ public class GLSLProgram {
 		fragShader = 0;
 		program = 0;
 		uniformLocations = null;
+		attribLocations = null;
 	}
+
+	public int createShaderProgram(String vertex, String fragment){
+    	int vertShader = 0, fragShader = 0;
+    	
+    	try {
+            vertShader = createShader(vertex,GL_VERTEX_SHADER);
+            fragShader = createShader(fragment,GL_FRAGMENT_SHADER);
+    	}
+    	catch(Exception exc) {
+    		exc.printStackTrace();
+    		return 0;
+    	}
+    	finally {
+    		if(vertShader == 0 || fragShader == 0)
+    			return 0;
+    	}
+    	
+    	program = ARBShaderObjects.glCreateProgramObjectARB();
+    	
+    	if(program == 0)
+    		return 0;
+        
+        /*
+        * if the vertex and fragment shaders setup sucessfully,
+        * attach them to the shader program, link the sahder program
+        * (into the GL context I suppose), and validate
+        */
+        ARBShaderObjects.glAttachObjectARB(program, vertShader);
+        ARBShaderObjects.glAttachObjectARB(program, fragShader);
+        
+        ARBShaderObjects.glLinkProgramARB(program);
+        if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
+            System.err.println(getLogInfo(program));
+            return 0;
+        }
+        
+
+        return program;
+    }
 	
-	private int createShader(String filename, int shaderType) throws Exception{
+	public void validate(){
+        ARBShaderObjects.glValidateProgramARB(program);
+        if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_VALIDATE_STATUS_ARB) == GL11.GL_FALSE) {
+        	System.err.println(getLogInfo(program));
+        	program = 0;
+        }
+	}
+     
+    /*
+    * With the exception of syntax, setting up vertex and fragment shaders
+    * is the same.
+    * @param the name and path to the vertex shader
+    */
+    private int createShader(String filename, int shaderType) throws Exception {
     	int shader = 0;
     	try {
-    		shader = glCreateShader(shaderType);
+	        shader = ARBShaderObjects.glCreateShaderObjectARB(shaderType);
 	        
 	        if(shader == 0)
 	        	return 0;
-	        glShaderSource(shader, readFileAsString(filename));
+	        
+	        ARBShaderObjects.glShaderSourceARB(shader, readFileAsString(filename));
+	        ARBShaderObjects.glCompileShaderARB(shader);
 	        glCompileShader(shader);
 	        
-	        if (glGetProgrami(shader, GL_COMPILE_STATUS) == GL11.GL_FALSE)
+	        if (ARBShaderObjects.glGetObjectParameteriARB(shader, ARBShaderObjects.GL_OBJECT_COMPILE_STATUS_ARB) == GL11.GL_FALSE)
 	            throw new RuntimeException("Error creating shader: " + getLogInfo(shader));
+	        
 	        return shader;
     	}
     	catch(Exception exc) {
-    		glDeleteShader(fragShader);
+    		ARBShaderObjects.glDeleteObjectARB(shader);
     		throw exc;
     	}
-	}
-	
-    private String getLogInfo(int obj) {
-        return glGetProgramInfoLog(obj, glGetProgrami(obj, GL_INFO_LOG_LENGTH));
     }
-	
+    
+    private static String getLogInfo(int obj) {
+        return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(obj, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
+    }
+    
     private String readFileAsString(String filename) throws Exception {
         StringBuilder source = new StringBuilder();
         
 		File f = new File(Game.RESOURCESPATH + Game.SHADERPATH + filename);
-        
-        FileInputStream in = new FileInputStream(f);
+	    FileInputStream in = new FileInputStream(f);
         
         Exception exception = null;
         
@@ -199,6 +229,4 @@ public class GLSLProgram {
         
         return source.toString();
     }
-	
-
 }

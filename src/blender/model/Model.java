@@ -29,10 +29,6 @@ public class Model{
     
 	public Transform offset;
 	
-	private boolean enableLighting = true;
-	
-	private boolean drawTexture = true;
-    
     public Model(){}
 	
 	public Model(String pathf){
@@ -44,10 +40,6 @@ public class Model{
 		this.pathf = pathf;
 		if(load)
 			loadModel();
-	}
-	
-	public void drawTexture(boolean b){
-		drawTexture = b;
 	}
 	
 	public void loadModel(){
@@ -98,7 +90,7 @@ public class Model{
 	
 	public void renderDraw(){
 		for(SubModel m: submodels){
-			m.render(drawTexture);
+			m.render();
 		}
 	}
 	public boolean isTextured = false;
@@ -121,10 +113,6 @@ public class Model{
 	
 	public void setOffset(Transform t){
 		offset = t;
-	}
-	
-	public void enableLighting(boolean b){
-		enableLighting = b;
 	}
 
 }

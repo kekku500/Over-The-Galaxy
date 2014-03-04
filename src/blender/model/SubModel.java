@@ -37,6 +37,7 @@ public class SubModel {
 	
 	public List<Face> faces = new ArrayList<Face>();
     public boolean isTextured;
+    public boolean isNormalMapped;
     
     public Material material = new Material();
 	
@@ -51,21 +52,18 @@ public class SubModel {
 		masterModel = master;
 	}
 	
-	public void render(boolean drawTexture){
+	public void render(){
 		material.apply();
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
  
-        if (drawTexture && isTextured){
+        if (isTextured){
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glActiveTexture(GL_TEXTURE0);  
             glBindTexture(GL_TEXTURE_2D, material.textureHandle);
             glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glTexCoordPointer(2, GL_FLOAT, 0, 0);
-        }else{
-        	//glActiveTexture(GL_TEXTURE0);
-        	//glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         // Bind the normal buffer
@@ -90,7 +88,7 @@ public class SubModel {
         
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        if (drawTexture && isTextured){
+        if (isTextured){
         	//glActiveTexture(GL_TEXTURE);
         	glBindTexture(GL_TEXTURE_2D, 0);
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -111,6 +109,8 @@ public class SubModel {
 		
 	    if (isTextured){
 	    	material.loadTexture();
+	    	if(material.normalHandle != 0)
+	    		isNormalMapped = true;
 	    	vboTexVertexID = glGenBuffers();
 	    }
 		
