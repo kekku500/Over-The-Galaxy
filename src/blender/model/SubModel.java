@@ -1,21 +1,8 @@
 package blender.model;
 
-import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glColorPointer;
-import static org.lwjgl.opengl.GL11.glDisableClientState;
-import static org.lwjgl.opengl.GL11.glDrawArrays;
-import static org.lwjgl.opengl.GL11.glEnableClientState;
-import static org.lwjgl.opengl.GL11.glNormalPointer;
-import static org.lwjgl.opengl.GL11.glTexCoordPointer;
-import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE1;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
@@ -23,15 +10,22 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glUniform1i;
+import game.world.World;
+import game.world.entities.Entity;
+import game.world.graphics.RenderEngine3D;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
-
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.ARBVertexShader;
+
+import utils.math.Vector2f;
+import utils.math.Vector3f;
 
 public class SubModel {
 	
@@ -46,59 +40,156 @@ public class SubModel {
 	public int vboColorID;
 	public int vboTexVertexID;
 	
+	public boolean reverseCull = false;
+	
 	private Model masterModel;
 	
 	public SubModel(Model master){
 		masterModel = master;
 	}
 	
-	public void render(){
-		material.apply();
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
- 
-        if (isTextured){
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glActiveTexture(GL_TEXTURE0);  
-            glBindTexture(GL_TEXTURE_2D, material.textureHandle);
-            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-            glTexCoordPointer(2, GL_FLOAT, 0, 0);
-        }
-
-        // Bind the normal buffer
-        glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
-        glNormalPointer(GL_FLOAT, 0, 0);
-
-        // Bind the vertex buffer
+	/*public void render(){
+		if(!Model.drawVertices()) //no point trying to draw without vertices enabled
+			return;
+		if(Model.drawMaterial())
+			material.apply();
+		
+		if(Model.drawNormals()){ 
+		    glEnableClientState(GL_NORMAL_ARRAY);
+	        glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
+	        glNormalPointer(GL_FLOAT, 0, 0);
+		}
+		
+	    glEnableClientState(GL_VERTEX_ARRAY);
         glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
         glVertexPointer(3, GL_FLOAT, 0, 0);
         
-        //color
-        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
-        glColorPointer(3, GL_FLOAT, 0, 0);
-
-        // Draw all the faces as triangles
-        glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());
-
-        // Disable client states
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_COLOR_ARRAY);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        if (isTextured){
-        	//glActiveTexture(GL_TEXTURE);
-        	glBindTexture(GL_TEXTURE_2D, 0);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        }else{
-        	//glActiveTexture(GL_TEXTURE0);
-        	//glBindTexture(GL_TEXTURE_2D, 0);
+        //if model is textured and textures are enabled
+        if(isTextured && Model.drawTextures()){
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
+            glTexCoordPointer(2, GL_FLOAT, 0, 0);
+        	glUniform1i(World.renderEngine.preprocess.uniformLocations[0], 1); //Tell shader that textures are coming
+        	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, material.textureHandle);
+        }else if(Model.drawColors()){
+        	glEnableClientState(GL_COLOR_ARRAY);
+	        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
+	        glColorPointer(3, GL_FLOAT, 0, 0);
+	        glUniform1i(World.renderEngine.preprocess.uniformLocations[0], 0); //Not using textures
         }
+        //if model is normalmapped and normalmapping is enabled
+		if(isNormalMapped && Model.drawNormalMapping()){
+			glEnableVertexAttribArray(World.renderEngine.preprocess.attribLocations[0]);
+			ARBVertexShader.glVertexAttribPointerARB(World.renderEngine.preprocess.attribLocations[0], 3, GL_FLOAT, false, 0, 0);
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[1], 1); //Inform shader of normalmapping
+			glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, material.normalHandle); //normalmap texture
+		}else{
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[1], 0); //not normalmapping
+		}
+		
+		//Draw call
+		if(masterModel.quadFaces){
+			glDrawArrays(GL_QUADS, 0, 12 * faces.size());  
+		}else{
+			glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());  
+		}
 
-        Material.clear();
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableClientState(GL_VERTEX_ARRAY);
+		if(Model.drawNormals()){ 
+			 glDisableClientState(GL_NORMAL_ARRAY);
+		} 
+       
+        if(isNormalMapped && Model.drawNormalMapping()){
+        	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
+        	glDisableVertexAttribArray(World.renderEngine.preprocess.attribLocations[0]);
+        }
+        if(isTextured && Model.drawTextures()){
+        	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }else if(Model.drawColors()){
+        	glDisableClientState(GL_COLOR_ARRAY);
+        }
+        if(Model.drawMaterial())
+        	Material.clear();
         
+	}*/
+	
+	public void render(){
+		if(!Model.drawVertices()) //no point trying to draw without vertices enabled
+			return;
+		if(Model.drawMaterial()){
+	        glEnable(GL_COLOR_MATERIAL);
+			material.apply();
+			
+		}
+		if(Model.drawNormals()){ 
+		    glEnableClientState(GL_NORMAL_ARRAY);
+	        glBindBuffer(GL_ARRAY_BUFFER, vboNormalID);
+	        glNormalPointer(GL_FLOAT, 0, 0);
+		}
+		
+	    glEnableClientState(GL_VERTEX_ARRAY);
+        glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+        
+        //if model is textured and textures are enabled
+        if(isTextured && Model.drawTextures()){
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
+            glTexCoordPointer(2, GL_FLOAT, 0, 0);
+        	glUniform1i(World.renderEngine.preprocess.uniformLocations[0], 1); //Tell shader that textures are coming
+        	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, material.textureHandle);
+        }else if(Model.drawColors()){
+        	glEnableClientState(GL_COLOR_ARRAY);
+	        glBindBuffer(GL_ARRAY_BUFFER, vboColorID);
+	        glColorPointer(3, GL_FLOAT, 0, 0);
+	        glUniform1i(World.renderEngine.preprocess.uniformLocations[0], 0); //Not using textures
+        }
+        //if model is normalmapped and normalmapping is enabled
+		if(isNormalMapped && Model.drawNormalMapping()){
+			glEnableVertexAttribArray(World.renderEngine.preprocess.attribLocations[0]);
+			ARBVertexShader.glVertexAttribPointerARB(World.renderEngine.preprocess.attribLocations[0], 3, GL_FLOAT, false, 0, 0);
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[1], 1); //Inform shader of normalmapping
+			glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, material.normalHandle); //normalmap texture
+		}else{
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[1], 0); //not normalmapping
+		}
+		
+		if(masterModel.isGodRays){
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[2], 1); //Inform shader of god rays
+		}
+		
+		//Draw call
+		if(masterModel.quadFaces){
+			glDrawArrays(GL_QUADS, 0, 12 * faces.size());  
+		}else{
+			glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());  
+		}
+		
+		if(masterModel.isGodRays){
+			glUniform1i(World.renderEngine.preprocess.uniformLocations[2], 0); //Inform shader of god rays
+		}
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableClientState(GL_VERTEX_ARRAY);
+		if(Model.drawNormals()){ 
+			 glDisableClientState(GL_NORMAL_ARRAY);
+		} 
+       
+        if(isNormalMapped && Model.drawNormalMapping()){
+        	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
+        	glDisableVertexAttribArray(World.renderEngine.preprocess.attribLocations[0]);
+        }
+        if(isTextured && Model.drawTextures()){
+        	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }else if(Model.drawColors()){
+        	glDisableClientState(GL_COLOR_ARRAY);
+        }
+        if(Model.drawMaterial())
+        	Material.clear();
+        	glDisable(GL_COLOR_MATERIAL);
 	}
 	
 	public void prepareVBO(){
@@ -113,13 +204,15 @@ public class SubModel {
 	    		isNormalMapped = true;
 	    	vboTexVertexID = glGenBuffers();
 	    }
-		
-		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(9 * faces.size());
-		FloatBuffer normalBuffer  = BufferUtils.createFloatBuffer(9 * faces.size());
-        FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(9 * faces.size());
+	    int faceVertexCount = 3;
+		if(masterModel.quadFaces)
+			faceVertexCount = 4;
+		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
+		FloatBuffer normalBuffer  = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
+        FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
         FloatBuffer textureBuffer = null;
         if (isTextured){
-            textureBuffer = BufferUtils.createFloatBuffer(6 * faces.size());
+            textureBuffer = BufferUtils.createFloatBuffer(2 * faceVertexCount * faces.size());
         }
         
         List<Vector3f> vertices = masterModel.vertices;
@@ -152,6 +245,16 @@ public class SubModel {
             colorBuffer.put(material.diffuse.get(0))
             .put(material.diffuse.get(1))
             .put(material.diffuse.get(2));
+            
+            if(masterModel.quadFaces){
+                // Get the fourth vertex of the face
+                Vector3f v4 = vertices.get((int) face.getVertex().w - 1);
+                vertexBuffer.put(v4.x).put(v4.y).put(v4.z);
+                // Get the color of the face
+                colorBuffer.put(material.diffuse.get(0))
+                .put(material.diffuse.get(1))
+                .put(material.diffuse.get(2));
+            }
 
             // Get the first normal of the face
             Vector3f n1 = normals.get((int) face.getNormal().x - 1);
@@ -165,6 +268,13 @@ public class SubModel {
             Vector3f n3 = normals.get((int) face.getNormal().z - 1);
             normalBuffer.put(n3.x).put(n3.y).put(n3.z);
             
+            if(masterModel.quadFaces){
+                // Get the fourth normal of the face
+                Vector3f n4 = normals.get((int) face.getNormal().w - 1);
+                normalBuffer.put(n4.x).put(n4.y).put(n4.z);
+            }
+
+            
             if (isTextured){
                 // Get the first texCoords of the face
                 Vector2f t1 = texCoords.get((int) face.getTexCoord().x - 1); 
@@ -177,6 +287,12 @@ public class SubModel {
                 // Get the third texCoords of the face
                 Vector2f t3 = texCoords.get((int) face.getTexCoord().z - 1);
                 textureBuffer.put(t3.x).put(1 - t3.y);
+                
+                if(masterModel.quadFaces){
+                    // Get the third texCoords of the face
+                    Vector2f t4 = texCoords.get((int) face.getTexCoord().w - 1);
+                    textureBuffer.put(t4.x).put(1 - t4.y);
+                }
             }
 		    
 		}

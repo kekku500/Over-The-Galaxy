@@ -37,7 +37,7 @@ public class RenderThread implements Runnable{
 	        Display.create();
 	        setDisplayMode(Game.width, Game.height, Game.fullscreen);
 	        Display.setLocation(0, 0);
-	        Display.setResizable(true);
+	        Display.setResizable(false);
 	    }catch (LWJGLException e){
 	        e.printStackTrace();
 	        System.exit(-1); 

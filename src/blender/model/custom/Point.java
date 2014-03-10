@@ -33,7 +33,7 @@ public class Point extends Model{
 		vertices.rewind();
 	}
 
-	public void renderDraw() {
+	public void renderSubModels() {
 		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 	    

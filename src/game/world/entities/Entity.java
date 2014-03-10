@@ -50,8 +50,6 @@ public interface Entity {
 	
 	public void render();
 	
-	public void render(boolean translate);
-	
 	public void dispose();
 	
 	public void createVBO();

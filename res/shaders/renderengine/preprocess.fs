@@ -1,7 +1,7 @@
 #version 120
 
 uniform sampler2D Texture, NormalMap;
-uniform int Texturing, NormalMapping;
+uniform int Texturing, NormalMapping, GodRays;
 
 varying vec3 Tangent, Binormal, Normal;
 
@@ -12,11 +12,18 @@ void main()
     
     //material stuff
     
-    gl_FragData[2] = gl_FrontMaterial.ambient;
+   	gl_FragData[2] = gl_FrontMaterial.ambient;
     gl_FragData[3] = gl_FrontMaterial.diffuse;
     gl_FragData[4] = gl_FrontMaterial.specular;
     gl_FragData[5] = gl_FrontMaterial.emission;
     gl_FragData[6] = vec4(gl_FrontMaterial.shininess);
+    
+    //God rays stuff
+	if(GodRays == 1){
+		gl_FragData[7] = gl_Color; //emits rays
+	}else{
+		gl_FragData[7] = vec4(0.0); //black means no god rays
+	}
     
     if(Texturing == 1){
     	gl_FragData[0] *= texture2D(Texture, gl_TexCoord[0].st);

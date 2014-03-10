@@ -32,6 +32,7 @@ import game.world.FrustumCulling.Frustum;
 import game.world.entities.Entity;
 import game.world.entities.LightSource;
 import game.world.entities.Player;
+import game.world.entities.LightSource.LightType;
 import game.world.graphics.RenderEngine3D;
 import game.world.gui.Component;
 import game.world.gui.Container;
@@ -52,9 +53,11 @@ import java.util.Set;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
+import org.newdawn.slick.Color;
 
 import shader.Shader;
 import utils.math.Vector3f;
+import utils.math.Vector4f;
 import blender.model.Material;
 import blender.model.Model;
 import blender.model.SubModel;
@@ -74,8 +77,7 @@ import controller.Camera;
 public class World{
 	
 	public static RenderEngine3D renderEngine = new RenderEngine3D();
-	public static LightSource testLight = new LightSource(true);
-	//public static LightSource testLight2 = new LightSource();
+
 	private Player player;
 	
 	DynamicsWorld dynamicsWorld; //Physics World
@@ -83,7 +85,7 @@ public class World{
 	//Store entities
 	Set<Entity> dynamicEntities = new HashSet<Entity>();
 	Set<Entity> staticEntities = new HashSet<Entity>();
-	Set<LightSource> lightSources = new HashSet<LightSource>();
+	public Set<LightSource> lightSources = new HashSet<LightSource>();
 	
 	//GUI
 	public Container container;
@@ -93,8 +95,6 @@ public class World{
 	private Camera camera = new Camera(15,15,-30, this);
 	
 	private State state;
-	
-	public Grid grid;
 	
 	private int uniqueID;
 	private int id;
@@ -111,13 +111,6 @@ public class World{
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		
 		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
-		
-		///test cube light
-		testLight.setPos(new Vector3f(30, 70, 20));
-		addEntity(testLight);
-		
-		//testLight2.setPos(new Vector3f(-30, 10, 20));
-		//addEntity(testLight2);
 	}
 
 	public World(State state, int id){
@@ -125,7 +118,6 @@ public class World{
 		idCounter++;
 		this.id = id;
 		this.state = state;
-		grid = new Grid(this);
 		frustum = new FrustumCulling(camera);
 		container = new Container();
 	}
@@ -142,6 +134,8 @@ public class World{
 			if(req.getItem() instanceof LightSource){
 				LightSource ls = (LightSource)req.getItem();
 				lightSources.add(ls);
+				if(ls.getModel() != null)
+					getStaticEntities().add(ls);
 			}else if(req.getItem() instanceof Entity){
 				Entity e = (Entity) req.getItem();
 				if(e.isDynamic()){
@@ -194,8 +188,6 @@ public class World{
 		
 		checkInput();
 		
-		grid.update();
-		
 		for(Entity e: getDynamicEntities()){
 			e.update(dt);
 		}
@@ -204,7 +196,7 @@ public class World{
 		
 		dynamicsWorld.stepSimulation(dt);
 		
-		World.renderEngine.update(dt);
+		container.update();
 		
 		//checkFrustum();
 	}
@@ -267,7 +259,7 @@ public class World{
 				if(req.getAction() == Action.INIT){
 					if(req.getItem() instanceof LightSource){
 						LightSource ls = (LightSource)req.getItem();
-						ls.init();
+						ls.createVBO();
 						req.done();
 					}else if(req.getItem() instanceof Entity){
 						Entity e = (Entity) req.getItem();
@@ -290,34 +282,18 @@ public class World{
 		renderRequests();
 		
 		World.renderEngine.updateMatrices(camera);
-		World.renderEngine.updateLightSources(lightSources);
-		World.renderEngine.render(getEntities());
+		World.renderEngine.render(getEntities(), camera, this);
 		
-		/*Graphics3D.updateMatrices(camera);
-		Graphics3D.render(getEntities(), this);*/
-		
-		//Graphics3D.cameraPerspective();
-        //glEnable(GL_DEPTH_TEST);
-	    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //grid.render();
-		//glDisable(GL_DEPTH_TEST);
-		
-	    //Render 2D stuff
-	    /*Graphics3D.perspective2D();
+	    Graphics2D.perspective2D();
 	    //just TESting some stuff
 	    container.render();
 	    
 	    g.setFontSize(18);
 	    
-	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
+	    g.drawString(0, 0, "Over The Galaxy Demo v1", Color.red);
 
-	    
-	    g.setFontSize(20);
-	    
-	    g.drawString(100, 50, "DEFAULT" + 50);*/
-
-	    
-	    
+	    //g.setFontSize(20);
+	    //g.drawString(100, 50, "DEFAULT" + 50);  
 	}
 	
 	public void addComponent(Component c){

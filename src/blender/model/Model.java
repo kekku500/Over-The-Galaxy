@@ -1,6 +1,7 @@
 package blender.model;
 
-import static org.lwjgl.opengl.GL11.glMultMatrix;
+import static org.lwjgl.opengl.GL11.*;
+import game.world.World;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,12 +10,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
+import javax.vecmath.Quat4f;
 
 import org.lwjgl.BufferUtils;
 
-import com.bulletphysics.linearmath.Transform;
+
+import com.bulletphysics.linearmath.QuaternionUtil;
+
+import shader.Shader;
+import utils.Utils;
+import utils.math.Transform;
+import utils.math.Vector2f;
+import utils.math.Vector3f;
 
 public class Model{
 	
@@ -25,9 +32,15 @@ public class Model{
 	public List<Vector2f> texCoords = new ArrayList<Vector2f>();
     public HashMap<String, Material> materials = new HashMap<String, Material>();
     
-    private String pathf;
+    private String pathf; //model .obj directory
     
 	public Transform offset;
+	
+	public boolean quadFaces = false;
+	private boolean initialized = false;
+	public boolean isTextured = false; //All submodels textured?
+    public boolean isGodRays = false; //create light scattering
+    
 	
     public Model(){}
 	
@@ -52,6 +65,42 @@ public class Model{
 		}
 	}
 	
+	public void scale(float s){
+		if(!initialized){ //can still modify vertices
+			for(Vector3f v: vertices){
+				v.mul(s);
+			}
+		}else{
+			if(offset == null){
+				offset = new Transform();
+				offset.setIdentity();
+			}
+			offset.scale(s);
+		}	
+	}
+	
+	public void translate(Vector3f v2){
+		if(!initialized){
+			for(Vector3f v: vertices){
+				v.add(v2);
+			}
+		}else{
+			if(offset == null){
+				offset = new Transform();
+				offset.setIdentity();
+			}
+			offset.origin.add(v2);
+		}
+	}
+	
+	public void setRotation(Quat4f q){
+		if(offset == null){
+			offset = new Transform();
+			offset.setIdentity();
+		}
+		offset.setRotation(q);
+	}
+	
 	public void render(){
 		if(offset != null){
 			float[] f = new float[16];
@@ -65,35 +114,15 @@ public class Model{
 			glMultMatrix(fb);
 		}
 
-
-		renderDraw();
-		
+		renderSubModels();
 	}
 	
-	public void render(boolean translate){
-		if(translate)
-			if(offset != null){
-				float[] f = new float[16];
-				
-				offset.getOpenGLMatrix(f);
-				
-				FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-				fb.put(f);
-				fb.rewind();
-				
-				glMultMatrix(fb);
-			}
-
-		renderDraw();
-		
-	}
-	
-	public void renderDraw(){
+	public void renderSubModels(){
 		for(SubModel m: submodels){
 			m.render();
 		}
 	}
-	public boolean isTextured = false;
+
 	public void prepareVBO(){
 		boolean allTex = true;
 		for(SubModel m: submodels){
@@ -103,6 +132,7 @@ public class Model{
 		}
 		if(allTex)
 			isTextured = true;
+		initialized = true; //vbo created
 	}
 	
 	public void dispose(){
@@ -111,8 +141,37 @@ public class Model{
 		}
 	}
 	
-	public void setOffset(Transform t){
-		offset = t;
+	private static boolean drawVertices = true, drawNormals = true, drawColors = true, drawTextures = true, normalMapping = true, drawMaterial = true;
+	public static void setRenderMode(boolean vertices, boolean normals, boolean colors, boolean textures, boolean nMapping, boolean dMaterial){
+		drawVertices = vertices; drawNormals = normals; drawColors = colors; drawTextures = textures; normalMapping =  nMapping; drawMaterial = dMaterial;
+	}
+	
+	public static void resetRenderMode(){
+		drawVertices = true; drawNormals = true; drawColors = true; drawTextures = true; normalMapping = true; drawMaterial = true;
+	}
+
+	public static boolean drawVertices() {
+		return drawVertices;
+	}
+
+	public static boolean drawNormals() {
+		return drawNormals;
+	}
+
+	public static boolean drawColors() {
+		return drawColors;
+	}
+
+	public static boolean drawTextures() {
+		return drawTextures;
+	}
+
+	public static boolean drawNormalMapping() {
+		return normalMapping;
+	}
+	
+	public static boolean drawMaterial(){
+		return drawMaterial;
 	}
 
 }

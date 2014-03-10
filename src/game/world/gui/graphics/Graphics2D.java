@@ -1,18 +1,12 @@
 package game.world.gui.graphics;
 
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.*;
 import game.Game;
 
 import java.awt.Font;
 import java.util.HashSet;
 
+import org.lwjgl.util.glu.GLU;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
@@ -90,6 +84,15 @@ public class Graphics2D {
 	
 	public UnicodeFont getFont(){
 		return font;
+	}
+	
+	
+	public static void perspective2D(){   
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    GLU.gluOrtho2D(0.0f, (float)Game.width, (float)Game.height, 0.0f);
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
 	}
 
 }

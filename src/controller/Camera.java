@@ -15,7 +15,6 @@ import org.lwjgl.util.glu.GLU;
 import utils.Utils;
 import utils.math.Vector3f;
 import blender.model.Model;
-import blender.model.custom.Sphere;
 
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
@@ -102,8 +101,6 @@ public class Camera extends DefaultEntity{
     	vertices.add(nbl);
     	CollisionShape shape = new ConvexHullShape(vertices);*/
 		//AbstractVBO testModel = new CuboidVBO(5,5,15);
-    	Model testModel = new Sphere(camRadius, 30, 30);
-		setModel(testModel);
     	//ConvexShape shape = new SphereShape(camRadius);
     	ConvexShape shape = new SphereShape(camRadius);
 		//CollisionShape shape = new BoxShape(new Vector3ff(5/2, 5/2, 15/2));
