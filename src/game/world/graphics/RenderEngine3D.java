@@ -263,7 +263,22 @@ public class RenderEngine3D {
 	    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
 	    // 2nd pass lighting
-	    deferredLightingStuff();
+	    //deferredLightingStuff();
+	    
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, colorBuffer);
+			glBegin(GL_QUADS);
+				glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
+				glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
+				glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
+				glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
+			glEnd();
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glDisable(GL_TEXTURE_2D);
     }
     
     //public void 
