@@ -180,50 +180,14 @@ public abstract class AbstractEntity implements Entity{
 		
 		glPushMatrix(); //save current transformations
 		
-		//Transform t = new Transform();
+		//Translate, rotate
 		float[] f = new float[16];
-		//body.getMotionState().getWorldTransform(t);
-
 		motionState.getOpenGLMatrix(f);
-		
 		FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 		fb.put(f);
 		fb.rewind();
-		
 		glMultMatrix(fb);
 		modelShape.render();
-	    
-	    glPopMatrix(); //reset transformations
-	    
-	    endRender();
-	}
-	
-	@Override
-	public void render(boolean translate){
-		if(modelShape == null)
-			return;
-		if(!isVisible()){
-			return;
-		}
-		startRender();
-		
-		glPushMatrix(); //save current transformations
-		
-		if(translate){
-			
-			//Transform t = new Transform();
-			float[] f = new float[16];
-			//body.getMotionState().getWorldTransform(t);
-
-			motionState.getOpenGLMatrix(f);
-			
-			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-			fb.put(f);
-			fb.rewind();
-			
-			glMultMatrix(fb);
-		}
-		modelShape.render(translate);
 	    
 	    glPopMatrix(); //reset transformations
 	    
@@ -237,7 +201,7 @@ public abstract class AbstractEntity implements Entity{
 	}
 	
 	@Override
-	public void createVBO() {
+	public void renderInit() {
 		if(modelShape != null)
 			modelShape.prepareVBO();
 	}

@@ -1,5 +1,11 @@
 package utils;
 
+import game.Game;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 
@@ -49,33 +55,11 @@ public class Utils {
 		
 	}
 	
-	public static Vector3f copy(Vector3f v){
-		return new Vector3f(v.x, v.y, v.z);
-	}
 	
 	public static float rads(float degrees){
 		return (float)Math.toRadians(degrees);
 	}
-	
-	public static FloatBuffer asFloatBuffer(float[] values){
-		FloatBuffer fb = BufferUtils.createFloatBuffer(values.length);
-		fb.put(values);
-		fb.flip();
-		return fb;
-	}
-	
-	public static FloatBuffer asFloatBuffer(Vector4f v){
-		FloatBuffer fb = BufferUtils.createFloatBuffer(4);
-		fb.put(v.x).put(v.y).put(v.z).put(v.w);
-		fb.flip();
-		return fb;
-	}
-	
-    /**
-	* @param values the float values that are to be turned into a FloatBuffer
-	*
-	* @return a FloatBuffer readable to OpenGL (not to you!) containing values
-	*/
+
     public static FloatBuffer asFlippedFloatBuffer(float... values) {
         FloatBuffer buffer = BufferUtils.createFloatBuffer(values.length);
         buffer.put(values);
@@ -93,12 +77,69 @@ public class Utils {
     }
     
 	public static FloatBuffer combineFloatBuffers(FloatBuffer...fbs){
-        FloatBuffer send = BufferUtils.createFloatBuffer(16*fbs.length);
+        FloatBuffer send = BufferUtils.createFloatBuffer(fbs[0].capacity()*fbs.length);
         for(FloatBuffer add: fbs){
         	send.put(add);
         }
         send.flip();
         return send;
 	}
+	
+    public static String readFileAsString(String filename) throws Exception {
+        StringBuilder source = new StringBuilder();
+        
+		File f = new File(Game.RESOURCESPATH + Game.SHADERPATH + filename);
+	    FileInputStream in = new FileInputStream(f);
+        
+        Exception exception = null;
+        
+        BufferedReader reader;
+        try{
+            reader = new BufferedReader(new InputStreamReader(in,"UTF-8"));
+            
+            Exception innerExc= null;
+            try {
+            	String line;
+                while((line = reader.readLine()) != null)
+                    source.append(line).append('\n');
+            }
+            catch(Exception exc) {
+            	exception = exc;
+            }
+            finally {
+            	try {
+            		reader.close();
+            	}
+            	catch(Exception exc) {
+            		if(innerExc == null)
+            			innerExc = exc;
+            		else
+            			exc.printStackTrace();
+            	}
+            }
+            
+            if(innerExc != null)
+            	throw innerExc;
+        }
+        catch(Exception exc) {
+        	exception = exc;
+        }
+        finally {
+        	try {
+        		in.close();
+        	}
+        	catch(Exception exc) {
+        		if(exception == null)
+        			exception = exc;
+        		else
+					exc.printStackTrace();
+        	}
+        	
+        	if(exception != null)
+        		throw exception;
+        }
+        
+        return source.toString();
+    }
 
 }

@@ -18,6 +18,8 @@ import org.lwjgl.opengl.ARBFragmentShader;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ARBVertexShader;
 import org.lwjgl.opengl.GL11;
+
+import utils.Utils;
 import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
 import static org.lwjgl.opengl.GL20.GL_INFO_LOG_LENGTH;
@@ -154,7 +156,7 @@ public class Shader {
 	        if(shader == 0)
 	        	return 0;
 	        
-	        ARBShaderObjects.glShaderSourceARB(shader, readFileAsString(filename));
+	        ARBShaderObjects.glShaderSourceARB(shader, Utils.readFileAsString(filename));
 	        ARBShaderObjects.glCompileShaderARB(shader);
 	        glCompileShader(shader);
 	        
@@ -173,60 +175,4 @@ public class Shader {
         return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(obj, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
     }
     
-    private String readFileAsString(String filename) throws Exception {
-        StringBuilder source = new StringBuilder();
-        
-		File f = new File(Game.RESOURCESPATH + Game.SHADERPATH + filename);
-	    FileInputStream in = new FileInputStream(f);
-        
-        Exception exception = null;
-        
-        BufferedReader reader;
-        try{
-            reader = new BufferedReader(new InputStreamReader(in,"UTF-8"));
-            
-            Exception innerExc= null;
-            try {
-            	String line;
-                while((line = reader.readLine()) != null)
-                    source.append(line).append('\n');
-            }
-            catch(Exception exc) {
-            	exception = exc;
-            }
-            finally {
-            	try {
-            		reader.close();
-            	}
-            	catch(Exception exc) {
-            		if(innerExc == null)
-            			innerExc = exc;
-            		else
-            			exc.printStackTrace();
-            	}
-            }
-            
-            if(innerExc != null)
-            	throw innerExc;
-        }
-        catch(Exception exc) {
-        	exception = exc;
-        }
-        finally {
-        	try {
-        		in.close();
-        	}
-        	catch(Exception exc) {
-        		if(exception == null)
-        			exception = exc;
-        		else
-					exc.printStackTrace();
-        	}
-        	
-        	if(exception != null)
-        		throw exception;
-        }
-        
-        return source.toString();
-    }
 }

@@ -99,7 +99,7 @@ public class Material {
         setAmbient(colorDefaultAmbient);
         setSpecular(colorNone);
         setEmission(colorNone);
-        setShininess(minShine);
+        setShininess(maxShine);
     }
 
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

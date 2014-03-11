@@ -8,8 +8,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
+
+
+
+import utils.math.Vector2f;
+import utils.math.Vector3f;
+import utils.math.Vector4f;
 
 public class OBJLoader {
 	
@@ -60,18 +64,25 @@ public class OBJLoader {
                 subM.setMaterial(material);
 			}else if(line.startsWith("f ")){ //this goest to subM!!!!!!!!!!!!!!!!!, before get usemtl plane (line 12066)
                 String[] values = line.split("\\s+");
-                for(int i = 1;i<values.length;i++){
-                	
+                float v4 = 0;
+                float vn4 = 0;
+                float vt4 = 0;
+                if(!m.quadFaces && values.length == 5){
+                	m.quadFaces = true;
+                }
+                if(m.quadFaces){
+                	v4 = Float.parseFloat(values[4].split("/")[0]);
+                	vn4 = Float.parseFloat(values[4].split("/")[2]);
                 }
                 float v1 = Float.parseFloat(values[1].split("/")[0]);
                 float v2 = Float.parseFloat(values[2].split("/")[0]);
                 float v3 = Float.parseFloat(values[3].split("/")[0]);
-                Vector3f vertex = new Vector3f(v1, v2, v3);
+                Vector4f vertex = new Vector4f(v1, v2, v3, v4);
                 
                 float vn1 = Float.parseFloat(values[1].split("/")[2]);
                 float vn2 = Float.parseFloat(values[2].split("/")[2]);
                 float vn3 = Float.parseFloat(values[3].split("/")[2]);
-                Vector3f normal = new Vector3f(vn1, vn2, vn3);
+                Vector4f normal = new Vector4f(vn1, vn2, vn3, vn4);
                 
                 if (subM.isTextured){
                 	if(!useMtl){ //model is textured, but no usemtl was specified, use previous material
@@ -80,8 +91,10 @@ public class OBJLoader {
                     float vt1 = Float.parseFloat(values[1].split("/")[1]);
                     float vt2 = Float.parseFloat(values[2].split("/")[1]);
                     float vt3 = Float.parseFloat(values[3].split("/")[1]);
+                    if(m.quadFaces)
+                    	vt4 = Float.parseFloat(values[4].split("/")[1]);
 
-                    Vector3f texCoords = new Vector3f(vt1, vt2, vt3);
+                    Vector4f texCoords = new Vector4f(vt1, vt2, vt3, vt4);
 
                     subM.faces.add(new Face(vertex, normal, texCoords, material));
                 }else{

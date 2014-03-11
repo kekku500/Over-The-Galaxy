@@ -6,6 +6,8 @@ uniform mat4x4 ProjectionBiasInverse, ViewInverse, LightTexture[6];
 uniform vec2 Samples[16];
 uniform int Shadows, Filtering, Occlusion, CubeLight;
 
+uniform sampler2D MaterialAmbient, MaterialDiffuse, MaterialSpecular, MaterialEmission, MaterialShininess;
+
 //Light source
 uniform vec3 LightSourcePosition, LightSourceNormal;
 uniform vec4 LightSourceAmbient, LightSourceDiffuse, LightSourceSpecular;
@@ -18,14 +20,13 @@ uniform mat3x3 NormalMatrix;
 uniform mat4x4 ProjectionMatrix, ModelViewMatrix;
 
 void main(){
-
+	
     float Depth = texture2D(DepthBuffer, gl_TexCoord[0].st).r;
     
     if(Depth < 1.0){
     	vec4 Position = ProjectionBiasInverse * vec4(gl_TexCoord[0].st, Depth, 1.0);
         Position.xyz /= Position.w;
        	
-        //vec3 LightDirection = gl_LightSource[0].position.xyz - Position.xyz; 
         vec3 LightDirection = LightSourcePosition - Position.xyz; 
         
         // shadows ------------------------------------------------------------------------------------------------------------
@@ -51,7 +52,6 @@ void main(){
 	            	}
 	        	}
     		}
-
 
         	vec4 ShadowTexCoord = LightTexture[MaxAxisID] * vec4(Position.xyz, 1.0);
         	ShadowTexCoord.xyz /= ShadowTexCoord.w;
@@ -85,164 +85,74 @@ void main(){
 			SSAO = texture2D(SSAOTexture, gl_TexCoord[0].st).r;
 		}
 
+		vec4 Ma = texture2D(MaterialAmbient, gl_TexCoord[0].st);
+		vec4 Md = texture2D(MaterialDiffuse, gl_TexCoord[0].st);
+		vec4 MSpec = texture2D(MaterialSpecular, gl_TexCoord[0].st);
+		vec4 Me = texture2D(MaterialEmission, gl_TexCoord[0].st); //not using
+		vec4 MShi = texture2D(MaterialShininess, gl_TexCoord[0].st);
+		
+		vec4 La = LightSourceAmbient;
+		vec4 Ld = LightSourceDiffuse;
+		vec4 LSpec = LightSourceSpecular;
+		
     	//lighting -------------------------------------
-    	if(LightSourceType == 0){ //Directional
-	    	vec3 Normal = normalize(texture2D(NormalBuffer, gl_TexCoord[0].st).rgb * 2.0 - 1.0);
+		int Lighting = 1;
+		vec4 Color = texture2D(ColorBuffer, gl_TexCoord[0].st); //contains ambient color of the model
+		if(Lighting == 1){ //Directional || Point || Spot
+			vec3 Normal = normalize(texture2D(NormalBuffer, gl_TexCoord[0].st).rgb * 2.0 - 1.0);
 	
 			float LightDistance2 = dot(LightDirection, LightDirection);
 			float LightDistance = sqrt(LightDistance2);
 			LightDirection /= LightDistance;
 			vec3 LightDirectionReflected = reflect(-LightDirection, Normal);
-			
-			vec3 ambient = LightSourceAmbient.rgb /**Material.ambient*/;
-			float NdotLD = max(dot(LightDirection, Normal), 0.0) * Shadow;
-			vec3 diffuse = LightSourceDiffuse.rgb /** Material.diffuse */ * NdotLD;
-	
-			float CDdotLDR = 0.0;
-	
-			vec4 Color = texture2D(ColorBuffer, gl_TexCoord[0].st);
-	
-			if(NdotLD > 0.0){
-				CDdotLDR = pow(max(dot(normalize(-Position.xyz), LightDirectionReflected), 0.0), Color.a * 128/*Material.shininess*/) * Shadow;
+			float LightIntensity = 1.0;
+			if(LightSourceType == 1){ //POINT LIGHT ------------------------------------------------------------
+				LightIntensity = max(-dot(LightDirection, LightSourceNormal), 0.0) / (LightSourceConstantAttenuation + LightSourceLinearAttenuation * LightDistance + LightSourceQuadricAttenuation * LightDistance2);
 			}
-			
-			vec3 spec = LightSourceSpecular.rgb /**Material.spec*/ * CDdotLDR;
-	
-			gl_FragColor = vec4(Color.rgb * (ambient * SSAO + diffuse) + spec, 1.0);
-    	}else if(LightSourceType == 1){ //POINT
-    		vec3 Normal = normalize(texture2D(NormalBuffer, gl_TexCoord[0].st).rgb * 2.0 - 1.0);
-	
-			float LightDistance2 = dot(LightDirection, LightDirection);
-			float LightDistance = sqrt(LightDistance2);
-			LightDirection /= LightDistance;
-			vec3 LightDirectionReflected = reflect(-LightDirection, Normal);
-			float LightIntensity = max(-dot(LightDirection, LightSourceNormal), 0.0) / (LightSourceConstantAttenuation + LightSourceLinearAttenuation * LightDistance + LightSourceQuadricAttenuation * LightDistance2);
-			vec3 ambient = LightSourceAmbient.rgb /**Material.ambient*/;
+			vec3 ambient = LightSourceAmbient.rgb * Ma.rgb;
 			float NdotLD = max(dot(LightDirection, Normal), 0.0) * Shadow * LightIntensity;
-			vec3 diffuse = LightSourceDiffuse.rgb /** Material.diffuse */ * NdotLD;
+			vec3 diffuse = LightSourceDiffuse.rgb * Md.rgb * NdotLD;
+	
 			float CDdotLDR = 0.0;
-	
-			vec4 Color = texture2D(ColorBuffer, gl_TexCoord[0].st);
-	
 			if(NdotLD > 0.0){
-				CDdotLDR = pow(max(dot(normalize(-Position.xyz), LightDirectionReflected), 0.0), Color.a * 128/*Material.shininess*/) * Shadow * LightIntensity;
+				CDdotLDR = pow(max(dot(normalize(-Position.xyz), LightDirectionReflected), 0.0), MShi.r) * Shadow * LightIntensity;
 			}
+			vec3 spec = LightSourceSpecular.rgb * MSpec.rgb * CDdotLDR;
 			
-			vec3 spec = LightSourceSpecular.rgb /**Material.spec*/ * CDdotLDR;
-	
-			gl_FragColor = vec4(Color.rgb * (ambient * SSAO + diffuse) + spec, 1.0);
-    	}else if(LightSourceType == 2){ //SPOT - currently dynamic
-    	    vec3 Normal = normalize(texture2D(NormalBuffer, gl_TexCoord[0].st).rgb * 2.0 - 1.0);
-	
-			float LightDistance2 = dot(LightDirection, LightDirection);
-			float LightDistance = sqrt(LightDistance2);
-			LightDirection /= LightDistance;
-			vec3 LightDirectionReflected = reflect(-LightDirection, Normal);
-			vec3 ambient = LightSourceAmbient.rgb /**Material.ambient*/;
-			float NdotLD = max(dot(LightDirection, Normal), 0.0) * Shadow;
-			vec3 diffuse = LightSourceDiffuse.rgb /** Material.diffuse */;
-			float CDdotLDR = 0.0;
-	
-			vec4 Color = texture2D(ColorBuffer, gl_TexCoord[0].st);
-			if(NdotLD > 0.0){
-				CDdotLDR = pow(max(dot(normalize(-Position.xyz), LightDirectionReflected), 0.0), Color.a * 128/*Material.shininess*/) * Shadow;
+			if(LightSourceType == 2){ //SPOT LIGHT -------------------------------------------------------------
+				vec4 spotDir = ModelViewMatrix * vec4(LightSourceSpotLightDirection, 1.0);
+				
+				vec3 D = normalize(spotDir.xyz);
+				
+				float cos_cur_angle = dot(-LightDirection, D);
+				float cos_inner_cone_angle = LightSourceSpotCutoff;
+				float cos_outer_cone_angle = LightSourceSpotCutoff - LightSourceSpotExponent;
+				
+				float cos_inner_minus_outer_angle = 
+				cos_inner_cone_angle - cos_outer_cone_angle;
+
+				float falloff = 1.0;
+				if (cos_cur_angle > cos_inner_cone_angle || cos_cur_angle > cos_outer_cone_angle) {
+					if(cos_cur_angle > cos_outer_cone_angle){
+						falloff = (cos_cur_angle - cos_outer_cone_angle) / 
+						cos_inner_minus_outer_angle;
+					}
+					if(NdotLD > 0.0){
+						diffuse *= falloff;
+						spec *= falloff;
+					}else{
+						diffuse = vec3(0.0);
+						spec = vec3(0.0);
+					}
+				}else{
+					diffuse = vec3(0.0);
+					spec = vec3(0.0);
+				}		
 			}
-			vec3 spec = LightSourceSpecular.rgb /**Material.spec*/ * CDdotLDR;
-			
-			//------------------------------
-		    vec4 spotDir = ModelViewMatrix * vec4(LightSourceSpotLightDirection, 1.0);
-		    
-			vec4 final_color = 
-			/*(gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient) + */
-			(LightSourceAmbient * SSAO /** gl_FrontMaterial.ambient*/);
-									
-			vec3 L = normalize(LightDirection.xyz);
-			vec3 D = normalize(spotDir.xyz);
-			
-			float cos_cur_angle = dot(-L, D);
-			
-			float cos_inner_cone_angle = LightSourceSpotCutoff;
-			float cos_outer_cone_angle = LightSourceSpotCutoff - LightSourceSpotExponent;
-			
-			float cos_inner_minus_outer_angle = 
-			cos_inner_cone_angle - cos_outer_cone_angle;
-			vec4 specular = vec4(0.0);
-			if (cos_cur_angle > cos_inner_cone_angle) {
-				vec3 N = Normal;
-			
-				float lambertTerm = max( dot(N,L), 0.0) * Shadow;
-				if(lambertTerm > 0.0){
-					final_color += LightSourceDiffuse * 
-					/*gl_FrontMaterial.diffuse * */
-					lambertTerm;	
-				
-					vec3 E = normalize(-Position.xyz);
-					vec3 R = reflect(-L, N);
-					
-					specular += pow( max(dot(R, E), 0.0), 
-					/*gl_FrontMaterial.shininess*/128 ) * Shadow;
-					
-					specular *= LightSourceSpecular;
-					
-					//final_color += LightSourceSpecular * 
-					/*gl_FrontMaterial.specular * */
-					//specular;	
-				}
-			}else if( cos_cur_angle > cos_outer_cone_angle ){
-				float falloff = (cos_cur_angle - cos_outer_cone_angle) / 
-				cos_inner_minus_outer_angle;
-				
-				vec3 N = Normal;
-			
-				float lambertTerm = max( dot(N,L), 0.0) * Shadow;
-				
-				if(lambertTerm > 0.0){
-					final_color += LightSourceDiffuse * 
-					/*gl_FrontMaterial.diffuse * */
-					lambertTerm * falloff;	
-				
-					vec3 E = normalize(-Position.xyz);
-					vec3 R = reflect(-L, N);
-					
-					specular += pow( max(dot(R, E), 0.0), 
-					/*gl_FrontMaterial.shininess*/128 ) * Shadow;
-					
-					specular *= LightSourceSpecular * falloff;
-					
-					//final_color += LightSourceSpecular * 
-					/*gl_FrontMaterial.specular * */
-					//specular * falloff;	
-				}
-			}
-			
-			gl_FragColor = Color * final_color + specular;			
-    	}
-
-		
-		
-		///OLD
-		/*   	
-		vec3 Normal = normalize(texture2D(NormalBuffer, gl_TexCoord[0].st).rgb * 2.0 - 1.0);
-
-		float LightDistance2 = dot(LightDirection, LightDirection);
-		float LightDistance = sqrt(LightDistance2);
-		LightDirection /= LightDistance;
-		vec3 LightDirectionReflected = reflect(-LightDirection, Normal);
-		float LightIntensity = max(-dot(LightDirection, LightSourceNormal), 0.0) / 1.0;//(1.0 + 0.0625 * LightDistance + 0.03125 * LightDistance2);
-		
-		float NdotLD = max(dot(LightDirection, Normal), 0.0) * LightIntensity * Shadow;
-
-		float CDdotLDR = 0.0;
-
-		vec4 Color = texture2D(ColorBuffer, gl_TexCoord[0].st);
-
-		if(Color.a > 0.0)
-		{
-			CDdotLDR = pow(max(dot(normalize(-Position.xyz), LightDirectionReflected), 0.0), Color.a * 128) * Shadow * LightIntensity;
+			gl_FragColor = vec4(Me.rgb + Color.rgb * (ambient * SSAO + diffuse) + spec, 1.0);				
+    	}else{ //lighting disabled
+			gl_FragColor = vec4(Me.rgb + Color.rgb * (Ma.rgb * SSAO + Md.rgb * Shadow), 1.0);		
 		}
-
-		gl_FragColor = vec4(Color.rgb * (0.33 * SSAO + 0.66 * NdotLD) + vec3(CDdotLDR), 1.0);
-		*/
     }else{
     	gl_FragColor = vec4(vec3(0.0), 1.0);
     }

@@ -2,6 +2,8 @@ package blender.model;
 
 import javax.vecmath.Vector3f;
 
+import utils.math.Vector4f;
+
 /**
  * A Face in a Model. Each face is a triangle.
  * 
@@ -11,11 +13,11 @@ public class Face
 {
 
     // Vertex indices
-    private Vector3f vertex;
+    private Vector4f vertex;
     // Normal indices
-    private Vector3f normal;
+    private Vector4f normal;
     // TexCoord indices
-    private Vector3f texCoords;
+    private Vector4f texCoords;
     
     private Material material;
 
@@ -24,7 +26,7 @@ public class Face
      * Create a new Face with vertex indices, normal indices, texture indices
      * and material
      */
-    public Face(Vector3f vertex, Vector3f normal, Vector3f texCoords, Material m){
+    public Face(Vector4f vertex, Vector4f normal, Vector4f texCoords, Material m){
         this.vertex = vertex;
         this.normal = normal;
         this.texCoords = texCoords;
@@ -41,7 +43,7 @@ public class Face
     /**
      * @return The vertex indices
      */
-    public Vector3f getVertex()
+    public Vector4f getVertex()
     {
         return vertex;
     }
@@ -49,7 +51,7 @@ public class Face
     /**
      * @return The normal indices
      */
-    public Vector3f getNormal()
+    public Vector4f getNormal()
     {
         return normal;
     }
@@ -57,7 +59,7 @@ public class Face
     /**
      * @return The Texture Indices
      */
-    public Vector3f getTexCoord()
+    public Vector4f getTexCoord()
     {
         return texCoords;
     }

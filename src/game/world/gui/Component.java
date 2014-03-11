@@ -10,7 +10,7 @@ public interface Component {
 	
 	public void dispose();
 	
-	public void createVBO();
+	public void renderInit();
 	
 	//SET
 	public void setId(int id);

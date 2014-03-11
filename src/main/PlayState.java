@@ -16,6 +16,7 @@ import javax.vecmath.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector2f;
 
+import utils.Utils;
 import blender.model.Model;
 import blender.model.custom.Cuboid;
 import blender.model.custom.Plane;
@@ -27,6 +28,7 @@ import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
+import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
 
 public class PlayState extends State{
@@ -40,7 +42,7 @@ public class PlayState extends State{
 	}
 	
 	Model model;
-	
+	public static Entity testBox = null;
 	@Override
 	public void init() {
 		Game.print("PlayState init");
@@ -52,7 +54,7 @@ public class PlayState extends State{
 		
 		//testing shadow
 		float w = 5, h = 5, d = 5;
-		Entity testBox = new DefaultEntity();
+		testBox = new DefaultEntity();
 		//visual
 		Model boxModel = new Cuboid(w,h,d);
 		testBox.setModel(boxModel);
@@ -78,7 +80,7 @@ public class PlayState extends State{
 
 		world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
 		
-		
+		//Random man
 		Entity testObject = new DefaultEntity();
 		//visual
 		//AbstractVBO testModel = new CuboidVBO(2,4,2);
@@ -107,23 +109,34 @@ public class PlayState extends State{
 		testObject.createPhysicsModel();
 		world.addEntity(testObject);
 		
-		
+		//Brick normal map
 		Entity testNormalMap = new DefaultEntity();
 		testNormalMap.getMotionState().origin.set(0,2,0);
 		try {
-			Model normalTest = new Model("normal_map_test\\brick01g.obj");
+			Model normalTest = new Model("normal_map_test\\brick01g-quad.obj");
 			testNormalMap.setModel(normalTest);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		world.addEntity(testNormalMap);
 		
+		///Building -------------------------------------
+		Entity testSSAO = new DefaultEntity();
+		testSSAO.getMotionState().origin.set(0,43.85f,0);
+		try {
+			Model normalTest = new Model("ssao_test\\hight_rise_build-tri.obj");
+			normalTest.scale(40);
+			testSSAO.setModel(normalTest);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		world.addEntity(testSSAO);
 		
+		//GROUND
 		Entity testGround = new DefaultEntity();
 		testGround.setGroud(true);
 		//visual
-		Plane testModel = new Plane(500,0,500);
-		
+		Plane testModel = new Plane(1000,0,1000);
 		testGround.setModel(testModel);
 
 		//physics

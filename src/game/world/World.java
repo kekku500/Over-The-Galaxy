@@ -32,7 +32,9 @@ import game.world.FrustumCulling.Frustum;
 import game.world.entities.Entity;
 import game.world.entities.LightSource;
 import game.world.entities.Player;
+import game.world.entities.LightSource.LightType;
 import game.world.graphics.RenderEngine3D;
+import game.world.graphics.ShadowMapper;
 import game.world.gui.Component;
 import game.world.gui.Container;
 import game.world.gui.graphics.Graphics2D;
@@ -52,12 +54,15 @@ import java.util.Set;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
+import org.newdawn.slick.Color;
 
 import shader.Shader;
 import utils.math.Vector3f;
+import utils.math.Vector4f;
 import blender.model.Material;
 import blender.model.Model;
 import blender.model.SubModel;
+import blender.model.custom.Sphere;
 
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
@@ -74,8 +79,7 @@ import controller.Camera;
 public class World{
 	
 	public static RenderEngine3D renderEngine = new RenderEngine3D();
-	public static LightSource testLight = new LightSource(true);
-	//public static LightSource testLight2 = new LightSource();
+	public static LightSource testLightSource = new LightSource(false);
 	private Player player;
 	
 	DynamicsWorld dynamicsWorld; //Physics World
@@ -85,6 +89,7 @@ public class World{
 	Set<Entity> staticEntities = new HashSet<Entity>();
 	Set<LightSource> lightSources = new HashSet<LightSource>();
 	
+
 	//GUI
 	public Container container;
 	
@@ -102,24 +107,7 @@ public class World{
 	private static int idCounter = 0;
 	private int entityIdCounter = 0;
 	private int componentIdCounter = 0;
-		
-	public void setUpPhysics(){
-		BroadphaseInterface broadphase = new DbvtBroadphase();
-		CollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
-		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
-		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
-		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		
-		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
-		
-		///test cube light
-		testLight.setPos(new Vector3f(30, 70, 20));
-		addEntity(testLight);
-		
-		//testLight2.setPos(new Vector3f(-30, 10, 20));
-		//addEntity(testLight2);
-	}
-
+	
 	public World(State state, int id){
 		uniqueID = idCounter;
 		idCounter++;
@@ -130,6 +118,37 @@ public class World{
 		container = new Container();
 	}
 	
+	public void init(){
+		BroadphaseInterface broadphase = new DbvtBroadphase();
+		CollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
+		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
+		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
+		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+		
+		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
+		
+		///test cube light
+		//testLightSource.setAmbient(new Vector4f(0.4f,0.4f,0.4f,1.0f));
+		Sphere s = new Sphere(8.75f, 16, 16);
+		s.isGodRays = true;
+		testLightSource.setModel(s);
+
+		testLightSource.setLightType(LightType.SPOT);
+		
+		testLightSource.setPos(new Vector3f(0, 50, 300));
+		testLightSource.setShadowMapper(new ShadowMapper(false));
+		
+		//testLightSource.setPos(new Vector3f(0, 75, 0));
+		//testLightSource.setShadowMapper(new ShadowMapper(true));
+		
+		addEntity(testLightSource);
+	}
+	
+	public void linkWorlds(World otherWorld){
+		otherWorld.linkCamera(getCamera());
+		otherWorld.setDynamicsWorld(getDynamicsWorld());
+	}
+
 	public void updateRequests(){
 		RequestManager syncM = state.getSyncManager();
 		ListIterator<UpdateRequest<?>> itr = syncM.getUpdateRequests().listIterator();
@@ -138,10 +157,12 @@ public class World{
 			Status status = req.requestStatus(this);
 			//System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
 			if(status == Status.IDLE)
-				continue; //skip, request must be handled later or done in this world
-			if(req.getItem() instanceof LightSource){
+				continue; //skip, request must be handled later or is already done in this world
+			if(req.getItem() instanceof LightSource){ //also entity, se must be checked first
 				LightSource ls = (LightSource)req.getItem();
 				lightSources.add(ls);
+				if(ls.getModel() != null)
+					getStaticEntities().add(ls);
 			}else if(req.getItem() instanceof Entity){
 				Entity e = (Entity) req.getItem();
 				if(e.isDynamic()){
@@ -194,7 +215,7 @@ public class World{
 		
 		checkInput();
 		
-		grid.update();
+		//grid.update();
 		
 		for(Entity e: getDynamicEntities()){
 			e.update(dt);
@@ -205,6 +226,8 @@ public class World{
 		dynamicsWorld.stepSimulation(dt);
 		
 		World.renderEngine.update(dt);
+		
+		container.update();
 		
 		//checkFrustum();
 	}
@@ -268,15 +291,16 @@ public class World{
 					if(req.getItem() instanceof LightSource){
 						LightSource ls = (LightSource)req.getItem();
 						ls.init();
+						ls.renderInit();
 						req.done();
 					}else if(req.getItem() instanceof Entity){
 						Entity e = (Entity) req.getItem();
-						e.createVBO();
+						e.renderInit();
 						e.preparePhysicsModel();
 						req.done();
 					}else if(req.getItem() instanceof Component){
 						Component c = (Component) req.getItem();
-						c.createVBO();
+						c.renderInit();
 						req.done();
 					}
 				}
@@ -288,10 +312,8 @@ public class World{
 	public void render(Graphics2D g){
 		//Create objects
 		renderRequests();
-		
-		World.renderEngine.updateMatrices(camera);
-		World.renderEngine.updateLightSources(lightSources);
-		World.renderEngine.render(getEntities());
+
+		World.renderEngine.render(this);
 		
 		/*Graphics3D.updateMatrices(camera);
 		Graphics3D.render(getEntities(), this);*/
@@ -303,7 +325,7 @@ public class World{
 		//glDisable(GL_DEPTH_TEST);
 		
 	    //Render 2D stuff
-	    /*Graphics3D.perspective2D();
+	    Graphics2D.perspective2D();
 	    //just TESting some stuff
 	    container.render();
 	    
@@ -314,7 +336,7 @@ public class World{
 	    
 	    g.setFontSize(20);
 	    
-	    g.drawString(100, 50, "DEFAULT" + 50);*/
+	    g.drawString(100, 50, "DEFAULT" + 50);
 
 	    
 	    
@@ -428,5 +450,9 @@ public class World{
 	
 	public State getState(){
 		return state;
+	}
+	
+	public Set<LightSource> getLightSources() {
+		return lightSources;
 	}
 }

@@ -52,7 +52,7 @@ public class Player extends DefaultEntity{
 					new Vector3f(0,0,0), 1.0f));
 			Matrix4f ne = new Matrix4f();
 			t.getMatrix(ne);
-			model2.setOffset(t);
+			model2.setRotation(quat);
 			setModel(model2);
 		} catch (Exception e) {
 			e.printStackTrace();

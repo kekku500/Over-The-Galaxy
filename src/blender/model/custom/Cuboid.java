@@ -1,7 +1,6 @@
 package blender.model.custom;
 
-import javax.vecmath.Vector3f;
-
+import utils.math.Vector3f;
 import blender.model.Model;
 
 public class Cuboid extends Model{

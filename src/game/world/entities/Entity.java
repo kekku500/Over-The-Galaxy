@@ -16,14 +16,8 @@ public interface Entity {
 		STATIC, DYNAMIC;
 	}
 	
-	/**
-	 * @return Success of setting object static.
-	 */
 	public boolean setStatic();
 	
-	/**
-	 * @return Success of setting object dynamic.
-	 */
 	public boolean setDynamic();
 	
 	public void setRigidBody(RigidBody rigidShape);
@@ -50,11 +44,9 @@ public interface Entity {
 	
 	public void render();
 	
-	public void render(boolean translate);
-	
 	public void dispose();
 	
-	public void createVBO();
+	public void renderInit();
 	
 	public void setMotionState(Transform t);
 	

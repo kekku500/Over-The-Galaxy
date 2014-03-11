@@ -54,7 +54,7 @@ public class Quad extends Model{
 		normals.rewind();
 	}
 
-	public void renderDraw() {
+	public void renderSubModels() {
 		glColor4f(color[0],color[1],color[2],color[3]);
 		
         // Bind the normal buffer

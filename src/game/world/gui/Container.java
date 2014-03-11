@@ -45,4 +45,8 @@ public class Container extends AbstractComponent{
 	@Override
 	public void renderDraw() {}
 
+	@Override
+	public void renderInitStart() {
+	}
+
 }

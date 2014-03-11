@@ -29,21 +29,13 @@ public abstract class State {
 	 * @param worlds
 	 */
 	private void linkWorlds(World...worlds){
-		boolean first = true;
-		World mainWorld = null;
-		Camera mainCam = null;
-		for(World w: worlds){
-			if(first){
-				mainWorld = w;
-				w.setUpPhysics();
-				mainCam = w.getCamera();
-				mainCam.createCamera();
-				first = false;
-				continue;
-			}
-			w.linkCamera(mainCam);
-			w.setDynamicsWorld(mainWorld.getDynamicsWorld());
-		}
+		World mainWorld = worlds[0];
+		mainWorld.init();
+		
+		mainWorld.getCamera().createCamera();
+		
+		for(int i=1;i<worlds.length;i++)
+			mainWorld.linkWorlds(worlds[i]);
 	}
 	
 	//ABSTRACT

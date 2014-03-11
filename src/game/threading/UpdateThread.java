@@ -78,6 +78,7 @@ public class UpdateThread implements Runnable{
 		}
 		
 		//Display has been closed
+		System.out.println("Update thread stopped!");
 		threadManager.endGame();
 	}
 	

@@ -1,18 +1,13 @@
 package game.world.gui.graphics;
 
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.*;
 import game.Game;
+import game.threading.RenderThread;
 
 import java.awt.Font;
 import java.util.HashSet;
 
+import org.lwjgl.util.glu.GLU;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
@@ -26,8 +21,6 @@ public class Graphics2D {
 	public Graphics2D(){}
 	
 	public void init(){
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //for fonts
-
 		//Create fonts here
 		Font awtFont = new Font("Times New Roman", 0, 0);
 		font = createFont(awtFont.deriveFont(0, 18));
@@ -63,6 +56,7 @@ public class Graphics2D {
 	
 	public void drawString(int x, int y, String text){
 		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //for fonts
 	    glEnable(GL_TEXTURE_2D);
 		font.drawString(x, y, text);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -72,6 +66,7 @@ public class Graphics2D {
 	
 	public void drawString(int x, int y, String text, Color color){
 		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //for fonts
 	    glEnable(GL_TEXTURE_2D);
 	    font.drawString(x, y, text, color);
 	    glBindTexture(GL_TEXTURE_2D, 0);
@@ -81,6 +76,7 @@ public class Graphics2D {
 	
 	public void drawString(int x, int y, String text, Color color, int startIndex, int endIndex){
 		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //for fonts
 	    glEnable(GL_TEXTURE_2D);
 		font.drawString(x, y, text, color, startIndex, endIndex);
 	    glBindTexture(GL_TEXTURE_2D, 0);
@@ -90,6 +86,14 @@ public class Graphics2D {
 	
 	public UnicodeFont getFont(){
 		return font;
+	}
+	
+	public static void perspective2D(){   
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    GLU.gluOrtho2D(0.0f, (float)RenderThread.displayWidth, (float)RenderThread.displayHeight, 0.0f);
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
 	}
 
 }

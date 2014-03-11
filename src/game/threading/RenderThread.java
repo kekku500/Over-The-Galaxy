@@ -50,7 +50,7 @@ public class RenderThread implements Runnable{
 	    graphics2D.init();
 	    
 	    //hide the mouse
-	    Mouse.setGrabbed(true);
+	    //Mouse.setGrabbed(true);
 	    
 	    //Initialize graphics renderer
 	    World.renderEngine.init();
@@ -85,9 +85,7 @@ public class RenderThread implements Runnable{
 			//Game.print("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
 			latestState.setRendering(true); //Must not modify a state that is being rendered
 			//Game.print("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
-			
 			activeState.render(graphics2D); //RENDER
-			
 			latestState.setRendering(false);
 			Display.update();
 				
@@ -102,12 +100,14 @@ public class RenderThread implements Runnable{
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
+					System.out.println("Render thread stopped while sleeping");
 					//End while sleeping
 					endGame();
 				}
 			}
 			
 		}
+		System.out.println("Render thread stopped normally");
 		//End normally
 		endGame();
 	}
@@ -131,8 +131,8 @@ public class RenderThread implements Runnable{
 	public void resized(){
 		displayWidth = Display.getWidth();
 		displayHeight = Display.getHeight();
-		glViewport(0, 0, displayWidth, displayHeight);
-		//World.renderEngine.resize(displayWidth, displayHeight);
+		//glViewport(0, 0, displayWidth, displayHeight);
+		World.renderEngine.resized();
 	}
 	
 	//Display fps counter
@@ -167,7 +167,7 @@ public class RenderThread implements Runnable{
 	 *
 	 * @return True if switching is successful. Else false.
 	 */
-	private boolean setDisplayMode(int width, int height, boolean fullscreen){
+	public static boolean setDisplayMode(int width, int height, boolean fullscreen){
 	    // return if requested DisplayMode is already set
 	    if ((Display.getDisplayMode().getWidth() == width) &&
 	        (Display.getDisplayMode().getHeight() == height) &&

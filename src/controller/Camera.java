@@ -205,7 +205,8 @@ public class Camera extends DefaultEntity{
 				rigidShape.setWorldTransform(t2);
 			}
 		}
-
+		
+		
 		rigidShape.getMotionState().getWorldTransform(motionState); //update position
 		Matrix4f viewMatrix = new Matrix4f();
 		motionState.getMatrix(viewMatrix);

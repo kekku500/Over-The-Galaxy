@@ -10,7 +10,7 @@ public class Game extends ThreadManager{
 	
 	public static boolean debug = true;
 	
-	public static final String VERSION = "0.53";
+	public static final String VERSION = "0.9";
 	
 	public static final String RESOURCESPATH = "res\\";
 	public static final String MODELPATH = "models\\";
