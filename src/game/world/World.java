@@ -133,7 +133,7 @@ public class World{
 		s.isGodRays = true;
 		testLightSource.setModel(s);
 
-		testLightSource.setLightType(LightType.SPOT);
+		testLightSource.setLightType(LightType.POINT);
 		
 		testLightSource.setPos(new Vector3f(0, 50, 300));
 		testLightSource.setShadowMapper(new ShadowMapper(false));
