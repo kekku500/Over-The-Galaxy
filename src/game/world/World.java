@@ -37,7 +37,7 @@ import game.world.graphics.RenderEngine3D;
 import game.world.graphics.ShadowMapper;
 import game.world.gui.Component;
 import game.world.gui.Container;
-import game.world.gui.HeadsUpDisplay;
+import game.world.gui.hud.HeadsUpDisplay;
 import game.world.gui.graphics.Graphics2D;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;

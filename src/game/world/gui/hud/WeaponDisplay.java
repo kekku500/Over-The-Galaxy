@@ -1,4 +1,4 @@
-package game.world.gui;
+package game.world.gui.hud;
 
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
@@ -13,18 +13,20 @@ import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+import game.world.gui.AbstractComponent;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
 
 import blender.model.Texture;
 
-public class HudComponent extends AbstractComponent{
-	String texPath = "res/models/HudWep.png";
-	public HudComponent(){
+public class WeaponDisplay extends HudComponent{
+	String texPath = "res/models/hud/HudWep.png";
+	public WeaponDisplay(){
 		position = new Vector2f(10,10);
 		width = 200;
 		height = 100;
+		
 		
 		//Create Vertex Buffer
 		vertices = BufferUtils.createFloatBuffer(2 * 4); //(x,y)*(4 vertices on a rectangle)

@@ -6,7 +6,7 @@ import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 import game.world.entities.Player;
-import game.world.gui.HeadsUpDisplay;
+import game.world.gui.hud.HeadsUpDisplay;
 import game.world.gui.Rectangle;
 import game.world.gui.graphics.Graphics2D;
 
