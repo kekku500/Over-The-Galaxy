@@ -2,7 +2,7 @@ package main;
 
 import game.Game;
 import game.State;
-import game.world.gui.graphics.Graphics2D;
+import game.world.graphics.Graphics2D;
 
 /**
  * A simple example of a state.
@@ -28,7 +28,7 @@ public class IntroState extends State{
 	}
 
 	@Override
-	public void render(Graphics2D g) {
+	public void render() {
 	}
 
 	@Override
@@ -40,6 +40,12 @@ public class IntroState extends State{
 	@Override
 	public int getId() {
 		return stateId;
+	}
+
+	@Override
+	public void renderInit() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

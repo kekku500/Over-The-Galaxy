@@ -1,7 +1,7 @@
 package game;
 
 import game.world.World;
-import game.world.gui.graphics.Graphics2D;
+import game.world.graphics.Graphics2D;
 import game.world.sync.RequestManager;
 
 import java.util.Arrays;
@@ -12,12 +12,14 @@ public abstract class State {
 	
 	//If false, renderThread sleeps
 	private boolean newStuffToRender = true;
+	private boolean renderInitialized = false;
 	
 	//Multithreading rendering handling (synchronizing update and render threads)
 	RenderState[] renderStates = new RenderState[3];
 	private RequestManager syncManager = new RequestManager();
 	
 	public State(){
+		System.out.println("linked worlds");
 		renderStates[0] = new RenderState(this, 0, 0);
 		renderStates[1] = new RenderState(this, 1, -1);
 		renderStates[2] = new RenderState(this, 2, -1);
@@ -38,16 +40,28 @@ public abstract class State {
 			mainWorld.linkWorlds(worlds[i]);
 	}
 	
+	public void callRenderInit(){
+		if(!renderInitialized){
+			renderInitialized = true;
+			World world = getLatestState().getWorld();
+			world.renderInit();
+			
+			renderInit();
+		}
+	}
+	
 	//ABSTRACT
 	public abstract void init();
 	
 	public abstract void update(float dt);
 	
-	public abstract void render(Graphics2D g);
+	public abstract void render();
 	
 	public abstract void dispose();
 	
 	public abstract int getId();
+	
+	public abstract void renderInit();
 	
 	//SET
 	public void setStuffToRender(boolean b){

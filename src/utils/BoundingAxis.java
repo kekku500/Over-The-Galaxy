@@ -33,6 +33,11 @@ public class BoundingAxis {
 	public Vector3f getMin(){
 		return min;
 	}
+	
+	@Override
+	public String toString(){
+		return "Min " + getMin() + " Max " + getMax();
+	}
 
 
 }

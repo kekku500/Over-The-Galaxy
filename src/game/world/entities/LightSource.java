@@ -21,19 +21,21 @@ public class LightSource extends AbstractEntity {
 	//Point fade
 	private float constantAttenuation = 1.0f, linearAttenuation = .000f, quadricAttenuation = .000f;
 	
-	//Other
-	private final boolean isStatic;
 	
 	public ShadowMapper shadowMapper;
 	
 
 
 	public LightSource(boolean isStatic){
-		this.isStatic = isStatic;
 		ambient = new Vector4f(.25f, .25f, .25f, 1.0f);
 		diffuse = new Vector4f(1.7f, 1.7f, 1.7f, 1.0f);
 		specular = new Vector4f(0.5f, 0.5f, 0.5f, 1.0f);
 		lightType = LightType.SPOT;
+	}
+	
+	@Override
+	public Entity getLinked(){
+		return new LightSource(true).linkTo(this);
 	}
 	
 	public ShadowMapper getShadowMapper() {
@@ -41,10 +43,6 @@ public class LightSource extends AbstractEntity {
 	}
 	public void setShadowMapper(ShadowMapper shadowMapper) {
 		this.shadowMapper = shadowMapper;
-	}
-	
-	public boolean isStatic() {
-		return isStatic;
 	}
 	
 	public float getConstantAttenuation() {
@@ -163,48 +161,5 @@ public class LightSource extends AbstractEntity {
 			quadricAttenuation = 0;
 		this.quadricAttenuation = quadricAttenuation;
 	}
-
-	@Override
-	public Vector3f getPosToMid() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void lastUpdate(float dt) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void firstUpdate(float dt) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void startRender() {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void endRender() {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void calcBoundingSphere() {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void calcBoundingAxis() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Entity copy() {
-		// TODO Auto-generated method stub
-		return null;
-	};
 
 }

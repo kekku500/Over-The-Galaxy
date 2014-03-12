@@ -69,18 +69,18 @@ public class Player extends DefaultEntity{
 		testConstructionInfo.angularDamping = 0.95f;
 		testConstructionInfo.friction = 0.95f;
 		RigidBody testBody;
-		testBody = new RigidBody(testConstructionInfo);
-		testBody.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
+		//testBody = new RigidBody(testConstructionInfo);
+		createRigidBody(testConstructionInfo);
+		getRigidBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
 		//controlBall.setLinearVelocity(new Vector3f(0,0,0));
 		//testBody.setCollisionFlags(CollisionFlags.KINEMATIC_OBJECT);
-		setDynamic();
-		rigidShape = testBody;	
+		//setDynamic();
+		//rigidShape = testBody;	
 	}
 	
 	@Override
-	public Entity copy(){
-		Player newCube = new Player();
-		return copy2(newCube);
+	public Entity getLinked(){
+		return new Player().linkTo(this);
 	}
 	
 	boolean applyForce = false;
@@ -107,7 +107,7 @@ public class Player extends DefaultEntity{
 	}
 	
 	@Override
-	public void firstUpdate(float dt){
+	public void update(float dt){
 		//rigidShape.setGravity(new Vector3f(0,0,0));
 		if(Mouse.isButtonDown(0)){
 			applyForce = true;
@@ -197,16 +197,17 @@ public class Player extends DefaultEntity{
 			RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(1.0f, motionState, shape, intertia);
 			constructionInfo.restitution = 0.75f;
 			constructionInfo.angularDamping = 0.95f;
-			RigidBody body = new RigidBody(constructionInfo);
-			setDynamic();
-			testObject.setRigidBody(body);
+			//RigidBody body = new RigidBody(constructionInfo);
+			//setDynamic();
+			testObject.createRigidBody(constructionInfo);
+			//testObject.setRigidBody(body);
 			getWorld().addEntity(testObject);
 			createNewShape = false;
 		}
 		if(shootBoxes){
 			float w = 5, h = 5, d = 5;
 			float I = 2f;
-			float impluseForce = 20;
+			float impluseForce = 100;
 			Entity testObject = new DefaultEntity();
 			//visual
 			Model testModel = new Cuboid(w,h,d);
@@ -221,15 +222,20 @@ public class Player extends DefaultEntity{
 			RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(I, motionState, shape, intertia);
 			constructionInfo.restitution = 0.1f;
 			constructionInfo.friction = 0.95f;
-			RigidBody body = new RigidBody(constructionInfo);
+			testObject.createRigidBody(constructionInfo);
+			System.out.println("created rigid body for box " + testObject.getRigidBody());
+			//RigidBody body = new RigidBody(constructionInfo);
 			setDynamic();
-			body.activate();
-			body.applyCentralImpulse(new Vector3f(viewRay.x*impluseForce, viewRay.y*impluseForce, viewRay.z*impluseForce));
 			
-			testObject.setRigidBody(body);
+			testObject.getRigidBody().activate();
+			testObject.getRigidBody().applyCentralImpulse(new Vector3f(viewRay.x*impluseForce, viewRay.y*impluseForce, viewRay.z*impluseForce));
+			
+			//testObject.setRigidBody(body);
 			getWorld().addEntity(testObject);
 			shootBoxes = false;
 		}
+		
+		super.update(dt);
 	}
 	
 	public float getMovementSpeed(){

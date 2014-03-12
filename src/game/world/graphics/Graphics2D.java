@@ -1,4 +1,4 @@
-package game.world.gui.graphics;
+package game.world.graphics;
 
 import static org.lwjgl.opengl.GL11.*;
 import game.Game;

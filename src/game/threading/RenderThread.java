@@ -5,7 +5,7 @@ import game.Game;
 import game.RenderState;
 import game.State;
 import game.world.World;
-import game.world.gui.graphics.Graphics2D;
+import game.world.graphics.Graphics2D;
 
 import java.util.ArrayList;
 
@@ -43,17 +43,8 @@ public class RenderThread implements Runnable{
 	        System.exit(-1); 
 	    }
 	    
-	    Game.print("Setting up OpenGL");
-	    
-	    //Initialize 2d graphics class
-	    graphics2D = new Graphics2D(); //used for texts
-	    graphics2D.init();
-	    
 	    //hide the mouse
 	    //Mouse.setGrabbed(true);
-	    
-	    //Initialize graphics renderer
-	    World.renderEngine.init();
 	}
 	
 
@@ -63,29 +54,37 @@ public class RenderThread implements Runnable{
 		
 		//Get Active State
 		State activeState = threadManager.getActiveState();
+		activeState.callRenderInit();
 		
 		//Rendering loop
 		Game.print("Starting renderThread loop");
 		threadManager.setRenderReady(true);
-		while(!Thread.interrupted()){
+		while(true){
+			boolean interrupted = Thread.interrupted();
+			if(interrupted)
+				break;
 			//Display fps
 			updateDisplayFps();
 			//Check if state has been changed
-			if(threadManager.getActiveStateId() != activeState.getId())
+			if(threadManager.getActiveStateId() != activeState.getId()){
 				activeState = threadManager.getActiveState();
+				activeState.callRenderInit();
+			}
 
 			//Check if screen has been resized
 			if(Display.wasResized()){
 				resized();
 			}
 		    
+			//Get state ready for rendering
 			RenderState latestState = activeState.getLatestState();
+			
 			//System.out.println("Rendering " + latestState.getId() + " " + activeState.getStatesCounts() + " (" + latestState.getFrameCount() + ")" + " at " + Main.getTime());
 			int renderingFrame = latestState.getFrameCount();
 			//Game.print("Frame states " + Arrays.toString(threadManager.getStatesCounts()));
 			latestState.setRendering(true); //Must not modify a state that is being rendered
 			//Game.print("Rendering RenderState " + latestState.getId() + " at " + Main.getTime());
-			activeState.render(graphics2D); //RENDER
+			activeState.render(); //RENDER
 			latestState.setRendering(false);
 			Display.update();
 				
@@ -94,7 +93,7 @@ public class RenderThread implements Runnable{
 				//Game.print("No new stuff to render at " + Main.getTime());
 				activeState.setStuffToRender(false);
 			}
-			while(!Thread.interrupted() && //Thread can still run
+			while(!interrupted && //Thread can still run
 					!activeState.newStuffToRender() &&  //Nothing new to render
 					threadManager.getActiveStateId() == activeState.getId()){ //State hasn't changed
 				try {

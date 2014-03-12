@@ -31,7 +31,7 @@ public class ShadowMapper {
 	private int shadowMapSize = 512;
 	
 	private Vector3f sceneOrigin = new Vector3f();
-	private float sceneBoundingRadius = 75;
+	private float sceneBoundingRadius = 100;
 	
 	private boolean shadowEnabled = true;
 	

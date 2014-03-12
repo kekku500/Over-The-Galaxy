@@ -9,201 +9,232 @@ import game.world.sync.RequestManager;
 import game.world.sync.UpdateRequest;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
-import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.BufferUtils;
 
 import utils.BoundingAxis;
 import utils.BoundingSphere;
+import utils.R;
+import utils.math.Matrix4f;
 import utils.math.Vector3f;
 import blender.model.Model;
 
+import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.Transform;
 
 public abstract class AbstractEntity implements Entity{
 	
+	//All variables that are independent from rendering
+	protected R<Boolean> isStaticWrapper = new R<Boolean>(true);
+	protected R<RigidBody> rigidBodyWrapper = new R<RigidBody>();
+	protected R<Model> modelWrapper = new R<Model>(); //visual object
+	protected R<RigidBodyConstructionInfo> constructionInfoWrapper = new R<RigidBodyConstructionInfo>(); //for changing object static/dynamic
+	protected R<Integer> idWrapper = new R<Integer>();
+	
+	//Every entity must have each of these variables (multi-threading rendering)
 	protected Transform motionState = new Transform(new Matrix4f(new Quat4f(0,0,0,1),new Vector3f(0,0,0), 1.0f));
-	
-	protected Model modelShape; //visual object
-	protected RigidBody rigidShape; //physics object
-	protected RigidBodyConstructionInfo rigidInfo; //for changing object static/dynamic
-	
 	protected boolean visible = true; //in camera
-	protected boolean createPhysicsModel = false;
-	protected boolean isGround = false;
-	
-	private boolean isStatic = true;
-	
 	protected World world;
-	protected int id;
 	
+	//Other
+	private int tag; //just to identify object when needed
+
 	protected BoundingAxis boundingAxis;
 	protected BoundingSphere boundingSphere;
-	protected float radius;
 	
 	@Override
-	public boolean isGround() {
-		return isGround;
+	public void update(float dt){
+		//update model motion state
+		if(getRigidBody() != null){
+			if(getRigidBody().isActive()){
+				getRigidBody().getMotionState().getWorldTransform(motionState); //update position
+				Vector3f min = new Vector3f();
+				Vector3f max = new Vector3f();
+				getRigidBody().getAabb(min, max);
+				boundingAxis = new BoundingAxis(min, max);
+				
+				if(boundingSphere != null)
+					boundingSphere.pos = getPos();
+			}
+		}
+	}
+	
+	@Override
+	public void render(){
+		//if("rendering " + this + " isvisual? " + !isVi) 
+		if(!isVisual() || !isVisible())
+			return;
+		
+		glPushMatrix(); //save current transformations
+		
+		Matrix4f m = new Matrix4f();
+		motionState.getMatrix(m);
+		m.transpose();
+		glMultMatrix(m.asFlippedFloatBuffer()); //translate, rotate, scale
+		
+		getModel().render();
+	    
+	    glPopMatrix(); //reset transformations
+	}
+	
+	/**
+	 * Creates new RigidBody from given RigidBodyConstructionInfo and
+	 * sets it to this entity's RigidBody.
+	 * @param rbci RigidBodyConstructionInfo
+	 */
+	@Override
+	public void createRigidBody(RigidBodyConstructionInfo rbci){
+		constructionInfoWrapper.set(rbci);
+		setRigidBody(new RigidBody(rbci));
+		isStaticWrapper.set(false);
+		
+		//bounding aabb
+		Vector3f min = new Vector3f();
+		Vector3f max = new Vector3f();
+		getRigidBody().getAabb(min, max);
+		boundingAxis = new BoundingAxis(min, max);
+		
+		//Bounding sphere
+		float[] f = new float[1];
+		Vector3f v = new Vector3f();
+		getRigidBodyConstructionInfo().collisionShape.getBoundingSphere(v, f);
+		
+		boundingSphere = new BoundingSphere(getPos(), f[0]);
+	}
+	
+	public boolean isVisual(){
+		if(getModel() == null)
+			return false;
+		return true;
 	}
 
-	@Override
-	public void setGroud(boolean b) {
-		isGround = b;
+	
+	public void setTag(int i){
+		tag = i;
 	}
 	
-	public boolean setStatic(){
-		if(rigidShape == null) //no physics shape, can't set static
+	public int getTag(){
+		return tag;
+	}
+	
+	
+
+	
+	/**
+	 * @return Does this entity have RigidBody?
+	 */
+	public boolean isPhysical(){
+		if(rigidBodyWrapper == null)
 			return false;
-		if(world != null){ //remove from world before changing
-			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
-		}
-		rigidShape.setMassProps(0f, new Vector3f(0,0,0)); //remove mass
-		rigidShape.updateInertiaTensor();
-		rigidShape.setLinearVelocity(new Vector3f(0,0,0)); //zero velocity
-		rigidShape.setAngularVelocity(new Vector3f(0,0,0)); //zero angular velocity
-		rigidShape.getMotionState().getWorldTransform(motionState); //update motionstate to the latest
-		if(world != null){
-			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
-		}
-		isStatic = true;
-		if(world != null){ //update other worlds aswell
-			RequestManager sync = getWorld().getState().getSyncManager();
-			sync.add(new UpdateRequest(Action.MOVE, this));
-		}
 		return true;
 	}
 	
 	/**
-	 * In order to set object dynamic, RigidBodyConstructionInfo must be available in this class.
+	 * @return Has been added to the world?
 	 */
-	public boolean setDynamic(){
-		if(rigidShape == null || rigidInfo == null) //no physics shape, can't set dynamic then
+	public boolean isInWorld(){
+		if(world == null)
 			return false;
-		if(world != null){ //added to the world, then remove it before changing anything
-			getWorld().getDynamicsWorld().removeRigidBody(rigidShape);
-			reconstructRigidBody();
-			getWorld().getDynamicsWorld().addRigidBody(rigidShape);
-			rigidShape.activate();
+		return true;
+	}
+	
+
+	public boolean setStatic(){
+		if(isStatic() || !isPhysical()) //no physics shape, can't set static
+			return false;
+		if(isInWorld()){ //remove from world before changing
+			getWorld().getDynamicsWorld().removeRigidBody(getRigidBody());
 		}
-		isStatic = false;
-		if(world != null){ //update other worlds as well
+		getRigidBody().setMassProps(0f, new Vector3f(0,0,0)); //remove mass
+		getRigidBody().updateInertiaTensor();
+		getRigidBody().setLinearVelocity(new Vector3f(0,0,0)); //zero velocity
+		getRigidBody().setAngularVelocity(new Vector3f(0,0,0)); //zero angular velocity
+		getRigidBody().getMotionState().getWorldTransform(motionState); //update motionstate to the latest, just in case
+		if(isInWorld()){
+			getWorld().getDynamicsWorld().addRigidBody(getRigidBody());
+		}
+		getIsStaticWrapper().set(true);
+		if(isInWorld()){ //update other worlds as well
 			RequestManager sync = getWorld().getState().getSyncManager();
-			sync.add(new UpdateRequest(Action.MOVE, this));
+			sync.add(new UpdateRequest<Entity>(Action.SETSTATIC, this));
 		}
 		return true;
 	}
 	
-	private void reconstructRigidBody(){
-		rigidInfo.motionState = rigidShape.getMotionState();
-		rigidShape = new RigidBody(rigidInfo);
+
+	public boolean setDynamic(){
+		if(!isStatic() || !isPhysical() || constructionInfoWrapper == null) //no physics shape, can't set dynamic then
+			return false;
+		if(isInWorld()){ //then remove it before changing anything
+			getWorld().getDynamicsWorld().removeRigidBody(getRigidBody());
+			//System.out.println("reconstructiong");
+			//reconstructRigidBody();
+		}
+		createRigidBody(getRigidBodyConstructionInfo());
+		getIsStaticWrapper().set(false);
+		if(isInWorld()){ //update other worlds as well
+			getWorld().getDynamicsWorld().addRigidBody(getRigidBody());
+			RequestManager sync = getWorld().getState().getSyncManager();
+			sync.add(new UpdateRequest<Entity>(Action.SETDYNAMIC, this));
+		}
+		return true;
 	}
 	
-	protected Transform oldMotionState = new Transform();
-	@Override
-	public void update(float dt){
-		firstUpdate(dt);
-		
-		//update model motion state
-		if(rigidShape != null){
-			if(rigidShape.isActive()){
-				rigidShape.getMotionState().getWorldTransform(motionState); //update position
-				Vector3f min = new Vector3f();
-				Vector3f max = new Vector3f();
-				rigidShape.getAabb(min, max);
-				boundingAxis = new BoundingAxis(min, max);
-				
-				calcBoundingSphere();
-			}
-		}
-		lastUpdate(dt);
-	}
+
 	@Override
 	public void setRigidBody(RigidBody rigidShape){
-		this.rigidShape = rigidShape;
+		this.rigidBodyWrapper.set(rigidShape);
 	}
+	
 	
 	@Override
 	public RigidBody getRigidBody(){
-		return rigidShape;
+		return rigidBodyWrapper.get();
 	}
+	
 	
 	@Override
 	public void setModel(Model model){
-		this.modelShape = model;
+		this.modelWrapper.set(model);
 	}
 	
 	@Override
 	public Model getModel(){
-		return modelShape;
+		return modelWrapper.get();
 	}
+	
 	
 	@Override
 	public RigidBodyConstructionInfo getRigidBodyConstructionInfo(){
-		return rigidInfo;
+		return constructionInfoWrapper.get();
 	}
+	
 	
 	@Override
 	public void setRigidBodyConstructionInfo(RigidBodyConstructionInfo r){
-		rigidInfo = r;
+		constructionInfoWrapper.set(r);
 	}
 	
-	@Override
-	public void preparePhysicsModel(){
-		if(createPhysicsModel){
-			if(modelShape != null){
-				if(modelShape instanceof Model){
-					//Doesnt work yet
-				}
-			}
-		}
-	}
 	
-	@Override
-	public void createPhysicsModel(){
-		createPhysicsModel = true;
-	}
+
 	
 
 	
 	@Override
-	public void render(){
-		if(modelShape == null)
-			return;
-		if(!isVisible()){
-			return;
-		}
-		startRender();
-		
-		glPushMatrix(); //save current transformations
-		
-		//Translate, rotate
-		float[] f = new float[16];
-		motionState.getOpenGLMatrix(f);
-		FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-		fb.put(f);
-		fb.rewind();
-		glMultMatrix(fb);
-		modelShape.render();
-	    
-	    glPopMatrix(); //reset transformations
-	    
-	    endRender();
-	}
-	
-	@Override
 	public void dispose(){
-		if(modelShape != null)
-			modelShape.dispose();
+		if(getModel() != null)
+			getModel().dispose();
 	}
 	
 	@Override
 	public void renderInit() {
-		if(modelShape != null)
-			modelShape.prepareVBO();
+		if(getModel() != null)
+			getModel().prepareVBO();
 	}
 	
 	@Override
@@ -238,12 +269,12 @@ public abstract class AbstractEntity implements Entity{
 	
 	@Override
 	public void setId(int id) {
-		this.id = id;
+		idWrapper.set(id);
 	}
 	
 	@Override
 	public int getId() {
-		return id;
+		return idWrapper.get();
 	}
 	
 	@Override
@@ -266,46 +297,57 @@ public abstract class AbstractEntity implements Entity{
 
 		return boundingAxis;
 	}
-	
-	@Override
-	public boolean isDynamic() {
-		return !isStatic;
-	}
 
 	@Override
 	public boolean isStatic() {
-		return isStatic;
-	}
-
-	public Entity copy2(Entity e){
-		e.setWorld(getWorld());
-		e.setId(getId());
-		e.setVBOObject(modelShape);
-		e.getMotionState().set(motionState);
-		e.setRigidBody(rigidShape);
-		e.setRigidBodyConstructionInfo(rigidInfo);
-		e.setGroud(isGround());
-		return e;
-	}	
-	
-	public Model getVBOOBject(){
-		return modelShape;
+		return isStaticWrapper.get();
 	}
 	
-	public void setVBOObject(Model o){
-		modelShape = o;
+	/**
+	 * @param masterEntity
+	 * @return Returns linked entity (The entity using this method).
+	 */
+	public Entity linkTo(AbstractEntity masterEntity){
+		rigidBodyWrapper = masterEntity.getRigidBodyWrapper();
+		modelWrapper = masterEntity.getModelWrapper();
+		constructionInfoWrapper = masterEntity.getRigidBodyConstructionInfoWrapper();
+		idWrapper = masterEntity.getIdWrapper();
+		isStaticWrapper = masterEntity.getIsStaticWrapper();
+		setTag(masterEntity.getTag());
+		boundingSphere = masterEntity.getBoundingSphere();
+		boundingAxis = masterEntity.getBoundingAxis();
+		return this;
 	}
 	
-	public abstract void lastUpdate(float dt);
+	@Override
+	public Entity getLinked(){
+		return new DefaultEntity().linkTo(this);
+	}
 	
-	public abstract void firstUpdate(float dt);
 	
-	public abstract void startRender();
+	private R<RigidBody> getRigidBodyWrapper(){
+		return rigidBodyWrapper;
+	}
 	
-	public abstract void endRender();
 	
-	public abstract void calcBoundingSphere();
+	private R<Model> getModelWrapper(){
+		return modelWrapper;
+	}
 	
-	public abstract void calcBoundingAxis();
+	
+	private R<RigidBodyConstructionInfo> getRigidBodyConstructionInfoWrapper(){
+		return constructionInfoWrapper;
+	}
+	
+	
+	private R<Integer> getIdWrapper(){
+		return idWrapper;
+	}
+	
+	
+	private R<Boolean> getIsStaticWrapper(){
+		return isStaticWrapper;
+	}
+	
 
 }

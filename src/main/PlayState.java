@@ -3,23 +3,29 @@ package main;
 import game.Game;
 import game.State;
 import game.world.World;
+import game.world.entities.AbstractEntity;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
+import game.world.entities.LightSource;
 import game.world.entities.Player;
+import game.world.entities.LightSource.LightType;
+import game.world.graphics.Graphics2D;
+import game.world.graphics.ShadowMapper;
 import game.world.gui.Rectangle;
-import game.world.gui.graphics.Graphics2D;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector2f;
 
 import utils.Utils;
+import utils.math.Vector3f;
+import utils.math.Vector4f;
 import blender.model.Model;
 import blender.model.custom.Cuboid;
 import blender.model.custom.Plane;
+import blender.model.custom.Sphere;
 
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -42,7 +48,7 @@ public class PlayState extends State{
 	}
 	
 	Model model;
-	public static Entity testBox = null;
+
 	@Override
 	public void init() {
 		Game.print("PlayState init");
@@ -52,8 +58,11 @@ public class PlayState extends State{
 		
 		world.addEntity(player);
 		
-		//testing shadow
+		
+		
+		
 		float w = 5, h = 5, d = 5;
+		AbstractEntity testBox = null;
 		testBox = new DefaultEntity();
 		//visual
 		Model boxModel = new Cuboid(w,h,d);
@@ -68,12 +77,23 @@ public class PlayState extends State{
 		RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(5f, motionState, shape, intertia);
 		constructionInfo.restitution = 0.1f;
 		constructionInfo.friction = 0.95f;
-		RigidBody body = new RigidBody(constructionInfo);
-		testBox.setDynamic();
-		body.activate();
-
-		testBox.setRigidBody(body);
+		//RigidBody body = new RigidBody(constructionInfo);
+		
+		//testBox.setDynamic();
+		//body.activate();
+		
+		testBox.setTag(1);
+		
+		testBox.createRigidBody(constructionInfo);
+		//testBox.setRigidBody(body);
+		//testBox.setStatic(); 
+		//System.out.println("SET DYNAMIC " + testBox.setDynamic());
 		world.addEntity(testBox);
+		
+		
+		
+		
+		
 		
 		/*Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
 		getSyncManager().add(request);*/
@@ -102,11 +122,10 @@ public class PlayState extends State{
 		testConstructionInfo.restitution = 0.5f;
 		testConstructionInfo.angularDamping = 0.95f;
 		testConstructionInfo.friction = 0.95f;
-		RigidBody testBody;
-		testBody = new RigidBody(testConstructionInfo);
-		testObject.setRigidBody(testBody);
-		testObject.setRigidBodyConstructionInfo(testConstructionInfo);
-		testObject.createPhysicsModel();
+		//testBody = new RigidBody(testConstructionInfo);
+		testObject.createRigidBody(testConstructionInfo);
+		//testObject.setRigidBody(testBody);
+		//testObject.setRigidBodyConstructionInfo(testConstructionInfo);
 		world.addEntity(testObject);
 		
 		//Brick normal map
@@ -134,7 +153,6 @@ public class PlayState extends State{
 		
 		//GROUND
 		Entity testGround = new DefaultEntity();
-		testGround.setGroud(true);
 		//visual
 		Plane testModel = new Plane(1000,0,1000);
 		testGround.setModel(testModel);
@@ -177,6 +195,23 @@ public class PlayState extends State{
 			p.setModel(oneVBO);
 			world.addEntity(p, req);
 		}*/
+		
+		LightSource testLightSource = new LightSource(false);
+		///test cube light
+		testLightSource.setAmbient(new Vector4f(0.4f,0.4f,0.4f,1.0f));
+		Sphere s = new Sphere(8.75f, 16, 16);
+		s.isGodRays = true;
+		testLightSource.setModel(s);
+
+		testLightSource.setLightType(LightType.DIRECTIONAL);
+		
+		testLightSource.setPos(new Vector3f(0, 50, 300));
+		testLightSource.setShadowMapper(new ShadowMapper(false));
+		
+		//testLightSource.setPos(new Vector3f(0, 75, 0));
+		//testLightSource.setShadowMapper(new ShadowMapper(true));
+		
+		world.addEntity(testLightSource);
 	}
 
 	@Override
@@ -187,11 +222,18 @@ public class PlayState extends State{
 	    //container.update();
 	}
 	
+
 	@Override
-	public void render(Graphics2D g){
+	public void renderInit() {
+
+		
+	}
+	
+	@Override
+	public void render(){
 		World world = getRenderingState().getWorld();
 		GL11.glColor4f(1,1,1,1);
-		world.render(g); 
+		world.render(); 
 	}
 
 	@Override

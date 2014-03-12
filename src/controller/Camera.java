@@ -46,11 +46,9 @@ public class Camera extends DefaultEntity{
     private Vector3f rightVector = new Vector3f(1,0,0); //Cross product of viewRay and upVector
     private Vector3f position = new Vector3f();
     
-	public Entity copy(){
-		Camera cam = new Camera();
-		
-		return copy2(cam);
-	}
+    public Entity getLinked(){
+    	return new Camera().linkTo(this);
+    }
 	
 	public void setFollowing(Entity e){
 		following = e;
@@ -65,8 +63,9 @@ public class Camera extends DefaultEntity{
     }
     
     public void setImportant(Camera fromHere){
-    	rigidShape = fromHere.getRigidBody();
-    	modelShape = fromHere.getModel();
+    	linkTo(fromHere);
+    	//setRigidBody(fromHere.getRigidBody());
+    	//setModel(fromHere.getModel());
     }
     
     
@@ -110,7 +109,7 @@ public class Camera extends DefaultEntity{
     	
 		Quat4f orientation = new Quat4f(0,0,0,1);
 		
-		Quat4f qRotatedy = new Quat4f();
+		/*Quat4f qRotatedy = new Quat4f();
 		QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(-20));
 		qRotatedy.mul(orientation);
 		orientation = qRotatedy;
@@ -118,7 +117,7 @@ public class Camera extends DefaultEntity{
 		Quat4f qRotatedx = new Quat4f();
 		QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(20));
 		orientation.mul(qRotatedx);
-		orientation.normalize();
+		orientation.normalize();*/
 
 		DefaultMotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(
 				orientation,
@@ -130,15 +129,17 @@ public class Camera extends DefaultEntity{
 		constructionInfo.angularDamping = 1f;
 		constructionInfo.linearDamping = .999f;
 		constructionInfo.mass = 0.0001f;
-		RigidBody body = new RigidBody(constructionInfo);
-		body.setAngularFactor(0);
-		body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-		setRigidBody(body);
+		//RigidBody body = new RigidBody(constructionInfo);
+		createRigidBody(constructionInfo);
+		getRigidBody().setAngularFactor(0);
+		getRigidBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
+
+		//setRigidBody(body);
 		
-		body.setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
+		getRigidBody().setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
 		
-		world.getDynamicsWorld().addRigidBody(body);
-		body.setGravity(new Vector3f(0,0,0));
+		world.getDynamicsWorld().addRigidBody(getRigidBody());
+		getRigidBody().setGravity(new Vector3f(0,0,0));
     }
     
     private void rotation(float dt){
@@ -146,7 +147,7 @@ public class Camera extends DefaultEntity{
 		float dy = Mouse.getDY() * mouseSensitivity;
 		if(type == CamType._6DOF){
 			Transform t = new Transform();
-			rigidShape.getWorldTransform(t);
+			getRigidBody().getWorldTransform(t);
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -163,10 +164,10 @@ public class Camera extends DefaultEntity{
 			orientation.normalize();
 			
 			t.setRotation(orientation);
-			rigidShape.setWorldTransform(t);
+			getRigidBody().setWorldTransform(t);
 		}else if(type == CamType.FP){
 			Transform t = new Transform();
-			rigidShape.getWorldTransform(t);
+			getRigidBody().getWorldTransform(t);
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -182,7 +183,7 @@ public class Camera extends DefaultEntity{
 			orientation.normalize();
 			
 			t.setRotation(orientation);
-			rigidShape.setWorldTransform(t);
+			getRigidBody().setWorldTransform(t);
 		}else if(type == CamType.LOCK){
 			if(following != null){
 				Transform t = new Transform();
@@ -200,14 +201,14 @@ public class Camera extends DefaultEntity{
 				orientation = qRotatedy;
 				
 				Transform t2 = new Transform();
-				rigidShape.getWorldTransform(t2);
+				getRigidBody().getWorldTransform(t2);
 				t2.setRotation(orientation);
-				rigidShape.setWorldTransform(t2);
+				getRigidBody().setWorldTransform(t2);
 			}
 		}
 		
 		
-		rigidShape.getMotionState().getWorldTransform(motionState); //update position
+		getRigidBody().getMotionState().getWorldTransform(motionState); //update position
 		Matrix4f viewMatrix = new Matrix4f();
 		motionState.getMatrix(viewMatrix);
 		float[] ray = new float[4];
@@ -227,7 +228,7 @@ public class Camera extends DefaultEntity{
 			speed *= shiftBoost;
 		if(following == null){
 			Transform tr = new Transform();
-			rigidShape.getWorldTransform(tr);
+			getRigidBody().getWorldTransform(tr);
 			Matrix4f mr = new Matrix4f();
 			tr.getMatrix(mr);
 			Vector3f delta = new Vector3f();
@@ -269,14 +270,14 @@ public class Camera extends DefaultEntity{
 				delta.normalize();
 				delta.scale(speed);
 				tr.origin.add(delta);
-				rigidShape.setWorldTransform(tr);
-				rigidShape.getWorldTransform(motionState);
+				getRigidBody().setWorldTransform(tr);
+				getRigidBody().getWorldTransform(motionState);
 			}
 			
 			position = new Vector3f(motionState.origin.x, motionState.origin.y, motionState.origin.z);
 		}else{
 			Transform tcam = new Transform();
-			rigidShape.getWorldTransform(tcam);
+			getRigidBody().getWorldTransform(tcam);
 			
 			Transform tfollow = new Transform();
 			following.getRigidBody().getWorldTransform(tfollow);
@@ -287,7 +288,7 @@ public class Camera extends DefaultEntity{
 			camPos.add(tfollow.origin, viewRay.getNegate());
 			tcam.origin.set(camPos);
 			
-			rigidShape.setWorldTransform(tcam);
+			getRigidBody().setWorldTransform(tcam);
 			
 			position = new Vector3f(tfollow.origin.x-viewRay.x, tfollow.origin.y-viewRay.y, tfollow.origin.z-viewRay.z);
 		}
@@ -296,7 +297,7 @@ public class Camera extends DefaultEntity{
     
     @Override
     public void update(float dt){
-		rigidShape.activate();
+		getRigidBody().activate();
 		
 		rotation(dt);
 		

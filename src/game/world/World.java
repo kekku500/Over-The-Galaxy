@@ -33,11 +33,11 @@ import game.world.entities.Entity;
 import game.world.entities.LightSource;
 import game.world.entities.Player;
 import game.world.entities.LightSource.LightType;
+import game.world.graphics.Graphics2D;
 import game.world.graphics.RenderEngine3D;
 import game.world.graphics.ShadowMapper;
 import game.world.gui.Component;
 import game.world.gui.Container;
-import game.world.gui.graphics.Graphics2D;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
@@ -54,6 +54,7 @@ import java.util.Set;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.newdawn.slick.Color;
 
 import shader.Shader;
@@ -79,7 +80,8 @@ import controller.Camera;
 public class World{
 	
 	public static RenderEngine3D renderEngine = new RenderEngine3D();
-	public static LightSource testLightSource = new LightSource(false);
+	public static Graphics2D graphics2D = new Graphics2D();
+	
 	private Player player;
 	
 	DynamicsWorld dynamicsWorld; //Physics World
@@ -88,7 +90,7 @@ public class World{
 	Set<Entity> dynamicEntities = new HashSet<Entity>();
 	Set<Entity> staticEntities = new HashSet<Entity>();
 	Set<LightSource> lightSources = new HashSet<LightSource>();
-	
+
 
 	//GUI
 	public Container container;
@@ -124,24 +126,12 @@ public class World{
 		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
 		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		
 		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
-		
-		///test cube light
-		//testLightSource.setAmbient(new Vector4f(0.4f,0.4f,0.4f,1.0f));
-		Sphere s = new Sphere(8.75f, 16, 16);
-		s.isGodRays = true;
-		testLightSource.setModel(s);
-
-		testLightSource.setLightType(LightType.POINT);
-		
-		testLightSource.setPos(new Vector3f(0, 50, 300));
-		testLightSource.setShadowMapper(new ShadowMapper(false));
-		
-		//testLightSource.setPos(new Vector3f(0, 75, 0));
-		//testLightSource.setShadowMapper(new ShadowMapper(true));
-		
-		addEntity(testLightSource);
+	}
+	
+	public void renderInit() {
+		graphics2D.init();
+		renderEngine.init();	
 	}
 	
 	public void linkWorlds(World otherWorld){
@@ -155,7 +145,7 @@ public class World{
 		while(itr.hasNext()){
 			UpdateRequest<?> req = itr.next();
 			Status status = req.requestStatus(this);
-			//System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
+			System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
 			if(status == Status.IDLE)
 				continue; //skip, request must be handled later or is already done in this world
 			if(req.getItem() instanceof LightSource){ //also entity, se must be checked first
@@ -165,18 +155,30 @@ public class World{
 					getStaticEntities().add(ls);
 			}else if(req.getItem() instanceof Entity){
 				Entity e = (Entity) req.getItem();
-				if(e.isDynamic()){
-					if(req.getAction() == Action.ADD){
-						getStaticEntities().add(e); //not copying, reference to all
-					}else if(req.getAction() == Action.MOVE){ //moving object to static
-						removeEntity(e, getDynamicEntities());
-						getStaticEntities().add(e);
-					}else if(req.getAction() == Action.REMOVE){
-						removeEntity(e, getStaticEntities());
+				boolean isStatic = e.isStatic();
+				if(req.getAction() == Action.SETDYNAMIC){
+					if(!isStatic){ //Set entity dynamic only if it's ready to be set dynamic
+						Entity removedEntity = removeEntity(e, getStaticEntities()); //Remove object from static collection
+						if(removedEntity != null){ //Was able to remove something
+							System.out.println("moving entity " + removedEntity + " " + removedEntity.getId() + " dynamic dy collection");
+							
+							//removedEntity.sets
+							getDynamicEntities().add(removedEntity); //Add entity to dynamic world
+						}
 					}
-				}else if(e.isStatic()){
+				}
+				if(req.getAction() == Action.SETSTATIC){
+					if(isStatic){ //Set entity static only if it's ready to be set static
+						Entity removedEntity = removeEntity(e, getDynamicEntities()); //Remove object from dynamic collection
+						System.out.println("moving entity " + removedEntity + " " + removedEntity.getId() + " to static collection");
+						if(removedEntity != null){ //Was able to remove something
+							getStaticEntities().add(removedEntity); //Add entity to dynamic world
+						}
+					}
+				}
+				if(!isStatic){ //dynamic
 					if(req.getAction() == Action.ADD){
-						Entity addThis = e.copy();
+						Entity addThis = e.getLinked();
 						e.setWorld(this);
 						addThis.setWorld(this);
 						if(addThis instanceof Player){
@@ -184,11 +186,21 @@ public class World{
 						}
 						getDynamicEntities().add(addThis);
 						//System.out.println("added " + e + " to dynamicentities");
+					}else if(req.getAction() == Action.MOVE){ //moving object to static
+						removeEntity(e, getDynamicEntities());
+						getStaticEntities().add(e);
+					}else if(req.getAction() == Action.REMOVE){
+						removeEntity(e, getStaticEntities());
+					}
+				}else if(isStatic){
+					if(req.getAction() == Action.ADD){
+						e.setWorld(this);
+						getStaticEntities().add(e); //not copying, reference to all
 					}else if(req.getAction() == Action.UPDATE || req.getAction() == Action.UPDATEALL){
-						replace(getDynamicEntities(), e.copy());
+						replace(getDynamicEntities(), e.getLinked());
 					}else if(req.getAction() == Action.MOVE){
 						Entity moveE = removeEntity(e, getStaticEntities());
-						getDynamicEntities().add(moveE.copy());
+						getDynamicEntities().add(moveE.getLinked());
 					}else if(req.getAction() == Action.REMOVE){
 						removeEntity(e, getDynamicEntities());
 					}else if(req.getAction() == Action.CAMERAFOCUS){
@@ -213,11 +225,15 @@ public class World{
 		//Check for added entities
 		updateRequests();
 		
-		checkInput();
+		checkKeyboardInput();
 		
 		//grid.update();
 		
-		for(Entity e: getDynamicEntities()){
+		for(Entity e: getEntities()){
+			if(e.getTag() == 1){
+				//e.setDynamic();
+				//e.setStatic();
+			}
 			e.update(dt);
 		}
 		
@@ -229,20 +245,34 @@ public class World{
 		
 		container.update();
 		
-		//checkFrustum();
+		checkFrustum();
 	}
 	
-	public void checkInput(){
-		while(Keyboard.next()){
-			if(Keyboard.getEventKeyState()){
-				int a = Keyboard.getEventKey();
-				if(player != null)
-					player.checkInput(a);
-				World.renderEngine.checkInput(a);
+	public void checkMouseInput(){
+		while(Mouse.next()){
+			if(Mouse.getEventButtonState()){
+				int m = Mouse.getEventButton();
 			}
 		}
 	}
 	
+	public void checkKeyboardInput(){
+		while(Keyboard.next()){
+			if(Keyboard.getEventKeyState()){
+				int k = Keyboard.getEventKey();
+				if(player != null)
+					player.checkInput(k);
+				World.renderEngine.checkInput(k);
+			}
+		}
+	}
+	
+	/**
+	 * Removed entity by it's id.
+	 * @param rem
+	 * @param list
+	 * @return Returns removed entity
+	 */
 	public Entity removeEntity(Entity rem, Set<Entity> list){
 		for(Entity e: list){
 			if(e.getId() == rem.getId()){
@@ -275,7 +305,7 @@ public class World{
 				}
 			//}
 		}
-		//System.out.println("Visible " + visibleCount[0] + " Outside " + visibleCount[1]);
+		System.out.println("Visible " + visibleCount[0] + " Outside " + visibleCount[1]);
 	}
 	
 	public void renderRequests(){
@@ -296,7 +326,6 @@ public class World{
 					}else if(req.getItem() instanceof Entity){
 						Entity e = (Entity) req.getItem();
 						e.renderInit();
-						e.preparePhysicsModel();
 						req.done();
 					}else if(req.getItem() instanceof Component){
 						Component c = (Component) req.getItem();
@@ -309,7 +338,7 @@ public class World{
 		}
 	}
 	
-	public void render(Graphics2D g){
+	public void render(){
 		//Create objects
 		renderRequests();
 
@@ -323,7 +352,7 @@ public class World{
 	    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //grid.render();
 		//glDisable(GL_DEPTH_TEST);
-		
+		Graphics2D g = graphics2D;
 	    //Render 2D stuff
 	    Graphics2D.perspective2D();
 	    //just TESting some stuff
@@ -361,7 +390,7 @@ public class World{
 		if(e.getRigidBody() != null)
 			dynamicsWorld.addRigidBody(e.getRigidBody()); //add to physics world
 		
-		request.waitFor(request2);
+		//request.waitFor(request2);
 		state.getSyncManager().add(request);
 		state.getSyncManager().add(request2);
 		return request2;
@@ -427,7 +456,7 @@ public class World{
 	public Set<Entity> getCopiedEntities(Set<Entity> list){
 		Set<Entity> newList = new HashSet<Entity>();
 		for(Entity e: list){
-			newList.add(e.copy());
+			newList.add(e.getLinked());
 		}
 		return newList;
 	}
@@ -455,4 +484,7 @@ public class World{
 	public Set<LightSource> getLightSources() {
 		return lightSources;
 	}
+
+	
+
 }

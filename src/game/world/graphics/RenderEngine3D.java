@@ -100,7 +100,7 @@ public class RenderEngine3D {
     private boolean shadows = false; 
     private boolean filtering = true;
     private boolean occlusion = false;
-    private boolean lightScattering = true;
+    private boolean lightScattering = false;
     private int showTexture;
     
     //Other
