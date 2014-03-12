@@ -37,6 +37,7 @@ import game.world.graphics.RenderEngine3D;
 import game.world.graphics.ShadowMapper;
 import game.world.gui.Component;
 import game.world.gui.Container;
+import game.world.gui.HeadsUpDisplay;
 import game.world.gui.graphics.Graphics2D;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
@@ -92,6 +93,7 @@ public class World{
 
 	//GUI
 	public Container container;
+	public HeadsUpDisplay HUD;
 	
 	//Camera stuff
 	private FrustumCulling frustum;
@@ -116,6 +118,7 @@ public class World{
 		grid = new Grid(this);
 		frustum = new FrustumCulling(camera);
 		container = new Container();
+		
 	}
 	
 	public void init(){
@@ -201,6 +204,10 @@ public class World{
 				if(req.getAction() == Action.ADD){
 					container.addComponent(c);
 				}
+			}else if(req.getItem() instanceof HeadsUpDisplay){
+				if(req.getAction() == Action.ADD){
+					HUD = (HeadsUpDisplay)req.getItem();
+				}
 			}
 			if(status == Status.FINAL){
 				itr.remove();
@@ -227,7 +234,11 @@ public class World{
 		
 		World.renderEngine.update(dt);
 		
+
 		container.update();
+		HUD.update();
+		
+	
 		
 		//checkFrustum();
 	}
@@ -329,14 +340,14 @@ public class World{
 	    //just TESting some stuff
 	    container.render();
 	    
-	    g.setFontSize(18);
+	 //   g.setFontSize(18);
 	    
-	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
+	  //  g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
 
 	    
-	    g.setFontSize(20);
+	  //  g.setFontSize(20);
 	    
-	    g.drawString(100, 50, "DEFAULT" + 50);
+	//    g.drawString(100, 50, "DEFAULT" + 50);
 
 	    
 	    
@@ -351,6 +362,12 @@ public class World{
 		request.waitFor(request2);
 		state.getSyncManager().add(request);
 		state.getSyncManager().add(request2);
+	}
+	
+	//Add HUD
+	public void addHud(HeadsUpDisplay h){
+		Request request = new UpdateRequest(Action.ADD, h);
+		state.getSyncManager().add(request);
 	}
 	
 	public Request addEntity(Entity e){

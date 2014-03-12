@@ -117,8 +117,8 @@ public class RenderEngine3D {
         }
         boolean error = false;
         
-        Texture tex = Texture.loadTexture("res/shaders/renderengine/lensdirt_lowc.jpg");
-        dirtTexture = tex.id;
+/*        Texture tex = Texture.loadTexture("res/shaders/renderengine/lensdirt_lowc.jpg");
+        dirtTexture = tex.id;*/
         
         // load shaders -----------------------------------------------------------------------------------------------------------
     	error = !preprocess.load("renderengine//preprocess.vs", "renderengine//preprocess.fs");

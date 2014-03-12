@@ -40,7 +40,7 @@ public class Player extends DefaultEntity{
 	public Player(float x, float y, float z) {
 		//super(new Vector3f(x,y,z), 5, 5, 15);
 		try {
-			Model model2 = new Model("F-35_Lightning_II\\F-35_Lightning_II.obj");
+			Model model2 = new Model("superman\\mees.obj");
 			Quat4f quat = new Quat4f();
 			QuaternionUtil.setRotation(quat, new Vector3f(1,0,0), Utils.rads(-90));
 			Quat4f quat2 = new Quat4f();

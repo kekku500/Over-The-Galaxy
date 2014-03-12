@@ -6,6 +6,7 @@ import game.world.World;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 import game.world.entities.Player;
+import game.world.gui.HeadsUpDisplay;
 import game.world.gui.Rectangle;
 import game.world.gui.graphics.Graphics2D;
 
@@ -36,6 +37,7 @@ public class PlayState extends State{
 	private int stateId;
 	
 	private Player player;
+	private HeadsUpDisplay HUD;
 	
 	public PlayState(int stateId){
 		this.stateId = stateId;
@@ -51,6 +53,9 @@ public class PlayState extends State{
 		player = new Player(25,20,15);
 		
 		world.addEntity(player);
+		
+		HUD = new HeadsUpDisplay(player, world);
+		world.addHud(HUD);
 		
 		//testing shadow
 		float w = 5, h = 5, d = 5;
@@ -78,7 +83,7 @@ public class PlayState extends State{
 		/*Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
 		getSyncManager().add(request);*/
 
-		world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
+	//	world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
 		
 		//Random man
 		Entity testObject = new DefaultEntity();
@@ -110,7 +115,7 @@ public class PlayState extends State{
 		world.addEntity(testObject);
 		
 		//Brick normal map
-		Entity testNormalMap = new DefaultEntity();
+/*		Entity testNormalMap = new DefaultEntity();
 		testNormalMap.getMotionState().origin.set(0,2,0);
 		try {
 			Model normalTest = new Model("normal_map_test\\brick01g-quad.obj");
@@ -130,7 +135,7 @@ public class PlayState extends State{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		world.addEntity(testSSAO);
+		world.addEntity(testSSAO);*/
 		
 		//GROUND
 		Entity testGround = new DefaultEntity();
