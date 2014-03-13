@@ -21,6 +21,8 @@ import game.threading.RenderThread;
 import game.world.World;
 import game.world.entities.Entity;
 import game.world.entities.LightSource;
+import game.world.input.Input;
+import game.world.input.InputListener;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -62,7 +64,7 @@ import utils.math.Vector2f;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
 
-public class RenderEngine3D {
+public class RenderEngine3D implements Input{
 	
 	//Store materials, bind textures, normal mapping
     public Shader preprocess = new Shader();
@@ -85,6 +87,12 @@ public class RenderEngine3D {
     private IntBuffer sunTextures; //textures required for blurring and light scattering
     private int sunTextureWidth, sunTextureHeight;
     private int dirtTexture;
+    
+    //SkyBox
+    Shader skyBoxShader = new Shader();
+    SubModel skyBoxModel = new SubModel();
+    int skyVAO;
+    private float skyBoxIntensity = .4f;
     
     //Framebuffer object
     private int FBO;
@@ -110,6 +118,7 @@ public class RenderEngine3D {
     public FloatBuffer cameraViewMatrix = BufferUtils.createFloatBuffer(16);
     
 	public void init(){
+		new InputListener(this);
 		// check OpenGL version ---------------------------------------------------------------------------------------------------
         if(!GLContext.getCapabilities().OpenGL30){
             System.err.println("OpenGL 3.0 not supported!");
@@ -117,7 +126,8 @@ public class RenderEngine3D {
         }
         boolean error = false;
         
-        Texture tex = Texture.loadTexture("res/shaders/renderengine/lensdirt_lowc.jpg");
+        //Load textures
+        Texture tex = Texture.loadTexture2D("res/shaders/renderengine/lensdirt_lowc.jpg"); //for sun
         dirtTexture = tex.id;
         
         // load shaders -----------------------------------------------------------------------------------------------------------
@@ -130,13 +140,43 @@ public class RenderEngine3D {
         error = !blurH.load("renderengine//blur.vs", "renderengine//blurh.fs");
         error = !blurV.load("renderengine//blur.vs", "renderengine//blurv.fs");
         error = !sunRaysLensFlareHalo.load("renderengine//sunrayslensflarehalo.vs", "renderengine//sunrayslensflarehalo.fs");
+        
+        //skybox
+        error = !skyBoxShader.load("renderengine//skybox.vs", "renderengine//skybox.fs");
 
     	if(error){
     		System.err.println("Error occoured!");
             System.exit(0);
     	}
     	
-    	prepareShaders();
+    	//skbox model
+        Texture skyBox = Texture.loadTextureCubeMap(new String[]{
+        		"res/textures/skybox/jajlands1_right.jpg", 
+        		"res/textures/skybox/jajlands1_left.jpg", 
+        		"res/textures/skybox/jajlands1_top.jpg", 
+        		"res/textures/skybox/jajlands1_bottom.jpg", 
+        		"res/textures/skybox/jajlands1_front.jpg", 
+        		"res/textures/skybox/jajlands1_back.jpg"
+        });
+        skyBoxModel.material.textureHandle = skyBox.id;
+    	skyBoxModel.prepareVBOVertices(new Vector3f[]{
+    			new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f( 1.0f, -1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f( 1.0f, -1.0f, -1.0f),
+    		    new Vector3f(-1.0f, -1.0f,  1.0f), new Vector3f(-1.0f, -1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f(-1.0f, -1.0f,  1.0f),
+    		    new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f(-1.0f,  1.0f, -1.0f),
+    		    new Vector3f(-1.0f, -1.0f,  1.0f), new Vector3f( 1.0f, -1.0f,  1.0f), new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f(-1.0f, -1.0f, -1.0f), new Vector3f(-1.0f, -1.0f,  1.0f),
+    		    new Vector3f( 1.0f, -1.0f,  1.0f), new Vector3f(-1.0f, -1.0f,  1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f, -1.0f,  1.0f), 
+    		    new Vector3f(-1.0f, -1.0f, -1.0f), new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f, -1.0f, -1.0f) 
+    	});
+    	
+    	prepareShaders(); //--------------------------------
+    	
+    	//sky
+        skyVAO = glGenVertexArrays();
+        glBindVertexArray(skyVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, skyBoxModel.vboVertexID);
+        ARBVertexShader.glVertexAttribPointerARB(skyBoxShader.attribLocations[0], 3, GL_FLOAT, false, 0, 0);
+        glEnableVertexAttribArray(skyBoxShader.attribLocations[0]);
+        glBindVertexArray(0);
         
     	preprocess.validate();
     	SSAO.validate();
@@ -146,6 +186,7 @@ public class RenderEngine3D {
     	blurH.validate();
     	blurV.validate();
     	sunRaysLensFlareHalo.validate();
+    	skyBoxShader.validate();
     	
     	prepareFiltering(); ////////////
         
@@ -236,7 +277,22 @@ public class RenderEngine3D {
 	
     private void prepareShaders(){
 		// Uniform stuff --------------------------------------------------------------------------------------------------
-	    sunRaysLensFlareHalo.bind();
+	    //Skybox
+        skyBoxShader.uniformLocations = new int[2];
+        skyBoxShader.uniformLocations[0] = glGetUniformLocation(skyBoxShader.i(), "CameraPosition");
+        skyBoxShader.uniformLocations[1] = glGetUniformLocation(skyBoxShader.i(), "ViewProjectionMatrix");
+
+        skyBoxShader.attribLocations = new int[1];
+        skyBoxShader.attribLocations[0] = glGetAttribLocation(skyBoxShader.i(), "vert_Position");
+        
+        
+        /*skyBoxShader.bind();
+        glUniform1i(glGetUniformLocation(skyBoxShader.i(), "CubeMap"), 0);
+        glUniform1i(glGetUniformLocation(skyBoxShader.i(), "DepthBuffer"), 1);
+        Shader.unbind();*/
+    	
+        //Sun
+    	sunRaysLensFlareHalo.bind();
 	    glUniform1i(glGetUniformLocation(sunRaysLensFlareHalo.i(), "LowBlurredSunTexture"), 0);
 	    glUniform1i(glGetUniformLocation(sunRaysLensFlareHalo.i(), "HighBlurredSunTexture"), 1);
 	    glUniform1i(glGetUniformLocation(sunRaysLensFlareHalo.i(), "DirtTexture"), 2);
@@ -277,7 +333,7 @@ public class RenderEngine3D {
         SSAOFilterV.uniformLocations[1] = glGetUniformLocation(SSAOFilterV.i(), "sy2");
         SSAOFilterV.uniformLocations[2] = glGetUniformLocation(SSAOFilterV.i(), "sy3");
 
-        lightingAndShadow.uniformLocations = new int[23];
+        lightingAndShadow.uniformLocations = new int[24];
         lightingAndShadow.uniformLocations[0] = glGetUniformLocation(lightingAndShadow.i(), "ProjectionBiasInverse");
         lightingAndShadow.uniformLocations[2] = glGetUniformLocation(lightingAndShadow.i(), "ViewInverse");
         lightingAndShadow.uniformLocations[3] = glGetUniformLocation(lightingAndShadow.i(), "LightTexture");
@@ -301,6 +357,7 @@ public class RenderEngine3D {
         lightingAndShadow.uniformLocations[20] = glGetUniformLocation(lightingAndShadow.i(), "ModelViewMatrix");
         lightingAndShadow.uniformLocations[21] = glGetUniformLocation(lightingAndShadow.i(), "ProjectionMatrix");
         lightingAndShadow.uniformLocations[22] = glGetUniformLocation(lightingAndShadow.i(), "sxy");
+        lightingAndShadow.uniformLocations[23] = glGetUniformLocation(lightingAndShadow.i(), "SkyBoxIntensity");
         
         // set texture indices in shaders -----------------------------------------------------------------------------------------
     	preprocess.bind();
@@ -385,7 +442,7 @@ public class RenderEngine3D {
 		colorWriteValues.rewind();
 		
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBO);
-        glDrawBuffers(colorWriteValues);glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+       glDrawBuffers(colorWriteValues);glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalBuffer, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
@@ -397,16 +454,30 @@ public class RenderEngine3D {
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, materialShininess, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT7, GL_TEXTURE_2D, sunTextures.get(0), 0);
         
-        //glClearColor(0.0f, 0.1f, 0.1f, 1.0f);
+        //glClearColor(0.0f, 0.1f, 0.1f, 1.0f)
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    
 		//glEnable(GL_BLEND);
 		//glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	    Matrix4f viewProjectionMatrix = new Matrix4f(cameraProjectionMatrix).mul(new Matrix4f(cameraViewMatrix));
 	    
-    	preprocess.bind();
+	    //SKYBOX
+	    skyBoxShader.bind();
+	    glUniform3(skyBoxShader.uniformLocations[0], cam.getPos().asFlippedFloatBuffer());
+	    glUniformMatrix4(skyBoxShader.uniformLocations[1], false, viewProjectionMatrix.asFlippedFloatBuffer());
+	    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxModel.material.textureHandle);
+	    glBindVertexArray(skyVAO);
+	    glDrawArrays(GL_TRIANGLES, 0, 36);
+	    glBindVertexArray(0);
+	    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	    Shader.unbind();
+	    
+	    //OTHER
+	    preprocess.bind();
     	
     	//glDisable(GL_BLEND);
-
+	    
         renderObjects(entities, false);
         
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
@@ -463,7 +534,7 @@ public class RenderEngine3D {
 	    // apply shadows and lightin, 2nd pass ---------------------------------------------------------------
 	    deferredLightingStuff(lightSources);
 	    
-
+	    
 		// applying light scattering to lighting stuff
 		if(lightScattering){
 			Vector3f sunPos = null;
@@ -475,7 +546,6 @@ public class RenderEngine3D {
 			sunRaysLensFlareHaloStuff(sunPos, cam);
 		}
 	    
-	        
 		//Debbuging textures
 	    showTextures();
     }
@@ -493,80 +563,6 @@ public class RenderEngine3D {
         glLoadIdentity();
         cam.lookAt();
         glGetFloat(GL_MODELVIEW_MATRIX, cameraViewMatrix);
-	}
-	
-	public void checkInput(int i){
-		switch(i){
-		case Keyboard.KEY_F1:
-			texturing = !texturing; 
-			System.out.println("Changed texturing to " + texturing);
-			break;
-		case Keyboard.KEY_F2:
-			normalMapping = !normalMapping;
-			System.out.println("Changed normalMapping to " + normalMapping);
-			break;
-		case Keyboard.KEY_F3:
-			shadows = !shadows;
-			System.out.println("Changed shadows to " + shadows);
-			break;
-		case Keyboard.KEY_F4:
-			filtering = !filtering;
-			System.out.println("Changed filtering to " + filtering);
-			break;
-		case Keyboard.KEY_F5:
-			occlusion = !occlusion;
-			System.out.println("Changed occlusion to " + occlusion);
-			break;
-		case Keyboard.KEY_F6:
-			lightScattering = !lightScattering;
-			System.out.println("Changed lightScattering to " + lightScattering);
-			break;
-		case Keyboard.KEY_NUMPAD7:
-			System.out.println("Showing colorBuffer");
-			showTexture = colorBuffer;
-			break;
-		case Keyboard.KEY_NUMPAD8:
-			System.out.println("Showing normalBuffer");
-			showTexture = normalBuffer;
-			break;
-		case Keyboard.KEY_NUMPAD9:
-			System.out.println("Showing depthBuffer");
-			showTexture = depthBuffer;
-			break;
-		case Keyboard.KEY_1:
-			System.out.println("Showing materialAmbient");
-			showTexture = materialAmbient;
-			break;
-		case Keyboard.KEY_2:
-			System.out.println("Showing materialDiffuse");
-			showTexture = materialDiffuse;
-			break;
-		case Keyboard.KEY_3:
-			System.out.println("Showing materialEmission");
-			showTexture = materialEmission;
-			break;
-		case Keyboard.KEY_4:
-			System.out.println("Showing materialShininess");
-			showTexture = materialShininess;
-			break;
-		case Keyboard.KEY_5:
-			System.out.println("Showing materialSpecular");
-			showTexture = materialSpecular;
-			break;
-		case Keyboard.KEY_NUMPAD5:
-			System.out.println("Showing godRaysTexture");
-			showTexture = sunTextures.get(0);
-			break;
-		case Keyboard.KEY_NUMPAD2:
-			System.out.println("Showing blurred SSAO");
-			showTexture = SSAOTexturesBlurred.get(1); //blurred ssao
-			break;
-		case Keyboard.KEY_NUMPAD0:
-			System.out.println("Showing normal.");
-			showTexture = 0;
-			break;
-		}
-
 	}
 	
 	private void moveLight(Set<LightSource> lightSources){
@@ -788,6 +784,7 @@ public class RenderEngine3D {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
+    
     public void deferredLightingStuff(Set<LightSource> lightSources){
     	//calculate matrices required for lighting
     	Matrix4f modelMatrix = new Matrix4f();
@@ -854,7 +851,7 @@ public class RenderEngine3D {
     		glUniform3(lightingAndShadow.uniformLocations[16], ls.getSpotLightDirection().asFlippedFloatBuffer());
     		glUniform1f(lightingAndShadow.uniformLocations[17], ls.getSpotExponent());
     		glUniform1i(lightingAndShadow.uniformLocations[18], ls.getLightType());
-
+    		glUniform1f(lightingAndShadow.uniformLocations[23], skyBoxIntensity); //skybox intensity
 
     		glBegin(GL_QUADS);
     			glVertex2f(0.0f, 0.0f);
@@ -1132,6 +1129,8 @@ public class RenderEngine3D {
         glDeleteTextures(sunTextures);
         glDeleteTextures(dirtTexture);
         
+        skyBoxModel.dispose();
+        
         glDeleteTextures(materialAmbient);
         glDeleteTextures(materialDiffuse);
         glDeleteTextures(materialSpecular);
@@ -1174,4 +1173,85 @@ public class RenderEngine3D {
     	//System.out.println("pos is " + Arrays.toString(getResult));
     	return new Vector2f(getResult[0], getResult[1]);
     }
+
+	@Override
+	public void checkKeyboardInput(int k) {
+		switch(k){
+		case Keyboard.KEY_F1:
+			texturing = !texturing; 
+			System.out.println("Changed texturing to " + texturing);
+			break;
+		case Keyboard.KEY_F2:
+			normalMapping = !normalMapping;
+			System.out.println("Changed normalMapping to " + normalMapping);
+			break;
+		case Keyboard.KEY_F3:
+			shadows = !shadows;
+			System.out.println("Changed shadows to " + shadows);
+			break;
+		case Keyboard.KEY_F4:
+			filtering = !filtering;
+			System.out.println("Changed filtering to " + filtering);
+			break;
+		case Keyboard.KEY_F5:
+			occlusion = !occlusion;
+			System.out.println("Changed occlusion to " + occlusion);
+			break;
+		case Keyboard.KEY_F6:
+			lightScattering = !lightScattering;
+			System.out.println("Changed lightScattering to " + lightScattering);
+			break;
+		case Keyboard.KEY_NUMPAD7:
+			System.out.println("Showing colorBuffer");
+			showTexture = colorBuffer;
+			break;
+		case Keyboard.KEY_NUMPAD8:
+			System.out.println("Showing normalBuffer");
+			showTexture = normalBuffer;
+			break;
+		case Keyboard.KEY_NUMPAD9:
+			System.out.println("Showing depthBuffer");
+			showTexture = depthBuffer;
+			break;
+		case Keyboard.KEY_1:
+			System.out.println("Showing materialAmbient");
+			showTexture = materialAmbient;
+			break;
+		case Keyboard.KEY_2:
+			System.out.println("Showing materialDiffuse");
+			showTexture = materialDiffuse;
+			break;
+		case Keyboard.KEY_3:
+			System.out.println("Showing materialEmission");
+			showTexture = materialEmission;
+			break;
+		case Keyboard.KEY_4:
+			System.out.println("Showing materialShininess");
+			showTexture = materialShininess;
+			break;
+		case Keyboard.KEY_5:
+			System.out.println("Showing materialSpecular");
+			showTexture = materialSpecular;
+			break;
+		case Keyboard.KEY_NUMPAD5:
+			System.out.println("Showing godRaysTexture");
+			showTexture = sunTextures.get(0);
+			break;
+		case Keyboard.KEY_NUMPAD2:
+			System.out.println("Showing blurred SSAO");
+			showTexture = SSAOTexturesBlurred.get(1); //blurred ssao
+			break;
+		case Keyboard.KEY_NUMPAD0:
+			System.out.println("Showing normal.");
+			showTexture = 0;
+			break;
+		}
+		
+	}
+
+	@Override
+	public void checkMouseInput(int m) {
+		// TODO Auto-generated method stub
+		
+	}
 }

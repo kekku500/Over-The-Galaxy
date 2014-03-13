@@ -27,8 +27,9 @@ import static org.lwjgl.opengl.GL11.glTexCoordPointer;
 import static org.lwjgl.opengl.GL11.glVertexPointer;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
+import game.Game;
 import game.State;
-import game.world.FrustumCulling.Frustum;
+import game.world.ViewFrustum.Frustum;
 import game.world.entities.Entity;
 import game.world.entities.LightSource;
 import game.world.entities.Player;
@@ -38,6 +39,8 @@ import game.world.graphics.RenderEngine3D;
 import game.world.graphics.ShadowMapper;
 import game.world.gui.Component;
 import game.world.gui.Container;
+import game.world.input.Input;
+import game.world.input.InputListener;
 import game.world.sync.RenderRequest;
 import game.world.sync.Request;
 import game.world.sync.Request.Action;
@@ -82,8 +85,6 @@ public class World{
 	public static RenderEngine3D renderEngine = new RenderEngine3D();
 	public static Graphics2D graphics2D = new Graphics2D();
 	
-	private Player player;
-	
 	DynamicsWorld dynamicsWorld; //Physics World
 	
 	//Store entities
@@ -91,12 +92,12 @@ public class World{
 	Set<Entity> staticEntities = new HashSet<Entity>();
 	Set<LightSource> lightSources = new HashSet<LightSource>();
 
-
 	//GUI
 	public Container container;
 	
 	//Camera stuff
-	private FrustumCulling frustum;
+	//private FrustumCulling frustum;
+	private ViewFrustum cameraFrustum;
 	private Camera camera = new Camera(15,15,-30, this);
 	
 	private State state;
@@ -116,7 +117,8 @@ public class World{
 		this.id = id;
 		this.state = state;
 		grid = new Grid(this);
-		frustum = new FrustumCulling(camera);
+		cameraFrustum = new ViewFrustum();
+		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);
 		container = new Container();
 	}
 	
@@ -135,8 +137,92 @@ public class World{
 	}
 	
 	public void linkWorlds(World otherWorld){
-		otherWorld.linkCamera(getCamera());
+		otherWorld.getCamera().linkTo(camera);
 		otherWorld.setDynamicsWorld(getDynamicsWorld());
+	}
+	
+	public void setCamera(Camera cam){
+		camera = cam;
+	}
+	
+	/**
+	 * No action is taken when object isn't in this world.
+	 * Removes entity from static entity collection if it's there and adds it to dynamic collection.
+	 * @param e
+	 */
+	private void setEntityDynamic(Entity e){
+		if(!e.isStatic()){ //Set entity dynamic only if it's ready to be set dynamic
+			Entity removedEntity = removeEntity(e, getStaticEntities()); //Remove object from static collection
+			if(removedEntity != null){ //Was able to remove something
+				//removedEntity.sets
+				getDynamicEntities().add(removedEntity); //Add entity to dynamic world
+			}
+		}
+	}
+	
+	/**
+	 * No action is taken when object isn't in this world.
+	 * Removes entity from dynamic entity collection if it's there and adds it to static collection.
+	 * @param e
+	 */
+	private void setEntityStatic(Entity e){
+		if(e.isStatic()){ //Set entity static only if it's ready to be set static
+			Entity removedEntity = removeEntity(e, getDynamicEntities()); //Remove object from dynamic collection
+			System.out.println("moving entity " + removedEntity + " " + removedEntity.getId() + " to static collection");
+			if(removedEntity != null){ //Was able to remove something
+				getStaticEntities().add(removedEntity); //Add entity to dynamic world
+			}
+		}
+	}
+	
+	public void setCameraFocus(Entity e){
+		camera.setFollowing(e);
+	}
+	
+	private void entityUpdateRequest(UpdateRequest<?> req, Entity e){
+		boolean isStatic = e.isStatic();
+		if(req.getAction() == Action.SETDYNAMIC){
+			setEntityDynamic(e);
+		}else if(req.getAction() == Action.SETSTATIC){
+			setEntityStatic(e);
+		}
+		if(!isStatic){ //DYNAMIC
+			if(req.getAction() == Action.ADD){
+				/*if(e instanceof LightSource){
+					LightSource ls = (LightSource)req.getItem();
+					lightSources.add(ls);
+					if(ls.getModel() != null)
+						getStaticEntities().add(ls);
+				}else{*/
+					Entity addThis = e.getLinked();
+					e.setWorld(this);
+					addThis.setWorld(this);
+					getDynamicEntities().add(addThis);
+				//}
+			}else if(req.getAction() == Action.REMOVE){
+				removeEntity(e, getStaticEntities());
+			}
+		}else if(isStatic){
+			if(req.getAction() == Action.ADD){
+				if(e instanceof LightSource){
+					LightSource ls = (LightSource)req.getItem();
+					lightSources.add(ls);
+					if(ls.getModel() != null)
+						getStaticEntities().add(ls);
+				}else{
+					e.setWorld(this);
+					getStaticEntities().add(e); //not copying, reference to all
+				}
+			}else if(req.getAction() == Action.REMOVE){
+				removeEntity(e, getDynamicEntities());
+			}
+		}
+	}
+	
+	private void componentUpdateRequest(UpdateRequest<?> req, Component c){
+		if(req.getAction() == Action.ADD){
+			container.addComponent(c);
+		}
 	}
 
 	public void updateRequests(){
@@ -145,75 +231,18 @@ public class World{
 		while(itr.hasNext()){
 			UpdateRequest<?> req = itr.next();
 			Status status = req.requestStatus(this);
-			System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
+			//System.out.println(req + " Status " + status + " at world " + uniqueID + " -> " + req.changedWorlds);
 			if(status == Status.IDLE)
 				continue; //skip, request must be handled later or is already done in this world
-			if(req.getItem() instanceof LightSource){ //also entity, se must be checked first
-				LightSource ls = (LightSource)req.getItem();
-				lightSources.add(ls);
-				if(ls.getModel() != null)
-					getStaticEntities().add(ls);
-			}else if(req.getItem() instanceof Entity){
+			
+			if(req.getItem() instanceof Entity){ //ENTITY -------------------------------
 				Entity e = (Entity) req.getItem();
-				boolean isStatic = e.isStatic();
-				if(req.getAction() == Action.SETDYNAMIC){
-					if(!isStatic){ //Set entity dynamic only if it's ready to be set dynamic
-						Entity removedEntity = removeEntity(e, getStaticEntities()); //Remove object from static collection
-						if(removedEntity != null){ //Was able to remove something
-							System.out.println("moving entity " + removedEntity + " " + removedEntity.getId() + " dynamic dy collection");
-							
-							//removedEntity.sets
-							getDynamicEntities().add(removedEntity); //Add entity to dynamic world
-						}
-					}
-				}
-				if(req.getAction() == Action.SETSTATIC){
-					if(isStatic){ //Set entity static only if it's ready to be set static
-						Entity removedEntity = removeEntity(e, getDynamicEntities()); //Remove object from dynamic collection
-						System.out.println("moving entity " + removedEntity + " " + removedEntity.getId() + " to static collection");
-						if(removedEntity != null){ //Was able to remove something
-							getStaticEntities().add(removedEntity); //Add entity to dynamic world
-						}
-					}
-				}
-				if(!isStatic){ //dynamic
-					if(req.getAction() == Action.ADD){
-						Entity addThis = e.getLinked();
-						e.setWorld(this);
-						addThis.setWorld(this);
-						if(addThis instanceof Player){
-							player = (Player)addThis;
-						}
-						getDynamicEntities().add(addThis);
-						//System.out.println("added " + e + " to dynamicentities");
-					}else if(req.getAction() == Action.MOVE){ //moving object to static
-						removeEntity(e, getDynamicEntities());
-						getStaticEntities().add(e);
-					}else if(req.getAction() == Action.REMOVE){
-						removeEntity(e, getStaticEntities());
-					}
-				}else if(isStatic){
-					if(req.getAction() == Action.ADD){
-						e.setWorld(this);
-						getStaticEntities().add(e); //not copying, reference to all
-					}else if(req.getAction() == Action.UPDATE || req.getAction() == Action.UPDATEALL){
-						replace(getDynamicEntities(), e.getLinked());
-					}else if(req.getAction() == Action.MOVE){
-						Entity moveE = removeEntity(e, getStaticEntities());
-						getDynamicEntities().add(moveE.getLinked());
-					}else if(req.getAction() == Action.REMOVE){
-						removeEntity(e, getDynamicEntities());
-					}else if(req.getAction() == Action.CAMERAFOCUS){
-						Entity focusThis = getEntityByID(e.getId(), getDynamicEntities());
-						camera.setFollowing(focusThis);
-					}
-				}
-			}else if(req.getItem() instanceof Component){
+				entityUpdateRequest(req, e);
+			}else if(req.getItem() instanceof Component){ //COMPONENT --------------------------------
 				Component c = (Component) req.getItem();
-				if(req.getAction() == Action.ADD){
-					container.addComponent(c);
-				}
+				componentUpdateRequest(req, c);
 			}
+			
 			if(status == Status.FINAL){
 				itr.remove();
 			}
@@ -226,14 +255,11 @@ public class World{
 		updateRequests();
 		
 		checkKeyboardInput();
+		checkMouseInput();
 		
 		//grid.update();
 		
-		for(Entity e: getEntities()){
-			if(e.getTag() == 1){
-				//e.setDynamic();
-				//e.setStatic();
-			}
+		for(Entity e: getDynamicEntities()){
 			e.update(dt);
 		}
 		
@@ -252,6 +278,9 @@ public class World{
 		while(Mouse.next()){
 			if(Mouse.getEventButtonState()){
 				int m = Mouse.getEventButton();
+				for(Input e: InputListener.inputCheckObjects){
+					e.checkMouseInput(m);
+				}
 			}
 		}
 	}
@@ -260,9 +289,9 @@ public class World{
 		while(Keyboard.next()){
 			if(Keyboard.getEventKeyState()){
 				int k = Keyboard.getEventKey();
-				if(player != null)
-					player.checkInput(k);
-				World.renderEngine.checkInput(k);
+				for(Input e: InputListener.inputCheckObjects){
+					e.checkKeyboardInput(k);
+				}
 			}
 		}
 	}
@@ -293,10 +322,13 @@ public class World{
 	
 	public void checkFrustum(){
 		float[] visibleCount = {0,0};
-		frustum.update(); //Update variables required for culling check
+		cameraFrustum.setView(camera.getViewRay(), camera.getRightVector(), camera.getUpVector());
+		cameraFrustum.setPos(camera.getPos());
+		//frustum.update(); //Update variables required for culling check
 		for(Entity e: getEntities()){
 			//if(e instanceof Cuboid){
-				if(frustum.inView(e) != Frustum.OUTSIDE){ //draw object if it's not outside of frustum
+				//if(frustum.inView(e) != Frustum.OUTSIDE){ //draw object if it's not outside of frustum
+				if(cameraFrustum.inView(e) != Frustum.OUTSIDE){ //draw object if it's not outside of frustum
 					e.setVisible(true);
 					visibleCount[0]++;
 				}else{
@@ -305,7 +337,7 @@ public class World{
 				}
 			//}
 		}
-		System.out.println("Visible " + visibleCount[0] + " Outside " + visibleCount[1]);
+		//System.out.println("Visible " + visibleCount[0] + " Outside " + visibleCount[1]);
 	}
 	
 	public void renderRequests(){
@@ -318,20 +350,14 @@ public class World{
 			
 			if(stat == Status.FINAL){
 				if(req.getAction() == Action.INIT){
-					if(req.getItem() instanceof LightSource){
-						LightSource ls = (LightSource)req.getItem();
-						ls.init();
-						ls.renderInit();
-						req.done();
-					}else if(req.getItem() instanceof Entity){
+					if(req.getItem() instanceof Entity){
 						Entity e = (Entity) req.getItem();
 						e.renderInit();
-						req.done();
 					}else if(req.getItem() instanceof Component){
 						Component c = (Component) req.getItem();
 						c.renderInit();
-						req.done();
 					}
+					req.done();
 				}
 				itr.remove();
 			}
@@ -463,10 +489,6 @@ public class World{
 	
 	public Camera getCamera(){
 		return camera;
-	}
-	
-	public void linkCamera(Camera cam){
-		camera.setImportant(cam);
 	}
 	
 	public int getID(){

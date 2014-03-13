@@ -90,8 +90,9 @@ public class LightSource extends AbstractEntity {
 			spotExponent = 0;
 	}
 
-	
-	public void init(){
+	@Override
+	public void renderInit(){
+		super.renderInit();
 		if(isShadowed())
 			shadowMapper.init();
 	}

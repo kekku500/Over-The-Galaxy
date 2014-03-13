@@ -41,9 +41,6 @@ public class UpdateRequest<T> implements Request{
 	
 	public void setAction(Action t){
 		action = t;
-		if(getAction() == Action.UPDATE || getAction() == Action.UPDATEALL){
-			changedWorlds.add(RenderState.updatingId);
-		}
 	}
 	
 	public Status requestStatus(World world){
@@ -58,8 +55,6 @@ public class UpdateRequest<T> implements Request{
 				}
 			}
 		}
-		if(getAction() == Action.UPDATE)
-			return Status.FINAL;
 		if(changedWorlds.contains(world.getUniqueID())){
 			return Status.IDLE;
 		}else

@@ -38,6 +38,13 @@ public class Rectangle extends AbstractComponent{
 			texVertices.rewind();
 		}
 		
+		/*gl.enable(GL.BLEND);
+gl.blendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
+gl.textureEnv(GL.TEXTURE_ENV, GL.TEXTURE_ENV_MODE, GL.MODULATE);
+gl.color4ub((byte)255, (byte)255, (byte)255, (byte)255); // You can fade something out in its entirety by altering alpha here too
+// Now draw your quads
+gl.disable(GL.BLEND);*/
+		
 	}
 	
 	@Override
@@ -51,7 +58,7 @@ public class Rectangle extends AbstractComponent{
 	@Override
 	public void renderInitStart() {
 		if(isTextured){
-			Texture tex = Texture.loadTexture(texPath);
+			Texture tex = Texture.loadTexture2D(texPath);
 			texture = tex.id;
 			vboTexVertexID = glGenBuffers();
 			

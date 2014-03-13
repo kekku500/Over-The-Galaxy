@@ -87,16 +87,21 @@ public interface Entity {
 	public World getWorld();
 	
 	
+	//Debugging purpose
 	public void setTag(int i);
 	
 	public int getTag();
 	
 	
-
+	//Frustum culling
 	public BoundingSphere getBoundingSphere();
 	
 	public BoundingAxis getBoundingAxis();
 	
+	
+	/**
+	 * @return Returns copy of this entity with some common variables.
+	 */
 	public Entity getLinked();
 
 

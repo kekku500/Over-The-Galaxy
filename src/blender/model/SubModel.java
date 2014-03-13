@@ -48,6 +48,8 @@ public class SubModel {
 		masterModel = master;
 	}
 	
+	public SubModel(){}
+	
 	public void render(){
 		if(!Model.drawVertices()) //no point trying to draw without vertices enabled
 			return;
@@ -123,6 +125,19 @@ public class SubModel {
         if(Model.drawMaterial())
         	Material.clear();
         	glDisable(GL_COLOR_MATERIAL);
+	}
+	
+	public void prepareVBOVertices(Vector3f[] vertices){
+		vboVertexID = glGenBuffers();
+		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.length * 3);
+		for(Vector3f v: vertices){
+			vertexBuffer.put(v.x*2).put(v.y*2).put(v.z*2);
+		}
+        vertexBuffer.rewind();
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+        glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	
 	public void prepareVBO(){

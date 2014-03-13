@@ -3,11 +3,8 @@ package game.world.sync;
 public interface Request {
 	
 	public enum Action{
-		ADD, //Add Entity to the world (for static objects)
+		ADD, //Add Entity to the world
 		REMOVE, //Remove Entity from the world
-		MOVE, //Change motion static/dynamic/physics
-		UPDATE, //Updates only next world
-		UPDATEALL, //Updates all worlds
 		CAMERAFOCUS,
 		INIT,
 		SETSTATIC,

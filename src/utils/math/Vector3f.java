@@ -21,6 +21,20 @@ public class Vector3f extends javax.vecmath.Vector3f{
 		return this;
 	}
 	
+	public Vector3f mul(Vector3f v){
+		x *= v.x;
+		y *= v.y;
+		z *= v.z;
+		return this;
+	}
+	
+	public Vector3f reverse(){
+		x = 1/x;
+		y = 1/y;
+		z = 1/z;
+		return this;
+	}
+	
 	public Vector3f mul(float m){
 		scale(m);
 		return this;

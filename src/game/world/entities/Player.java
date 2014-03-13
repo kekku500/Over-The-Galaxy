@@ -1,12 +1,15 @@
 package game.world.entities;
 
 import game.world.World;
+import game.world.input.Input;
+import game.world.input.InputListener;
 
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import utils.R;
 import utils.Utils;
 import utils.math.Matrix4f;
 import utils.math.Vector3f;
@@ -29,7 +32,7 @@ import com.bulletphysics.linearmath.Transform;
  * This is temporary.
  */
 
-public class Player extends DefaultEntity{
+public class Player extends DefaultEntity implements Input{
 	
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
@@ -38,6 +41,7 @@ public class Player extends DefaultEntity{
 	public Player(){}
 
 	public Player(float x, float y, float z) {
+		new InputListener(this); //to be able to register input
 		//super(new Vector3f(x,y,z), 5, 5, 15);
 		try {
 			Model model2 = new Model("F-35_Lightning_II\\F-35_Lightning_II.obj");
@@ -80,7 +84,9 @@ public class Player extends DefaultEntity{
 	
 	@Override
 	public Entity getLinked(){
-		return new Player().linkTo(this);
+		Player p = new Player();
+		p.shootBoxes = shootBoxes;
+		return p.linkTo(this);
 	}
 	
 	boolean applyForce = false;
@@ -90,20 +96,11 @@ public class Player extends DefaultEntity{
 	private Rotate rotate = Rotate.NONE;
 	boolean createNewShape = false;
 	boolean resetControlBall = false;
-	boolean shootBoxes = false;
+	R<Boolean> shootBoxes = new R<Boolean>(false);
 	boolean switchMotion = false;
 	
 	public void checkInput(int a){
-		switch(a){
-		case Keyboard.KEY_G:
-			createNewShape = true; break;
-		case Keyboard.KEY_F:
-			resetControlBall = true; break;
-		case Keyboard.KEY_E:
-			shootBoxes = true; break;
-		case Keyboard.KEY_X:
-			switchMotion = true; break;
-		}
+
 	}
 	
 	@Override
@@ -204,10 +201,10 @@ public class Player extends DefaultEntity{
 			getWorld().addEntity(testObject);
 			createNewShape = false;
 		}
-		if(shootBoxes){
+		if(shootBoxes.get()){
 			float w = 5, h = 5, d = 5;
 			float I = 2f;
-			float impluseForce = 100;
+			float impluseForce = 10;
 			Entity testObject = new DefaultEntity();
 			//visual
 			Model testModel = new Cuboid(w,h,d);
@@ -232,7 +229,7 @@ public class Player extends DefaultEntity{
 			
 			//testObject.setRigidBody(body);
 			getWorld().addEntity(testObject);
-			shootBoxes = false;
+			shootBoxes.set(false);
 		}
 		
 		super.update(dt);
@@ -244,6 +241,26 @@ public class Player extends DefaultEntity{
 	
 	public float getRotationSpeed(){
 		return rotationSpeed;
+	}
+
+	@Override
+	public void checkKeyboardInput(int k) {
+		switch(k){
+		case Keyboard.KEY_G:
+			createNewShape = true; break;
+		case Keyboard.KEY_F:
+			resetControlBall = true; break;
+		case Keyboard.KEY_E:
+			shootBoxes.set(true); break;
+		case Keyboard.KEY_X:
+			switchMotion = true; break;
+		}
+	}
+
+	@Override
+	public void checkMouseInput(int m) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

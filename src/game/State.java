@@ -19,7 +19,6 @@ public abstract class State {
 	private RequestManager syncManager = new RequestManager();
 	
 	public State(){
-		System.out.println("linked worlds");
 		renderStates[0] = new RenderState(this, 0, 0);
 		renderStates[1] = new RenderState(this, 1, -1);
 		renderStates[2] = new RenderState(this, 2, -1);
@@ -53,6 +52,8 @@ public abstract class State {
 	//ABSTRACT
 	public abstract void init();
 	
+	public abstract void renderInit();
+	
 	public abstract void update(float dt);
 	
 	public abstract void render();
@@ -60,8 +61,6 @@ public abstract class State {
 	public abstract void dispose();
 	
 	public abstract int getId();
-	
-	public abstract void renderInit();
 	
 	//SET
 	public void setStuffToRender(boolean b){

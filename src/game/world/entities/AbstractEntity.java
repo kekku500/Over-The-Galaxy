@@ -82,6 +82,18 @@ public abstract class AbstractEntity implements Entity{
 	    glPopMatrix(); //reset transformations
 	}
 	
+	@Override
+	public void dispose(){
+		if(getModel() != null)
+			getModel().dispose();
+	}
+	
+	@Override
+	public void renderInit() {
+		if(getModel() != null)
+			getModel().prepareVBO();
+	}
+	
 	/**
 	 * Creates new RigidBody from given RigidBodyConstructionInfo and
 	 * sets it to this entity's RigidBody.
@@ -107,43 +119,6 @@ public abstract class AbstractEntity implements Entity{
 		boundingSphere = new BoundingSphere(getPos(), f[0]);
 	}
 	
-	public boolean isVisual(){
-		if(getModel() == null)
-			return false;
-		return true;
-	}
-
-	
-	public void setTag(int i){
-		tag = i;
-	}
-	
-	public int getTag(){
-		return tag;
-	}
-	
-	
-
-	
-	/**
-	 * @return Does this entity have RigidBody?
-	 */
-	public boolean isPhysical(){
-		if(rigidBodyWrapper == null)
-			return false;
-		return true;
-	}
-	
-	/**
-	 * @return Has been added to the world?
-	 */
-	public boolean isInWorld(){
-		if(world == null)
-			return false;
-		return true;
-	}
-	
-
 	public boolean setStatic(){
 		if(isStatic() || !isPhysical()) //no physics shape, can't set static
 			return false;
@@ -166,7 +141,6 @@ public abstract class AbstractEntity implements Entity{
 		return true;
 	}
 	
-
 	public boolean setDynamic(){
 		if(!isStatic() || !isPhysical() || constructionInfoWrapper == null) //no physics shape, can't set dynamic then
 			return false;
@@ -185,12 +159,37 @@ public abstract class AbstractEntity implements Entity{
 		return true;
 	}
 	
+	/**
+	 * @return Does this entity have model?
+	 */
+	public boolean isVisual(){
+		if(getModel() == null)
+			return false;
+		return true;
+	}
+	
+	/**
+	 * @return Does this entity have RigidBody?
+	 */
+	public boolean isPhysical(){
+		if(getRigidBody() == null)
+			return false;
+		return true;
+	}
+	
+	/**
+	 * @return Has been added to the world?
+	 */
+	public boolean isInWorld(){
+		if(world == null)
+			return false;
+		return true;
+	}
 
 	@Override
 	public void setRigidBody(RigidBody rigidShape){
 		this.rigidBodyWrapper.set(rigidShape);
 	}
-	
 	
 	@Override
 	public RigidBody getRigidBody(){
@@ -220,23 +219,17 @@ public abstract class AbstractEntity implements Entity{
 		constructionInfoWrapper.set(r);
 	}
 	
-	
-
-	
-
-	
 	@Override
-	public void dispose(){
-		if(getModel() != null)
-			getModel().dispose();
+	public void setTag(int i){
+		tag = i;
 	}
 	
 	@Override
-	public void renderInit() {
-		if(getModel() != null)
-			getModel().prepareVBO();
+	public int getTag(){
+		return tag;
 	}
 	
+
 	@Override
 	public void setPos(Vector3f v){
 		motionState.origin.set(v);

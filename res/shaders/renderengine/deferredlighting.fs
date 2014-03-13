@@ -16,6 +16,8 @@ uniform float LightSourceSpotCutoff, LightSourceSpotExponent;
 uniform vec3 LightSourceSpotLightDirection;
 uniform int LightSourceType; //0 - directional, 1 - point, 2 - spot
 
+uniform float SkyBoxIntensity;
+
 uniform mat3x3 NormalMatrix;
 uniform mat4x4 ProjectionMatrix, ModelViewMatrix;
 
@@ -153,6 +155,6 @@ void main(){
 			gl_FragColor = vec4(Me.rgb + Color.rgb * (Ma.rgb * SSAO + Md.rgb * Shadow), 1.0);		
 		}
     }else{
-    	gl_FragColor = vec4(vec3(0.0), 1.0);
+    	gl_FragColor = vec4(texture2D(ColorBuffer, gl_TexCoord[0].st).rgb * SkyBoxIntensity, 1.0);
     }
 }

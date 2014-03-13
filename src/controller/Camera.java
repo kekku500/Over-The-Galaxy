@@ -2,6 +2,7 @@ package controller;
 
 import game.Game;
 import game.world.World;
+import game.world.entities.AbstractEntity;
 import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
 
@@ -12,6 +13,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.glu.GLU;
 
+import utils.R;
 import utils.Utils;
 import utils.math.Vector3f;
 import blender.model.Model;
@@ -37,7 +39,7 @@ public class Camera extends DefaultEntity{
     private enum CamType{FP, _6DOF, LOCK}
     private CamType type = CamType.FP;
     
-    private Entity following;
+    private R<Entity> following = new R<Entity>();
     private float viewRadius = 30;
     
 	
@@ -46,12 +48,20 @@ public class Camera extends DefaultEntity{
     private Vector3f rightVector = new Vector3f(1,0,0); //Cross product of viewRay and upVector
     private Vector3f position = new Vector3f();
     
-    public Entity getLinked(){
-    	return new Camera().linkTo(this);
+    @Override
+	public Entity linkTo(AbstractEntity masterEntity){
+    	super.linkTo(masterEntity);
+    	Camera masterCam = (Camera)masterEntity;
+    	following = masterCam.getFollowingWrapper();
+    	return this;
     }
 	
 	public void setFollowing(Entity e){
-		following = e;
+		following.set(e);
+	}
+	
+	public R<Entity> getFollowingWrapper(){
+		return following;
 	}
     
     public Camera(){}
@@ -60,12 +70,6 @@ public class Camera extends DefaultEntity{
     public Camera(float x, float y, float z, World w){
     	position = new Vector3f(x, y, z);
     	world = w;
-    }
-    
-    public void setImportant(Camera fromHere){
-    	linkTo(fromHere);
-    	//setRigidBody(fromHere.getRigidBody());
-    	//setModel(fromHere.getModel());
     }
     
     
@@ -185,9 +189,9 @@ public class Camera extends DefaultEntity{
 			t.setRotation(orientation);
 			getRigidBody().setWorldTransform(t);
 		}else if(type == CamType.LOCK){
-			if(following != null){
+			if(following.get() != null){
 				Transform t = new Transform();
-				following.getRigidBody().getWorldTransform(t);
+				following.get().getRigidBody().getWorldTransform(t);
 				
 				Quat4f orientation = new Quat4f();
 				t.getRotation(orientation);
@@ -226,7 +230,7 @@ public class Camera extends DefaultEntity{
 		float speed = movementSpeed*dt;
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 			speed *= shiftBoost;
-		if(following == null){
+		if(following.get() == null){
 			Transform tr = new Transform();
 			getRigidBody().getWorldTransform(tr);
 			Matrix4f mr = new Matrix4f();
@@ -280,7 +284,7 @@ public class Camera extends DefaultEntity{
 			getRigidBody().getWorldTransform(tcam);
 			
 			Transform tfollow = new Transform();
-			following.getRigidBody().getWorldTransform(tfollow);
+			following.get().getRigidBody().getWorldTransform(tfollow);
 			
 			Vector3f camPos = new Vector3f();
 			viewRay.normalize();

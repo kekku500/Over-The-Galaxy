@@ -12,6 +12,9 @@ import game.world.entities.LightSource.LightType;
 import game.world.graphics.Graphics2D;
 import game.world.graphics.ShadowMapper;
 import game.world.gui.Rectangle;
+import game.world.sync.Request;
+import game.world.sync.Request.Action;
+import game.world.sync.UpdateRequest;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
@@ -41,7 +44,7 @@ public class PlayState extends State{
 	
 	private int stateId;
 	
-	private Player player;
+
 	
 	public PlayState(int stateId){
 		this.stateId = stateId;
@@ -54,12 +57,11 @@ public class PlayState extends State{
 		Game.print("PlayState init");
 		World world = this.getUpToDateState().getWorld();
 
-		player = new Player(25,20,15);
+		Player player = new Player(25,20,15);
 		
 		world.addEntity(player);
-		
-		
-		
+
+		//world.setCameraFocus(player);
 		
 		float w = 5, h = 5, d = 5;
 		AbstractEntity testBox = null;
@@ -94,9 +96,7 @@ public class PlayState extends State{
 		
 		
 		
-		
-		/*Request request = new UpdateRequest(Action.CAMERAFOCUS, player);
-		getSyncManager().add(request);*/
+
 
 		world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
 		
@@ -130,13 +130,25 @@ public class PlayState extends State{
 		
 		//Brick normal map
 		Entity testNormalMap = new DefaultEntity();
-		testNormalMap.getMotionState().origin.set(0,2,0);
 		try {
 			Model normalTest = new Model("normal_map_test\\brick01g-quad.obj");
+			normalTest.translate(new Vector3f(0,-2,0));
 			testNormalMap.setModel(normalTest);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		//physics
+		CollisionShape brickShape = new BoxShape(new Vector3f(8/2, 4/2, 20/2));
+		DefaultMotionState brickMotionState = new DefaultMotionState(new Transform(new Matrix4f(
+				new Quat4f(0,0,0,1),
+				new Vector3f(0,5f,0), 1)));
+		Vector3f brickInertia = new Vector3f();
+		shape.calculateLocalInertia(5f,  intertia);
+		RigidBodyConstructionInfo brickConstructionInfo = new RigidBodyConstructionInfo(5f, brickMotionState, brickShape, brickInertia);
+		constructionInfo.restitution = 0.1f;
+		constructionInfo.friction = 0.95f;
+		
+		testNormalMap.createRigidBody(brickConstructionInfo);
 		world.addEntity(testNormalMap);
 		
 		///Building -------------------------------------
@@ -203,13 +215,13 @@ public class PlayState extends State{
 		s.isGodRays = true;
 		testLightSource.setModel(s);
 
-		testLightSource.setLightType(LightType.DIRECTIONAL);
+		testLightSource.setLightType(LightType.POINT);
 		
-		testLightSource.setPos(new Vector3f(0, 50, 300));
-		testLightSource.setShadowMapper(new ShadowMapper(false));
+		//testLightSource.setPos(new Vector3f(0, 50, 300));
+		//testLightSource.setShadowMapper(new ShadowMapper(false));
 		
-		//testLightSource.setPos(new Vector3f(0, 75, 0));
-		//testLightSource.setShadowMapper(new ShadowMapper(true));
+		testLightSource.setPos(new Vector3f(0, 75, 0));
+		testLightSource.setShadowMapper(new ShadowMapper(true));
 		
 		world.addEntity(testLightSource);
 	}
