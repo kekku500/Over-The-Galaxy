@@ -14,20 +14,18 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.Game;
-import game.world.gui.AbstractComponent;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
 
 import blender.model.Texture;
 
-public class WeaponDisplay extends HudComponent{
-	String texPath;
-	public WeaponDisplay(String texPath){
-		position = new Vector2f(50,10);
-		width = 100;
-		height = 50;
-		this.texPath = texPath;
+public class HudBase extends HudComponent{
+	String texPath = "res/models/hud/HUD.png";
+	public HudBase(){
+		position = new Vector2f(0,0);
+		width = Game.width;
+		height = Game.height;
 		
 		
 		//Create Vertex Buffer

@@ -12,15 +12,16 @@ public class HeadsUpDisplay{
 	public List<HudComponent> components = new ArrayList<HudComponent>();
 	private Player player;
 	private World world;
-	String texPath = "res/models/HudWep.png";
 	
 
 	public HeadsUpDisplay(Player player, World world) {
 		this.player = player;
 		this.world = world;
 		
-		components.add(new WeaponDisplay());
+		components.add(new HudBase());
+		components.add(new WeaponDisplay(player.getWeapon().getTexture()));
 		world.addComponent(components.get(0));
+		world.addComponent(components.get(1));
 
 	}
 

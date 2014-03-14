@@ -10,6 +10,8 @@ import org.lwjgl.input.Mouse;
 import utils.Utils;
 import utils.math.Matrix4f;
 import utils.math.Vector3f;
+import Weapon.Laser;
+import Weapon.Weapon;
 import blender.model.Model;
 import blender.model.custom.Cuboid;
 import blender.model.custom.Sphere;
@@ -33,12 +35,14 @@ public class Player extends DefaultEntity{
 	
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
+	private Weapon weapon;
 	
 	
 	public Player(){}
 
 	public Player(float x, float y, float z) {
 		//super(new Vector3f(x,y,z), 5, 5, 15);
+		weapon = new Laser();
 		try {
 			Model model2 = new Model("superman\\mees.obj");
 			Quat4f quat = new Quat4f();
@@ -238,6 +242,10 @@ public class Player extends DefaultEntity{
 	
 	public float getRotationSpeed(){
 		return rotationSpeed;
+	}
+	
+	public Weapon getWeapon(){
+		return weapon;
 	}
 
 }
