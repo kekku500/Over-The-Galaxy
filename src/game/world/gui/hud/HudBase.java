@@ -21,7 +21,7 @@ import org.lwjgl.util.vector.Vector2f;
 import blender.model.Texture;
 
 public class HudBase extends HudComponent{
-	String texPath = "res/models/hud/HUD.png";
+	String texPath = "res/models/hud/HUD2.png";
 	public HudBase(){
 		position = new Vector2f(0,0);
 		width = Game.width;

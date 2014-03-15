@@ -81,6 +81,7 @@ public class World{
 	
 	public static RenderEngine3D renderEngine = new RenderEngine3D();
 	public static LightSource testLightSource = new LightSource(false);
+	public static Graphics2D graphics2D;
 	private Player player;
 	
 	DynamicsWorld dynamicsWorld; //Physics World
@@ -118,6 +119,8 @@ public class World{
 		grid = new Grid(this);
 		frustum = new FrustumCulling(camera);
 		container = new Container();
+		graphics2D = new Graphics2D();
+		//graphics2D.init();
 		
 	}
 	
@@ -336,7 +339,7 @@ public class World{
 		//glDisable(GL_DEPTH_TEST);
 		
 	    //Render 2D stuff
-	    Graphics2D.perspective2D();
+	    graphics2D.perspective2D();
 	    //just TESting some stuff
 	    container.render();
 	    

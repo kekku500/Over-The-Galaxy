@@ -14,17 +14,21 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.Game;
-import game.world.gui.AbstractComponent;
+import game.world.World;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
+
+
 
 import blender.model.Texture;
 
 public class WeaponDisplay extends HudComponent{
 	String texPath;
+
 	public WeaponDisplay(String texPath){
-		position = new Vector2f(50,10);
+		
+		position = new Vector2f(50,0);
 		width = 100;
 		height = 50;
 		this.texPath = texPath;
@@ -64,7 +68,9 @@ public class WeaponDisplay extends HudComponent{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDrawArrays(GL_QUADS, 0, 4);
+		World.graphics2D.drawString(100, 50, "DEFAULT" + 50);
 		glDisable(GL_BLEND);
+		
 		
 	}
 
