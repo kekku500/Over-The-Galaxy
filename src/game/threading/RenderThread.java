@@ -20,7 +20,7 @@ public class RenderThread implements Runnable{
 	
 	private ThreadManager threadManager;
 	
-	private Graphics2D graphics2D;
+	public static Graphics2D graphics2D;
 	
 	public RenderThread(ThreadManager threadManager){
 		this.threadManager = threadManager;

@@ -35,10 +35,12 @@ public class Player extends DefaultEntity{
 	
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
-	private Weapon weapon;
+	private static Weapon weapon;
 	
 	
-	public Player(){}
+	public Player(){
+
+	}
 
 	public Player(float x, float y, float z) {
 		//super(new Vector3f(x,y,z), 5, 5, 15);
@@ -107,6 +109,10 @@ public class Player extends DefaultEntity{
 			shootBoxes = true; break;
 		case Keyboard.KEY_X:
 			switchMotion = true; break;
+		case Keyboard.KEY_Y:
+			weapon.fire(); break;
+		case Keyboard.KEY_U:
+			weapon.reload(); break;
 		}
 	}
 	

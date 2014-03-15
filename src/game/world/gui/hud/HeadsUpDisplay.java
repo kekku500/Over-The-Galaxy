@@ -19,7 +19,7 @@ public class HeadsUpDisplay{
 		this.world = world;
 		
 		components.add(new HudBase());
-		components.add(new WeaponDisplay(player.getWeapon().getTexture()));
+		components.add(new WeaponDisplay(player.getWeapon()));
 		world.addComponent(components.get(0));
 		world.addComponent(components.get(1));
 

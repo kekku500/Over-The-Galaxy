@@ -1,14 +1,17 @@
 package Weapon;
 
 public class Laser implements Weapon{
-	private int Ammo = 100;
-	private int MaxAmmo = 100;
-	private int ClipCount = 5;
-	private int MaxClips = 5;
+	private int Ammo;
+	private int MaxAmmo;
+	private int ClipCount;
+	private int MaxClips;
 	private String texture = "res/models/weapons/Laser.png";
 	
 	public Laser(){
-		
+		Ammo = 100;
+		MaxAmmo = 100;
+		ClipCount = 5;
+		MaxClips = 5;
 	}
 
 	@Override
@@ -33,8 +36,10 @@ public class Laser implements Weapon{
 
 	@Override
 	public void reload() {
-		Ammo = MaxAmmo;
-		ClipCount --;		
+		if(ClipCount > 0){
+			Ammo = MaxAmmo;
+			ClipCount --;
+		}
 	}
 
 	@Override
@@ -57,6 +62,13 @@ public class Laser implements Weapon{
 	public void setMaxClips(int newMax) {
 		MaxClips = newMax;
 		
+	}
+
+	@Override
+	public void fire() {
+		if(Ammo > 0){
+			Ammo --;
+		}
 	}
 
 }

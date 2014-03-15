@@ -14,24 +14,22 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import game.Game;
-import game.world.World;
+import game.threading.RenderThread;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
 
-
-
+import Weapon.Weapon;
 import blender.model.Texture;
 
 public class WeaponDisplay extends HudComponent{
-	String texPath;
+	Weapon weapon;
 
-	public WeaponDisplay(String texPath){
-		
+	public WeaponDisplay(Weapon weapon){
+		this.weapon = weapon;		
 		position = new Vector2f(50,0);
 		width = 100;
 		height = 50;
-		this.texPath = texPath;
 		
 		
 		//Create Vertex Buffer
@@ -39,28 +37,24 @@ public class WeaponDisplay extends HudComponent{
 		vertices.put(new float[]{0,height, width,height, width,0, 0,0});
 		vertices.rewind();
 		
-		//testing texture
 		isTextured = true;
 		
-		if(isTextured){
-			texVertices = BufferUtils.createFloatBuffer(2 * 4);
-			texVertices.put(new float[]{0,1, 1,1, 1,0, 0,0});
-			texVertices.rewind();
-		}
+		texVertices = BufferUtils.createFloatBuffer(2 * 4);
+		texVertices.put(new float[]{0,1, 1,1, 1,0, 0,0});
+		texVertices.rewind();
+		
 	}
 
 	@Override
 	public void renderInitStart() {
-		if(isTextured){
-			Texture tex = Texture.loadTexture(texPath);
-			texture = tex.id;
-			vboTexVertexID = glGenBuffers();
+		Texture tex = Texture.loadTexture(weapon.getTexture());
+		texture = tex.id;
+		vboTexVertexID = glGenBuffers();
 			
-            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-            glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STATIC_DRAW);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-		
+        glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
+        glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+				
 	}
 
 	@Override
@@ -68,7 +62,8 @@ public class WeaponDisplay extends HudComponent{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDrawArrays(GL_QUADS, 0, 4);
-		World.graphics2D.drawString(100, 50, "DEFAULT" + 50);
+		RenderThread.graphics2D.drawString(38, 40, weapon.getClipAmount() + "/" + weapon.getMaxClips());
+		RenderThread.graphics2D.drawString(20, 55, weapon.getAmmo() + "/" + weapon.getMaxAmmo());
 		glDisable(GL_BLEND);
 		
 		

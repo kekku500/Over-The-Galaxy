@@ -14,5 +14,6 @@ public interface Weapon {
 	public void addClips(int clips);
 	
 	public void reload();
+	public void fire();
 	
 }
