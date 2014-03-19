@@ -5,7 +5,7 @@ public class Laser implements Weapon{
 	private int MaxAmmo;
 	private int ClipCount;
 	private int MaxClips;
-	private String texture = "res/models/weapons/Laser.png";
+	private String texture = "res/models/hud/HUD2.png";
 	
 	public Laser(){
 		Ammo = 100;
