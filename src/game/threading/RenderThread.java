@@ -5,6 +5,7 @@ import game.Game;
 import game.RenderState;
 import game.State;
 import game.world.World;
+import game.world.graphics.Spritesheet;
 import game.world.gui.graphics.Graphics2D;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class RenderThread implements Runnable{
 	private ThreadManager threadManager;
 	
 	public static Graphics2D graphics2D;
+	public static Spritesheet spritesheet;
 	
 	public RenderThread(ThreadManager threadManager){
 		this.threadManager = threadManager;
@@ -48,6 +50,7 @@ public class RenderThread implements Runnable{
 	    //Initialize 2d graphics class
 	    graphics2D = new Graphics2D(); //used for texts
 	    graphics2D.init();
+	    spritesheet = new Spritesheet("res/models/hud/HUD2.png",75);
 	    
 	    //hide the mouse
 	    //Mouse.setGrabbed(true);
