@@ -9,20 +9,29 @@ varying vec3 Tangent, Binormal, Normal;
 void main()
 {
     gl_FragData[0] = gl_Color;
+	//gl_FragData[0] = gl_FrontMaterial.diffuse;
     
     //material stuff
     
-   	gl_FragData[2] = gl_FrontMaterial.ambient;
-    gl_FragData[3] = gl_FrontMaterial.diffuse;
-    gl_FragData[4] = gl_FrontMaterial.specular;
-    gl_FragData[5] = gl_FrontMaterial.emission;
-    gl_FragData[6] = vec4(gl_FrontMaterial.shininess);
+
     
     //God rays stuff
 	if(GodRays == 1){
 		gl_FragData[7] = gl_Color; //emits rays
+		
+		gl_FragData[2] = gl_Color;
+		gl_FragData[3] = gl_Color;
+		gl_FragData[4] = gl_Color;
+		gl_FragData[5] = gl_Color;
+		gl_FragData[6] = gl_Color;
 	}else{
 		gl_FragData[7] = vec4(0.0); //black means no god rays
+		
+		gl_FragData[2] = gl_FrontMaterial.ambient;
+		gl_FragData[3] = gl_FrontMaterial.diffuse;
+		gl_FragData[4] = gl_FrontMaterial.specular;
+		gl_FragData[5] = gl_FrontMaterial.emission;
+		gl_FragData[6] = vec4(gl_FrontMaterial.shininess);
 	}
     
     if(Texturing == 1){

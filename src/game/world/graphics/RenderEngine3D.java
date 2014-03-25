@@ -17,16 +17,22 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.util.glu.GLU.gluLookAt;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
 import game.Game;
+import game.resources.Resources;
 import game.threading.RenderThread;
 import game.world.World;
-import game.world.entities.Entity;
-import game.world.entities.LightSource;
+import game.world.entities.VisualEntity;
+import game.world.entities.lighting.DirectionalLighting;
+import game.world.entities.lighting.Lighting;
+import game.world.entities.lighting.PointLighting;
+import game.world.entities.lighting.SpotLighting;
+import game.world.entities.lighting.SunLight;
 import game.world.input.Input;
 import game.world.input.InputListener;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -53,7 +59,6 @@ import blender.model.Material;
 import blender.model.Model;
 import blender.model.SubModel;
 import blender.model.Texture;
-import blender.model.custom.Cuboid;
 import blender.model.custom.Sphere;
 import shader.Shader;
 import shader.Shader;
@@ -79,6 +84,7 @@ public class RenderEngine3D implements Input{
     private IntBuffer SSAOTexturesBlurred;
     private int SSAOTexture; //without blur
     private int rotationTexture; //SSAO randomly rotated texture
+    private int SSAOWidth, SSAOHeight;
     
     //Light scattering, Lens, Flare and Halo
     private Shader sunRaysLensFlareHalo = new Shader(); //Light scattering, Lens, Flare and Halo
@@ -98,7 +104,7 @@ public class RenderEngine3D implements Input{
     private int FBO;
     
     //Texture indicies
-    private int colorBuffer, normalBuffer, depthBuffer; //for deferred shading
+    private int colorBuffer, normalBuffer, depthBuffer, combinedLighting, combinedSpecular; //for deferred shading
     private int materialAmbient, materialDiffuse, materialSpecular, materialEmission, materialShininess;
 
     //Rendering settings
@@ -127,38 +133,44 @@ public class RenderEngine3D implements Input{
         boolean error = false;
         
         //Load textures
-        Texture tex = Texture.loadTexture2D("res/shaders/renderengine/lensdirt_lowc.jpg"); //for sun
-        dirtTexture = tex.id;
+        Texture tex = null;
+		try {
+			tex = Resources.getTexture("sunlens\\lensdirt_lowc.jpg");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} //for sun
+        dirtTexture = tex.getID();
         
-        // load shaders -----------------------------------------------------------------------------------------------------------
-    	error = !preprocess.load("renderengine//preprocess.vs", "renderengine//preprocess.fs");
-    	error = !SSAO.load("renderengine//ssao.vs", "renderengine//ssao.fs");
-    	error = !SSAOFilterH.load("renderengine//ssaofilter.vs", "renderengine//ssaofilterh.fs");
-    	error = !SSAOFilterV.load("renderengine//ssaofilter.vs", "renderengine//ssaofilterv.fs");
-    	error = !lightingAndShadow.load("renderengine//deferredlighting.vs", "renderengine//deferredlighting.fs");
-    	
-        error = !blurH.load("renderengine//blur.vs", "renderengine//blurh.fs");
-        error = !blurV.load("renderengine//blur.vs", "renderengine//blurv.fs");
-        error = !sunRaysLensFlareHalo.load("renderengine//sunrayslensflarehalo.vs", "renderengine//sunrayslensflarehalo.fs");
+        //get shaders -----------------------------------------------------------------------------------------------------------
+        try {
+			preprocess = Resources.getShader("renderengine\\preprocess");
+			SSAO = Resources.getShader("renderengine\\ssao");
+			SSAOFilterH = Resources.getShader("renderengine\\ssaofilterh");
+			SSAOFilterV = Resources.getShader("renderengine\\ssaofilterv");
+			lightingAndShadow = Resources.getShader("renderengine\\deferredlighting");
+			blurH = Resources.getShader("renderengine\\blurh");
+			blurV = Resources.getShader("renderengine\\blurv");
+			sunRaysLensFlareHalo = Resources.getShader("renderengine\\sunrayslensflarehalo");
+			skyBoxShader = Resources.getShader("renderengine\\skybox");
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
         
-        //skybox
-        error = !skyBoxShader.load("renderengine//skybox.vs", "renderengine//skybox.fs");
-
     	if(error){
     		System.err.println("Error occoured!");
             System.exit(0);
     	}
     	
     	//skbox model
-        Texture skyBox = Texture.loadTextureCubeMap(new String[]{
-        		"res/textures/skybox/jajlands1_right.jpg", 
-        		"res/textures/skybox/jajlands1_left.jpg", 
-        		"res/textures/skybox/jajlands1_top.jpg", 
-        		"res/textures/skybox/jajlands1_bottom.jpg", 
-        		"res/textures/skybox/jajlands1_front.jpg", 
-        		"res/textures/skybox/jajlands1_back.jpg"
-        });
-        skyBoxModel.material.textureHandle = skyBox.id;
+        Texture skyBox = null;
+		try {
+			skyBox = Resources.getTexture("skybox\\skybox.ct");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        skyBoxModel.material.textureHandle = skyBox.getID();
     	skyBoxModel.prepareVBOVertices(new Vector3f[]{
     			new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f( 1.0f, -1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f( 1.0f, -1.0f, -1.0f),
     		    new Vector3f(-1.0f, -1.0f,  1.0f), new Vector3f(-1.0f, -1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f(-1.0f, -1.0f,  1.0f),
@@ -206,6 +218,9 @@ public class RenderEngine3D implements Input{
         materialEmission = glGenTextures();
         materialShininess = glGenTextures();
         
+        combinedLighting = glGenTextures();
+        combinedSpecular = glGenTextures();
+        
         // generate framebuffer object --------------------------------------------------------------------------------------------
         FBO = glGenFramebuffersEXT();
         
@@ -237,10 +252,11 @@ public class RenderEngine3D implements Input{
         
         samples = BufferUtils.createFloatBuffer(16*2);
     	float angle = 0.0f;
-
+    	
+    	float radyus = 2f; //default  2
         for(int i = 0; i < 16; i++){
-        	samples.put((float)Math.sin(angle) * ((float)i + 1.0f) / 16.0f / 1024.0f * 2.0f);
-        	samples.put((float)Math.cos(angle) * ((float)i + 1.0f) / 16.0f / 1024.0f * 2.0f);
+        	samples.put((float)Math.sin(angle) * ((float)i + 1.0f) / 16.0f / 1024.0f * radyus);
+        	samples.put((float)Math.cos(angle) * ((float)i + 1.0f) / 16.0f / 1024.0f * radyus);
 
         	angle += (float)Math.PI/2;
 
@@ -314,10 +330,6 @@ public class RenderEngine3D implements Input{
         preprocess.uniformLocations[0] = glGetUniformLocation(preprocess.i(), "Texturing");
         preprocess.uniformLocations[1] = glGetUniformLocation(preprocess.i(), "NormalMapping");
         preprocess.uniformLocations[2] = glGetUniformLocation(preprocess.i(), "GodRays");
-        
-        lightingAndShadow.bind();
-        glUniform1i(glGetUniformLocation(lightingAndShadow.i(), "ColorBuffer"), 0);
-        glUniform1i(glGetUniformLocation(lightingAndShadow.i(), "NormalBuffer"), 1);
 
         SSAO.uniformLocations = new int[2];
         SSAO.uniformLocations[0] = glGetUniformLocation(SSAO.i(), "sxy");
@@ -333,7 +345,7 @@ public class RenderEngine3D implements Input{
         SSAOFilterV.uniformLocations[1] = glGetUniformLocation(SSAOFilterV.i(), "sy2");
         SSAOFilterV.uniformLocations[2] = glGetUniformLocation(SSAOFilterV.i(), "sy3");
 
-        lightingAndShadow.uniformLocations = new int[24];
+        lightingAndShadow.uniformLocations = new int[25];
         lightingAndShadow.uniformLocations[0] = glGetUniformLocation(lightingAndShadow.i(), "ProjectionBiasInverse");
         lightingAndShadow.uniformLocations[2] = glGetUniformLocation(lightingAndShadow.i(), "ViewInverse");
         lightingAndShadow.uniformLocations[3] = glGetUniformLocation(lightingAndShadow.i(), "LightTexture");
@@ -358,6 +370,7 @@ public class RenderEngine3D implements Input{
         lightingAndShadow.uniformLocations[21] = glGetUniformLocation(lightingAndShadow.i(), "ProjectionMatrix");
         lightingAndShadow.uniformLocations[22] = glGetUniformLocation(lightingAndShadow.i(), "sxy");
         lightingAndShadow.uniformLocations[23] = glGetUniformLocation(lightingAndShadow.i(), "SkyBoxIntensity");
+        lightingAndShadow.uniformLocations[24] = glGetUniformLocation(lightingAndShadow.i(), "LightCount");
         
         // set texture indices in shaders -----------------------------------------------------------------------------------------
     	preprocess.bind();
@@ -412,14 +425,13 @@ public class RenderEngine3D implements Input{
     	Camera cam = world.getCamera();
     	if(cam == null) //wait for camera to be ready
     		return;
-    	List<Entity> entities = world.getEntities();
-    	Set<LightSource> lightSources = world.getLightSources();
-    			
+
+    	Set<VisualEntity> entities = world.getCamera().cameraFrustum.getInsideFrustumEntities();//world.cameraFrustum.getInsideFrustumEntities();
     	//set camera view/perspective ready
     	cameraStuff(cam);
     	
     	//Random input
-    	moveLight(lightSources);
+    	moveLight(world.getLightingEntities());
     	if(Mouse.isButtonDown(1)){
     		Mouse.setGrabbed(true);
     	}else if(Mouse.isButtonDown(0)){
@@ -442,7 +454,7 @@ public class RenderEngine3D implements Input{
 		colorWriteValues.rewind();
 		
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBO);
-       glDrawBuffers(colorWriteValues);glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glDrawBuffers(colorWriteValues);glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalBuffer, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
@@ -464,7 +476,7 @@ public class RenderEngine3D implements Input{
 	    
 	    //SKYBOX
 	    skyBoxShader.bind();
-	    glUniform3(skyBoxShader.uniformLocations[0], cam.getPos().asFlippedFloatBuffer());
+	    glUniform3(skyBoxShader.uniformLocations[0], cam.getPosition().asFlippedFloatBuffer());
 	    glUniformMatrix4(skyBoxShader.uniformLocations[1], false, viewProjectionMatrix.asFlippedFloatBuffer());
 	    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxModel.material.textureHandle);
 	    glBindVertexArray(skyVAO);
@@ -475,10 +487,16 @@ public class RenderEngine3D implements Input{
 	    
 	    //OTHER
 	    preprocess.bind();
+	    
+	    for(Lighting ls: world.getLightingEntities())
+	    	if(ls instanceof SunLight){
+	    		((SunLight)ls).render();
+	    		break;
+	    	}
     	
     	//glDisable(GL_BLEND);
 	    
-        renderObjects(entities, false);
+        renderObjects(world.getVisualEntities(), false);
         
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
@@ -494,56 +512,71 @@ public class RenderEngine3D implements Input{
 	   
 	    //independent pass, render shadows -------------------------------------------------------------------------------------------------
 	    if(shadows){
+	    	//glEnable(GL_POLYGON_OFFSET_FILL);
+	    	//glPolygonOffset(0, 4f);
 	    	viewInverse = new Matrix4f(cameraViewMatrix).getInvert();
 	    	
-	    	for(LightSource ls: lightSources){
+	    	for(Lighting ls: world.getLightingEntities()){
 	    		if(ls.isShadowed() && ls.getShadowMapper().isShadowEnabled()){
 	    			ShadowMapper sm = ls.getShadowMapper();
 	    			
-	    			sm.update(new Matrix4f(cameraViewMatrix), ls.getPos());
+	    			if(ls instanceof SunLight)
+	    				sm.setSceneOrigin(ls.getWorld().getCamera().getPosition());
+	    			
+	    			//sm.update(new Matrix4f(cameraViewMatrix));
+	    			sm.update(new Matrix4f(cameraViewMatrix), ls.getPosition());
 		    		
 			        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBO);
 			        glDrawBuffers(0); glReadBuffer(GL_NONE);
 
-		    	
 		    		glViewport(0, 0, sm.getShadowMapSize(), sm.getShadowMapSize());
 			        sm.setShadowProjection();
-			        if(sm.isCube()){
-				        for(int i =0;i<6;i++){
-				        	sm.renderToTexture(i);
-				        	renderObjects(entities, true);
-				        }
-			        }else{
-			        	sm.renderToTexture(0);
-			        	renderObjects(entities, true);
-			        }
+
+			        sm.renderToTexture(0);
+			        sm.getViewFrustum().cullEntities(world.getVisualEntities());
+			        renderObjects(sm.getViewFrustum().getInsideFrustumEntities(), true);
 
 			        
 			        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+			        break; //only once
 	    		}   
 	    	}
+	    	//glDisable(GL_POLYGON_OFFSET_FILL);
 	    	glViewport(0, 0, width, height);
 	    }
 	    
 	    //occlusion, using data from 1st pass  -------------------------------------------------------------------------------
 	    if(occlusion){
+	    	glViewport(0, 0, SSAOWidth, SSAOHeight);
 	    	SSAOStuff();
+	    	glViewport(0, 0, width, height);
 	        SSAOFilterStuff();
+
 	    }
 
 	    // apply shadows and lightin, 2nd pass ---------------------------------------------------------------
-	    deferredLightingStuff(lightSources);
+	    //oldDeferredLightingStuff(lightSources);
 	    
+	    deferredLightingStuff(world.getLightingEntities());
+
 	    
 		// applying light scattering to lighting stuff
 		if(lightScattering){
-			Vector3f sunPos = null;
-			for(Entity e : entities){
+			/*Vector3f sunPos = null;
+			for(OldEntity e : entities){
 				if(e.getModel().isGodRays){
 					sunPos = e.getPos();
 				}
 			}
-			sunRaysLensFlareHaloStuff(sunPos, cam);
+			sunRaysLensFlareHaloStuff(sunPos, cam);*/
+			
+			SunLight sun = null;
+			for(Lighting e : world.getLightingEntities()){
+				if(e instanceof SunLight){
+					sun = (SunLight)e;
+				}
+			}
+			sunRaysLensFlareHaloStuff(sun, cam);
 		}
 	    
 		//Debbuging textures
@@ -565,8 +598,8 @@ public class RenderEngine3D implements Input{
         glGetFloat(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 	}
 	
-	private void moveLight(Set<LightSource> lightSources){
-		for(LightSource ls: lightSources){
+	private void moveLight(List<Lighting> lightSources){
+		/*for(Lighting ls: lightSources){
 			int dx = 0, dy = 0, dz = 0;
 	    	if(Keyboard.isKeyDown(Keyboard.KEY_UP))
 	    		dx -= 1;
@@ -580,9 +613,9 @@ public class RenderEngine3D implements Input{
 	    		dy += 1;
 	    	if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD1))
 	    		dy -= 1;
-	    	Vector3f pos = ls.getPos();
-	    	ls.getMotionState().origin.set(pos.x+dx, pos.y+dy, pos.z+dz);
-		}
+	    	Vector3f pos = ls.getPosition();
+	    	ls.setPosition(pos.x+dx,pos.y+dy,pos.z+dz);
+		}*/
 
 	}
 	
@@ -609,11 +642,11 @@ public class RenderEngine3D implements Input{
 		}
 	}
 	
-    public boolean sunRaysLensFlareHaloStuff(Vector3f sunPos, Camera cam){
-    	if(sunPos == null)
+    public boolean sunRaysLensFlareHaloStuff(SunLight sun, Camera cam){
+    	if(sun == null)
     		return false;
 	    boolean CalculateSunRaysLensFlareHalo = false;
-		Vector2f lightPosOnScreen = glToScreen(sunPos);
+		Vector2f lightPosOnScreen = glToScreen(sun.getPosition());
     	lightPosOnScreen = new Vector2f(lightPosOnScreen.x/Game.width,lightPosOnScreen.y/Game.height);
 	    int Test = 0, Tests = 16;
 	    float Angle = 0.0f, AngleInc = 360.0f / Tests;
@@ -621,8 +654,8 @@ public class RenderEngine3D implements Input{
 	    Matrix4f VPB = biasMatrix.mul(new Matrix4f(cameraProjectionMatrix)).mul(new Matrix4f(cameraViewMatrix));
 
 	    while(Test < Tests && !CalculateSunRaysLensFlareHalo){
-	    	Vector3f temp2 = Utils.rotate(cam.getRightVector(), Angle, cam.getViewRay()).mul(8.75f * 1.3f);
-	    	Vector4f temp = new Vector4f(sunPos.copy().add(temp2), 1.0f);
+	    	Vector3f temp2 = cam.getRightVector().rotateGet(Angle, cam.getViewRay()).mul(sun.getRadius()* 1.3f);//Utils.rotate(cam.getRightVector(), Angle, cam.getViewRay()).mul(8.75f * 1.3f);
+	    	Vector4f temp = new Vector4f(sun.getPosition().copy().add(temp2), 1.0f);
 	    	
 	        Vector4f SunPosProj = VPB.mul(temp);
 	        SunPosProj.mul(1/SunPosProj.w);
@@ -784,13 +817,13 @@ public class RenderEngine3D implements Input{
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
-    
-    public void deferredLightingStuff(Set<LightSource> lightSources){
+    public void deferredLightingStuff(List<Lighting> lightSources){
     	//calculate matrices required for lighting
     	Matrix4f modelMatrix = new Matrix4f();
     	modelMatrix.setIdentity();
     	modelMatrix.set(15, 0);
     	Matrix4f modelViewMatrix = new Matrix4f(cameraViewMatrix).mul(modelMatrix);
+    	//System.out.println(modelViewMatrix);
     	Matrix3f normalMatrix = new Matrix3f(modelViewMatrix).getInvert().getTranspose();
     	//System.out.println(normalMatrix);
     	
@@ -824,42 +857,126 @@ public class RenderEngine3D implements Input{
         glUniformMatrix4(lightingAndShadow.uniformLocations[19], false, normalMatrix.asFlippedFloatBuffer()); //normal
         glUniformMatrix4(lightingAndShadow.uniformLocations[20], false, modelViewMatrix.asFlippedFloatBuffer()); //view
         glUniformMatrix4(lightingAndShadow.uniformLocations[21], false, cameraProjectionMatrix); //projection
-        
-       	for(LightSource ls: lightSources){
-       		if(shadows && ls.isShadowed() && ls.getShadowMapper().isShadowEnabled()){
-       			ShadowMapper sm = ls.getShadowMapper();
-       			glUniform1i(lightingAndShadow.uniformLocations[4], 1);
-       			glUniform1i(lightingAndShadow.uniformLocations[8], sm.isCube() ? 1 : 0);
-       			glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D_ARRAY, sm.getShadowMap());
-        		glUniformMatrix4(lightingAndShadow.uniformLocations[3], false, Utils.combineFloatBuffers(sm.getLightTexture()));
-       		}else{
-       			glUniform1i(lightingAndShadow.uniformLocations[4], 0); //no shadows
-       		}
-    		Vector4f pos =  new Vector4f(ls.getPos(), 1.0f);
-    		Matrix4f viewMatrix = new Matrix4f(cameraViewMatrix);
-    		pos = viewMatrix.mul(pos);
-    		Vector3f normal = new Vector3f(-viewMatrix.get(4), -viewMatrix.get(5), -viewMatrix.get(6));
-    		glUniform3(lightingAndShadow.uniformLocations[1], pos.asFlippedFloatBuffer());
-    		glUniform3(lightingAndShadow.uniformLocations[7], normal.asFlippedFloatBuffer());
-    		glUniform4(lightingAndShadow.uniformLocations[9], ls.getAmbient().asFlippedFloatBuffer());
-    		glUniform4(lightingAndShadow.uniformLocations[10], ls.getDiffuse().asFlippedFloatBuffer());
-    		glUniform4(lightingAndShadow.uniformLocations[11], ls.getSpecular().asFlippedFloatBuffer());
-    		glUniform1f(lightingAndShadow.uniformLocations[12], ls.getConstantAttenuation());
-    		glUniform1f(lightingAndShadow.uniformLocations[13], ls.getLinearAttenuation());
-    		glUniform1f(lightingAndShadow.uniformLocations[14], ls.getQuadricAttenuation());
-    		glUniform1f(lightingAndShadow.uniformLocations[15], ls.getSpotCutoff());
-    		glUniform3(lightingAndShadow.uniformLocations[16], ls.getSpotLightDirection().asFlippedFloatBuffer());
-    		glUniform1f(lightingAndShadow.uniformLocations[17], ls.getSpotExponent());
-    		glUniform1i(lightingAndShadow.uniformLocations[18], ls.getLightType());
-    		glUniform1f(lightingAndShadow.uniformLocations[23], skyBoxIntensity); //skybox intensity
+		glUniform1f(lightingAndShadow.uniformLocations[23], skyBoxIntensity); //skybox intensity
+		
+		//count stuff
+		int lightCount = 0;
+		int directionalLights = 0;
+		int pointLights = 0;
+		int spotLights = 0;
+		
+		for(Lighting ls: lightSources){
+			if(ls.isEnabled()){
+				lightCount++;
+				if(ls instanceof DirectionalLighting)
+					directionalLights++;
+				else if(ls instanceof PointLighting)
+					pointLights++;
+				else if(ls instanceof SpotLighting)
+					spotLights++;
+			}
+		}
 
-    		glBegin(GL_QUADS);
-    			glVertex2f(0.0f, 0.0f);
-    			glVertex2f(1.0f, 0.0f);
-    			glVertex2f(1.0f, 1.0f);
-    			glVertex2f(0.0f, 1.0f);
-    		glEnd();	
-       	}
+		glUniform1i(lightingAndShadow.uniformLocations[24], lightCount); //light count
+		glUniform1i(lightingAndShadow.uniformLocations[4], 0); //assume no light has shadows
+		
+		FloatBuffer lightPositions = BufferUtils.createFloatBuffer(3 * lightCount);
+		FloatBuffer lightAmbient = BufferUtils.createFloatBuffer(4 * lightCount);
+		FloatBuffer lightDiffuse = BufferUtils.createFloatBuffer(4 * lightCount);
+		FloatBuffer lightSpecular = BufferUtils.createFloatBuffer(4 * lightCount);
+		IntBuffer lightType = BufferUtils.createIntBuffer(lightCount);
+		FloatBuffer lightConstantAttenuation = BufferUtils.createFloatBuffer(pointLights);
+		FloatBuffer lightLinearAttenuation = BufferUtils.createFloatBuffer(pointLights);
+		FloatBuffer lightQuadricAttenuation = BufferUtils.createFloatBuffer(pointLights);
+		FloatBuffer spotCutoff = BufferUtils.createFloatBuffer(spotLights);
+		FloatBuffer spotDirection = BufferUtils.createFloatBuffer(3 * spotLights);
+		FloatBuffer spotExponent = BufferUtils.createFloatBuffer(spotLights);
+		
+		
+		Matrix4f viewMatrix = new Matrix4f(cameraViewMatrix);
+		Vector3f normal = new Vector3f(-viewMatrix.get(4), -viewMatrix.get(5), -viewMatrix.get(6));
+		for(Lighting ls: lightSources){
+			if(ls.isEnabled()){
+	       		if(shadows && ls.isShadowed() && ls.getShadowMapper().isShadowEnabled()){
+	       			ShadowMapper sm = ls.getShadowMapper();
+	       			glUniform1i(lightingAndShadow.uniformLocations[4], 1);
+	       			glUniform1i(lightingAndShadow.uniformLocations[8], 0);
+	       			glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D, sm.getShadowMap());
+	       			//glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D_ARRAY, sm.getShadowMap());
+	        		glUniformMatrix4(lightingAndShadow.uniformLocations[3], false, Utils.combineFloatBuffers(sm.getLightTexture()));
+	       		}
+	    		Vector4f pos =  new Vector4f(ls.getPosition(), 1.0f);
+	    		pos = viewMatrix.mul(pos);
+
+	    		lightPositions.put(pos.x).put(pos.y).put(pos.z);
+	    		Vector4f ambient = ls.getAmbient();
+	    		lightAmbient.put(ambient.x).put(ambient.y).put(ambient.z).put(ambient.w);
+	    		Vector4f diffuse = ls.getDiffuse();
+	    		lightDiffuse.put(diffuse.x).put(diffuse.y).put(diffuse.z).put(diffuse.w);
+	    		Vector4f specular = ls.getSpecular();
+	    		lightSpecular.put(specular.x).put(specular.y).put(specular.z).put(specular.w);
+	    		
+	    		if(ls instanceof DirectionalLighting)
+	    			lightType.put(0);
+	    		else if(ls instanceof PointLighting){
+	    			PointLighting pls = (PointLighting)ls;
+	    			lightType.put(1);
+	    			lightConstantAttenuation.put(pls.getConstantAttenuation());
+	    			lightLinearAttenuation.put(pls.getLinearAttenuation());
+	    			lightQuadricAttenuation.put(pls.getQuadricAttenuation());
+	    		}else if(ls instanceof SpotLighting){
+	    			lightType.put(2);
+	    			SpotLighting sls = (SpotLighting)ls;
+	    			spotCutoff.put(sls.getSpotCutoff());
+	    			Vector3f dir = sls.getSpotLightDirection();
+	    			spotDirection.put(dir.x).put(dir.y).put(dir.z);
+	    			spotExponent.put(sls.getSpotExponent());
+	    		}
+			}
+		}
+		
+		lightPositions.flip();
+		lightAmbient.flip();
+		lightDiffuse.flip();
+		lightSpecular.flip();
+		lightType.flip();
+		lightConstantAttenuation.flip();
+		lightLinearAttenuation.flip();
+		lightQuadricAttenuation.flip();
+		spotCutoff.flip();
+		spotDirection.flip();
+		spotExponent.flip();
+
+
+		
+		glUniform3(lightingAndShadow.uniformLocations[1], lightPositions);
+		glUniform3(lightingAndShadow.uniformLocations[7], normal.asFlippedFloatBuffer());
+		
+		glUniform4(lightingAndShadow.uniformLocations[9], lightAmbient);
+		glUniform4(lightingAndShadow.uniformLocations[10], lightDiffuse);
+		glUniform4(lightingAndShadow.uniformLocations[11], lightSpecular);
+		
+		glUniform1(lightingAndShadow.uniformLocations[18], lightType);
+		
+		glUniform1(lightingAndShadow.uniformLocations[12], lightConstantAttenuation);
+		glUniform1(lightingAndShadow.uniformLocations[13], lightLinearAttenuation);
+		glUniform1(lightingAndShadow.uniformLocations[14], lightQuadricAttenuation);
+		
+		glUniform1(lightingAndShadow.uniformLocations[15], spotCutoff);
+		glUniform3(lightingAndShadow.uniformLocations[16], spotDirection);
+		glUniform1(lightingAndShadow.uniformLocations[17], spotExponent);
+		
+
+		
+		
+		glBegin(GL_QUADS);
+			glVertex2f(0.0f, 0.0f);
+			glVertex2f(1.0f, 0.0f);
+			glVertex2f(1.0f, 1.0f);
+			glVertex2f(0.0f, 1.0f);
+		glEnd();
+
+		
        	Shader.unbind();
        	
         glActiveTexture(GL_TEXTURE10); glBindTexture(GL_TEXTURE_2D, 0);
@@ -868,13 +985,14 @@ public class RenderEngine3D implements Input{
         glActiveTexture(GL_TEXTURE7); glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_2D, 0);
        	
-       	glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+       	glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D, 0);
+       	//glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         glActiveTexture(GL_TEXTURE5); glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
-        
+	    glDisable(GL_BLEND);
     	
       	if(useMultiShaderPass){
       		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -900,7 +1018,6 @@ public class RenderEngine3D implements Input{
     		glBindTexture(GL_TEXTURE_2D, 0);
 
     		glDisable(GL_TEXTURE_2D);
-			
       	}
     }
     
@@ -958,9 +1075,9 @@ public class RenderEngine3D implements Input{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
-	public void resized(){
-		width = RenderThread.displayWidth;
-		height = RenderThread.displayHeight;
+	public void resized(int displayWidth, int displayHeight){
+		width = displayWidth;
+		height = displayHeight;
 		
 		System.out.println("Resized to: " + width + " " + height);
 		
@@ -999,12 +1116,15 @@ public class RenderEngine3D implements Input{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, (FloatBuffer)null);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		
+		SSAOWidth = width / 2;
+		SSAOHeight = height / 2;
+		
 		glBindTexture(GL_TEXTURE_2D, SSAOTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer)null);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SSAOWidth, SSAOHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer)null);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		for(int i = 0; i < 2; i++){
@@ -1059,7 +1179,7 @@ public class RenderEngine3D implements Input{
 
         SSAO.bind();
         //glUniform2f(SSAO.uniformLocations[0], (float)SSAOShadowBufferWidth / 64.0f, (float)SSAOShadowBufferHeight / 64.0f);
-        glUniform2f(SSAO.uniformLocations[0], (float)(width) / 64.0f, (float)(height) / 64.0f);
+        glUniform2f(SSAO.uniformLocations[0], (float)(SSAOWidth) / 64.0f, (float)(SSAOHeight) / 64.0f);
         glUniformMatrix4(SSAO.uniformLocations[1], false, projectionBiasInverse);
         Shader.unbind();
         
@@ -1111,15 +1231,6 @@ public class RenderEngine3D implements Input{
 	}
     
     public void dispose() {
-        preprocess.destroy();
-        SSAO.destroy();
-        SSAOFilterH.destroy();
-        SSAOFilterV.destroy();
-        lightingAndShadow.destroy();
-        sunRaysLensFlareHalo.destroy();
-        blurH.destroy();
-        blurV.destroy();
-
         glDeleteTextures(rotationTexture);
         glDeleteTextures(colorBuffer);
         glDeleteTextures(normalBuffer);
@@ -1136,24 +1247,27 @@ public class RenderEngine3D implements Input{
         glDeleteTextures(materialSpecular);
         glDeleteTextures(materialEmission);
         glDeleteTextures(materialShininess);
+        
+        glDeleteTextures(combinedLighting);
+        glDeleteTextures(combinedSpecular);
     	
         glDeleteFramebuffers(FBO);
     }
     
-    public void renderObjects(List<Entity> entities, boolean depthOnly){
+    public void renderObjects(Set<VisualEntity> entities, boolean depthOnly){
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
     	if(depthOnly){ //shadows
 	        glCullFace(GL_FRONT);
 	        Model.setRenderMode(true, false, false, false, false, false); //only vertices
-	        for(Entity e: entities){
+	        for(VisualEntity e: entities){
 	        	e.render();
 	        }
 	        Model.resetRenderMode();
 	        glCullFace(GL_BACK);
     	}else{ //normal
     		Model.setRenderMode(true, true, true, (texturing ? true : false), (normalMapping ? true : false), true);
-	        for(Entity e: entities){
+	        for(VisualEntity e: entities){
     			e.render();
 	        }
 	        Model.resetRenderMode();
@@ -1173,7 +1287,22 @@ public class RenderEngine3D implements Input{
     	//System.out.println("pos is " + Arrays.toString(getResult));
     	return new Vector2f(getResult[0], getResult[1]);
     }
+    
+    public Vector3f glToWorld(Vector2f v, float depth){
+    	IntBuffer viewport = BufferUtils.createIntBuffer(4);
+    	viewport.put(0).put(0).put(Game.width).put(Game.height);
+    	viewport.flip();
+    	
+    	FloatBuffer result = BufferUtils.createFloatBuffer(16);
+    	GLU.gluUnProject(v.x, v.y, depth, cameraViewMatrix, cameraProjectionMatrix, viewport, result);
+    	float[] getResult = new float[16];
+    	result.get(getResult);
+    	
+    	return new Vector3f(getResult[0], getResult[1], getResult[2]);
+    }
 
+    
+    
 	@Override
 	public void checkKeyboardInput(int k) {
 		switch(k){
@@ -1249,9 +1378,59 @@ public class RenderEngine3D implements Input{
 		
 	}
 
+	public void perspective3D(){
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadMatrix(cameraProjectionMatrix);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrix(cameraViewMatrix);
+        
+        glViewport(0, 0, width, height);
+	}
+	
 	@Override
 	public void checkMouseInput(int m) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	private int axesLength = 2000;
+	public void renderAxes(){
+
+		
+		glColor3f(1f, 0f, 0f);
+        glLineWidth(1);
+        glBegin(GL_LINES);
+        glVertex3f(-axesLength, 0, 0);
+        glVertex3f(0, 0, 0);
+        glEnd();
+        glLineWidth(3);
+        glBegin(GL_LINES);
+        glVertex3f(0, 0, 0);
+        glVertex3f(axesLength, 0, 0);
+        glEnd();
+        glLineWidth(1);
+		glColor3f(0f, 1f, 0f);
+        glBegin(GL_LINES);
+        glVertex3f(0,-axesLength, 0);
+        glVertex3f(0,0, 0);
+        glEnd();
+        glLineWidth(3);
+        glBegin(GL_LINES);
+        glVertex3f(0,0, 0);
+        glVertex3f(0,axesLength, 0);
+        glEnd();
+		glColor3f(0f, 0f, 1f);
+        glLineWidth(1);
+        glBegin(GL_LINES);
+        glVertex3f(0, 0, -axesLength);
+        glVertex3f(0, 0, 0);
+        glEnd();
+        glLineWidth(3);
+        glBegin(GL_LINES);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, 0, axesLength);
+        glEnd();
+        glLineWidth(1);
 	}
 }

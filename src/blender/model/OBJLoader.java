@@ -18,7 +18,8 @@ import utils.math.Vector4f;
 public class OBJLoader {
 	
 	public static void loadModel(String pathf, Model m) throws FileNotFoundException, IOException{
-		File f = new File(Game.RESOURCESPATH + Game.MODELPATH + pathf);
+		//File f = new File(Game.RESOURCESPATH + Game.MODELPATH + pathf);
+		File f = new File(pathf);
 		f = new File(f.getAbsolutePath());
 		String path = f.getAbsolutePath().replace(f.getName(), "");
 		BufferedReader reader = new BufferedReader(new FileReader(f));
@@ -62,44 +63,37 @@ public class OBJLoader {
 				useMtl = true;
                 material = m.materials.get(line.replaceAll("usemtl ", "").trim());
                 subM.setMaterial(material);
-			}else if(line.startsWith("f ")){ //this goest to subM!!!!!!!!!!!!!!!!!, before get usemtl plane (line 12066)
-                String[] values = line.split("\\s+");
-                float v4 = 0;
-                float vn4 = 0;
-                float vt4 = 0;
-                if(!m.quadFaces && values.length == 5){
-                	m.quadFaces = true;
-                }
-                if(m.quadFaces){
-                	v4 = Float.parseFloat(values[4].split("/")[0]);
-                	vn4 = Float.parseFloat(values[4].split("/")[2]);
-                }
-                float v1 = Float.parseFloat(values[1].split("/")[0]);
-                float v2 = Float.parseFloat(values[2].split("/")[0]);
-                float v3 = Float.parseFloat(values[3].split("/")[0]);
-                Vector4f vertex = new Vector4f(v1, v2, v3, v4);
-                
-                float vn1 = Float.parseFloat(values[1].split("/")[2]);
-                float vn2 = Float.parseFloat(values[2].split("/")[2]);
-                float vn3 = Float.parseFloat(values[3].split("/")[2]);
-                Vector4f normal = new Vector4f(vn1, vn2, vn3, vn4);
-                
-                if (subM.isTextured){
-                	if(!useMtl){ //model is textured, but no usemtl was specified, use previous material
-                		subM.setMaterial(material);
-                	}
-                    float vt1 = Float.parseFloat(values[1].split("/")[1]);
-                    float vt2 = Float.parseFloat(values[2].split("/")[1]);
-                    float vt3 = Float.parseFloat(values[3].split("/")[1]);
-                    if(m.quadFaces)
-                    	vt4 = Float.parseFloat(values[4].split("/")[1]);
-
-                    Vector4f texCoords = new Vector4f(vt1, vt2, vt3, vt4);
-
-                    subM.faces.add(new Face(vertex, normal, texCoords, material));
-                }else{
-                	subM.faces.add(new Face(vertex, normal, null, material));
-                }
+			}else if(line.startsWith("f ")){
+				String[] indicesData = line.replace("f ", "").trim().split("\\s+");
+				
+				//Split face vertices into triangles (TRIANGLE FANNING)
+				String[] indiceData1 = indicesData[0].split("/");
+				
+				for(int i=0;i+2<indicesData.length;i++){
+					String[] indiceData2= indicesData[i+1].split("/");
+					String[] indiceData3 = indicesData[i+2].split("/");
+					
+					
+					Vector3f vertexIndices = new Vector3f(Integer.parseInt(indiceData1[0]) - 1,
+														Integer.parseInt(indiceData2[0]) - 1,
+														Integer.parseInt(indiceData3[0]) - 1);
+					
+					Vector3f normalIndices = new Vector3f(Integer.parseInt(indiceData1[2]) - 1,
+														Integer.parseInt(indiceData2[2]) -1 ,
+														Integer.parseInt(indiceData3[2]) - 1);
+	                if (subM.isTextured){
+	                	if(!useMtl){ //model is textured, but no usemtl was specified, use previous material
+	                		subM.setMaterial(material);
+	                	}
+						Vector3f texIndices = new Vector3f(Integer.parseInt(indiceData1[1]) - 1,
+								Integer.parseInt(indiceData2[1]) - 1,
+								Integer.parseInt(indiceData3[1]) - 1);
+						subM.faces.add(new Face(vertexIndices, normalIndices, texIndices, material));
+	                }else{
+	                	subM.faces.add(new Face(vertexIndices, normalIndices, null, material));
+	                }
+	                
+				}
                 finalStep = true;
 			}
 		}

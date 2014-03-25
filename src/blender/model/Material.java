@@ -1,5 +1,7 @@
 package blender.model;
 
+import game.resources.Resources;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -127,11 +129,21 @@ public class Material {
     
     public void loadTexture(){
     	if(textureHandle == 0){
-        	Texture tex = Texture.loadTexture2D(textureFile);
-        	textureHandle = tex.id;
+        	Texture tex = null;
+			try {
+				tex = Resources.getModelTexture(textureFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}//Texture.loadTexture2D(textureFile);
+        	textureHandle = tex.getID();
         	if(normalFile != null){ //got normal
-        		Texture tex2 = Texture.loadTexture2D(normalFile);
-        		normalHandle = tex2.id;
+        		Texture tex2 = null;
+				try {
+					tex2 = Resources.getModelTexture(normalFile);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}//Texture.loadTexture2D(normalFile);
+        		normalHandle = tex2.getID();
         	}
     	}
     }

@@ -1,7 +1,6 @@
 package game.world.sync;
 
 import game.world.World;
-import game.world.entities.Entity;
 import game.world.gui.Component;
 
 import java.util.ArrayList;

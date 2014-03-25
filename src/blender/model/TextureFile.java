@@ -38,9 +38,7 @@ public class TextureFile {
         {	
           File f = new File(name);
           bimg = ImageIO.read(f);
-        }
-        catch (IOException e)
-        {
+        }catch (IOException e){
             e.printStackTrace();
             System.out.println("Unable to load texture file: " + name);
         }

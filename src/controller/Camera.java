@@ -2,9 +2,10 @@ package controller;
 
 import game.Game;
 import game.world.World;
+import game.world.culling.ViewFrustum;
 import game.world.entities.AbstractEntity;
-import game.world.entities.DefaultEntity;
 import game.world.entities.Entity;
+import game.world.entities.VisualEntity;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
@@ -29,7 +30,7 @@ import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
 
-public class Camera extends DefaultEntity{
+public class Camera extends AbstractEntity{
 
     //Camera config
     private float mouseSensitivity = 0.05f;
@@ -42,19 +43,37 @@ public class Camera extends DefaultEntity{
     private R<Entity> following = new R<Entity>();
     private float viewRadius = 30;
     
+    //Camera frustum
+	public ViewFrustum cameraFrustum;
 	
     private Vector3f viewRay = new Vector3f(0,0,1); //Vector which points at the direction your'e looking at
     private Vector3f upVector = new Vector3f(0,1,0); //Points up
     private Vector3f rightVector = new Vector3f(1,0,0); //Cross product of viewRay and upVector
-    private Vector3f position = new Vector3f();
+    private Transform uniformTransform = new Transform(new Matrix4f(new Quat4f(0,0,0,1), new Vector3f(0,0,0), 1));
     
-    @Override
-	public Entity linkTo(AbstractEntity masterEntity){
-    	super.linkTo(masterEntity);
-    	Camera masterCam = (Camera)masterEntity;
-    	following = masterCam.getFollowingWrapper();
-    	return this;
-    }
+
+	@Override
+	public void dispose() {}
+
+	@Override
+	public void openGLInitialization() {}
+
+	@Override
+	public Entity getLinked() {
+		return new Camera().setLink(this);
+	}
+    
+	@Override
+	public Entity setLink(Entity t) {
+		super.setLink(t);
+		if(t instanceof Camera){
+			Camera ve = (Camera)t;
+			uniformTransform = ve.uniformTransform;
+			following = ve.following;
+		}
+
+		return this;
+	}
 	
 	public void setFollowing(Entity e){
 		following.set(e);
@@ -64,94 +83,25 @@ public class Camera extends DefaultEntity{
 		return following;
 	}
     
-    public Camera(){}
+    public Camera(){
+		cameraFrustum = new ViewFrustum();
+		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
+    }
    
     World world;
     public Camera(float x, float y, float z, World w){
-    	position = new Vector3f(x, y, z);
+    	uniformTransform.origin.set(x, y, z);
     	world = w;
-    }
-    
-    
-    private float camRadius;
-    public void createCamera(){
-    	//for helpz
-    	Vector3f up = new Vector3f(0,1,0);
-    	Vector3f ray = new Vector3f(0,0,-1);
-    	Vector3f right = new Vector3f(1,0,0);
     	
-    	float zNear = Game.zNear;
-    	float fov = Game.fov;
-    	float ratio = Game.width/Game.height;
-    	
-    	float Hnear = 2 * (float)Math.tan(Math.toRadians(fov/2))*zNear;
-    	float Wnear = Hnear * ratio;
-    	
-    	camRadius = zNear;
-    	
-    	//Frustum vertices
-    	/*Vector3f tip = new Vector3f(0,0,0);
-    	Vector3f nc = tip.getAdd(ray.getMultiply(zNear));
-    	Vector3f ntl = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2).getNegate());
-    	Vector3f ntr = nc.getAdd(up.getMultiply(Hnear/2)).getAdd(right.getMultiply(Wnear/2));
-    	Vector3f nbl = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2).getNegate());
-    	Vector3f nbr = nc.getAdd(up.getMultiply(Hnear/2).getNegate()).getAdd(right.getMultiply(Wnear/2));
-
-    	ObjectArrayList<Vector3ff> vertices = new ObjectArrayList<Vector3ff>();
-    	vertices.add(tip);
-    	vertices.add(ntl);
-    	vertices.add(ntr);
-    	vertices.add(nbr);
-    	vertices.add(nbl);
-    	CollisionShape shape = new ConvexHullShape(vertices);*/
-		//AbstractVBO testModel = new CuboidVBO(5,5,15);
-    	Model testModel = new Sphere(camRadius, 30, 30);
-		setModel(testModel);
-    	//ConvexShape shape = new SphereShape(camRadius);
-    	ConvexShape shape = new SphereShape(camRadius);
-		//CollisionShape shape = new BoxShape(new Vector3ff(5/2, 5/2, 15/2));
-    	
-		Quat4f orientation = new Quat4f(0,0,0,1);
-		
-		/*Quat4f qRotatedy = new Quat4f();
-		QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(-20));
-		qRotatedy.mul(orientation);
-		orientation = qRotatedy;
-		
-		Quat4f qRotatedx = new Quat4f();
-		QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(20));
-		orientation.mul(qRotatedx);
-		orientation.normalize();*/
-
-		DefaultMotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(
-				orientation,
-				position, 1)));
-		Vector3f intertia = new Vector3f();
-		shape.calculateLocalInertia(0f,  intertia);
-		RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(1.0f, motionState, shape, intertia);
-		constructionInfo.restitution = 1f;
-		constructionInfo.angularDamping = 1f;
-		constructionInfo.linearDamping = .999f;
-		constructionInfo.mass = 0.0001f;
-		//RigidBody body = new RigidBody(constructionInfo);
-		createRigidBody(constructionInfo);
-		getRigidBody().setAngularFactor(0);
-		getRigidBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-
-		//setRigidBody(body);
-		
-		getRigidBody().setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
-		
-		world.getDynamicsWorld().addRigidBody(getRigidBody());
-		getRigidBody().setGravity(new Vector3f(0,0,0));
+    	cameraFrustum = new ViewFrustum();
+		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
     }
     
     private void rotation(float dt){
 		float dx = Mouse.getDX() * mouseSensitivity;
 		float dy = Mouse.getDY() * mouseSensitivity;
 		if(type == CamType._6DOF){
-			Transform t = new Transform();
-			getRigidBody().getWorldTransform(t);
+			Transform t = uniformTransform;
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -168,10 +118,8 @@ public class Camera extends DefaultEntity{
 			orientation.normalize();
 			
 			t.setRotation(orientation);
-			getRigidBody().setWorldTransform(t);
 		}else if(type == CamType.FP){
-			Transform t = new Transform();
-			getRigidBody().getWorldTransform(t);
+			Transform t = uniformTransform;
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -187,11 +135,9 @@ public class Camera extends DefaultEntity{
 			orientation.normalize();
 			
 			t.setRotation(orientation);
-			getRigidBody().setWorldTransform(t);
 		}else if(type == CamType.LOCK){
 			if(following.get() != null){
-				Transform t = new Transform();
-				following.get().getRigidBody().getWorldTransform(t);
+				Transform t = following.get().getTransform();
 				
 				Quat4f orientation = new Quat4f();
 				t.getRotation(orientation);
@@ -200,21 +146,23 @@ public class Camera extends DefaultEntity{
 				
 				//Dont wanna look directly from behind
 				Quat4f qRotatedy = new Quat4f();
-				QuaternionUtil.setRotation(qRotatedy, new Vector3f(1,0,0), Utils.rads(-25));
+				QuaternionUtil.setRotation(qRotatedy, new Vector3f(0,1,0), Utils.rads(180));
 				qRotatedy.mul(orientation);
 				orientation = qRotatedy;
 				
-				Transform t2 = new Transform();
-				getRigidBody().getWorldTransform(t2);
+				Quat4f qRotatedx = new Quat4f();
+				QuaternionUtil.setRotation(qRotatedx, new Vector3f(1,0,0), Utils.rads(10));
+				qRotatedx.mul(orientation);
+				orientation = qRotatedx;
+				orientation.normalize();
+				
+				Transform t2 = uniformTransform;
 				t2.setRotation(orientation);
-				getRigidBody().setWorldTransform(t2);
 			}
 		}
 		
-		
-		getRigidBody().getMotionState().getWorldTransform(motionState); //update position
 		Matrix4f viewMatrix = new Matrix4f();
-		motionState.getMatrix(viewMatrix);
+		uniformTransform.getMatrix(viewMatrix);
 		float[] ray = new float[4];
 		viewMatrix.getRow(2, ray);
 		viewRay = new Vector3f(ray[0], ray[1], ray[2]);
@@ -224,6 +172,7 @@ public class Camera extends DefaultEntity{
 		float[] right = new float[4];
 		viewMatrix.getRow(0, right);
 		rightVector = new Vector3f(right[0], right[1],right[2]);
+		
     }
     
     private void translation(float dt){
@@ -231,8 +180,7 @@ public class Camera extends DefaultEntity{
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 			speed *= shiftBoost;
 		if(following.get() == null){
-			Transform tr = new Transform();
-			getRigidBody().getWorldTransform(tr);
+			Transform tr = uniformTransform;
 			Matrix4f mr = new Matrix4f();
 			tr.getMatrix(mr);
 			Vector3f delta = new Vector3f();
@@ -274,17 +222,14 @@ public class Camera extends DefaultEntity{
 				delta.normalize();
 				delta.scale(speed);
 				tr.origin.add(delta);
-				getRigidBody().setWorldTransform(tr);
-				getRigidBody().getWorldTransform(motionState);
 			}
 			
-			position = new Vector3f(motionState.origin.x, motionState.origin.y, motionState.origin.z);
+			setPosition(new Vector3f(uniformTransform.origin));
+
 		}else{
-			Transform tcam = new Transform();
-			getRigidBody().getWorldTransform(tcam);
+			Transform tcam = uniformTransform;
 			
-			Transform tfollow = new Transform();
-			following.get().getRigidBody().getWorldTransform(tfollow);
+			Transform tfollow = following.get().getTransform();
 			
 			Vector3f camPos = new Vector3f();
 			viewRay.normalize();
@@ -292,27 +237,28 @@ public class Camera extends DefaultEntity{
 			camPos.add(tfollow.origin, viewRay.getNegate());
 			tcam.origin.set(camPos);
 			
-			getRigidBody().setWorldTransform(tcam);
-			
-			position = new Vector3f(tfollow.origin.x-viewRay.x, tfollow.origin.y-viewRay.y, tfollow.origin.z-viewRay.z);
+			setPosition(new Vector3f(tfollow.origin).copy().add(viewRay.copy().getNegate()));
 		}
 
     }
     
     @Override
     public void update(float dt){
-		getRigidBody().activate();
-		
 		rotation(dt);
 		
 		translation(dt);
-    }
-    
-    public Vector3f getPos(){
-    	return position;
+		
+		
+		//Culling
+		cameraFrustum.setView(getViewRay(), getRightVector(), getUpVector());
+		cameraFrustum.setPos(getPosition());
+		//frustum.update(); //Update variables required for culling check
+		
+		cameraFrustum.cullEntities(world.getVisualEntities());
     }
     
     public void lookAt(){
+    	Vector3f position = getPosition();
     	//if(following == null)
     		GLU.gluLookAt(position.x, position.y, position.z, position.x+viewRay.x, position.y+viewRay.y, position.z+viewRay.z, upVector.x, upVector.y, upVector.z);	
     	//else

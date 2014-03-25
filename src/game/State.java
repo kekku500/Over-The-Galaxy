@@ -33,7 +33,7 @@ public abstract class State {
 		World mainWorld = worlds[0];
 		mainWorld.init();
 		
-		mainWorld.getCamera().createCamera();
+		mainWorld.getCamera().openGLInitialization();
 		
 		for(int i=1;i<worlds.length;i++)
 			mainWorld.linkWorlds(worlds[i]);
@@ -48,6 +48,8 @@ public abstract class State {
 			renderInit();
 		}
 	}
+	
+	public abstract void postRenderInit();
 	
 	//ABSTRACT
 	public abstract void init();

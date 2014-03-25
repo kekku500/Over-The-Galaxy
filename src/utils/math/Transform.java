@@ -1,9 +1,19 @@
 package utils.math;
 
+import javax.vecmath.Quat4f;
+
 public class Transform extends com.bulletphysics.linearmath.Transform{
 	
 	private float scaleLog = 1;
 	private Vector3f scaleLogV = new Vector3f(1,1,1);
+	
+	public Transform(){
+		super();
+	}
+	
+	public Transform(Matrix4f m4){
+		super(m4);	
+	}
 	
 	public void scale(float s){
 		scaleLog *= s;
@@ -13,6 +23,11 @@ public class Transform extends com.bulletphysics.linearmath.Transform{
 		m.set(5, m.get(5)*s);
 		m.set(10, m.get(10)*s);
 		set(m);
+	}
+	
+	public void setRotation(Quat4f q){
+		super.setRotation(q);
+		scale(scaleLog);
 	}
 	
 	public void scale(Vector3f s){

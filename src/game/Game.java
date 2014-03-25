@@ -10,13 +10,14 @@ public class Game extends ThreadManager{
 	
 	public static boolean debug = true;
 	
-	public static final String VERSION = "0.9";
+	public static final String VERSION = "1.3";
 	
-	public static final String RESOURCESPATH = "res\\";
+	/*public static final String RESOURCESPATH = "res\\";
 	public static final String MODELPATH = "models\\";
 	public static final String SHADERPATH = "shaders\\";
+	public static final String TEXTUREPATH = "textures\\";*/
 
-	public static int fps = 500;
+	public static int fps = 60;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
 	public static int width = 800;
 	public static int height = 600;

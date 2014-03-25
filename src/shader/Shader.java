@@ -53,7 +53,17 @@ public class Shader {
 	private int program;
 	public int[] uniformLocations;
 	public int[] attribLocations;
-    
+	
+	public Shader(){
+		
+	}
+	
+	public Shader(String vertex, String fragment){
+		this.vertex = vertex;
+		this.fragment = fragment;
+		createShaderProgram(vertex, fragment);
+	}
+	
 	public boolean load(String vertex, String fragment){
 		this.vertex = vertex;
 		this.fragment = fragment;

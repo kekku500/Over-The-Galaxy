@@ -6,6 +6,7 @@ import game.world.World;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +17,21 @@ import org.lwjgl.BufferUtils;
 
 import blender.model.custom.Sphere;
 
+import com.bulletphysics.collision.dispatch.CollisionConfiguration;
+import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
+import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
+import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.collision.shapes.CompoundShape;
+import com.bulletphysics.collision.shapes.ConvexHullShape;
+import com.bulletphysics.collision.shapes.IndexedMesh;
+import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
 import com.bulletphysics.linearmath.QuaternionUtil;
+import com.bulletphysics.util.ObjectArrayList;
 
 import shader.Shader;
 import utils.Utils;
+import utils.math.Matrix3f;
+import utils.math.Matrix4f;
 import utils.math.Transform;
 import utils.math.Vector2f;
 import utils.math.Vector3f;
@@ -33,12 +45,9 @@ public class Model{
 	public List<Vector2f> texCoords = new ArrayList<Vector2f>();
     public HashMap<String, Material> materials = new HashMap<String, Material>();
     
-    private String pathf; //model .obj directory
-    
-	public Transform offset;
+    public String modelPath; //model .obj directory
 	
-	public boolean quadFaces = false;
-	private boolean initialized = false;
+	public boolean VBOCreated = false;
 	public boolean isTextured = false; //All submodels textured?
     public boolean isGodRays = false; //create light scattering
     
@@ -46,19 +55,28 @@ public class Model{
     public Model(){}
 	
 	public Model(String pathf){
-		this.pathf = pathf;
+		this.modelPath = pathf;
 		loadModel();
 	}
 	
 	public Model(String pathf, boolean load){
-		this.pathf = pathf;
+		this.modelPath = pathf;
 		if(load)
 			loadModel();
 	}
 	
+	public FloatBuffer getVertices(){
+		FloatBuffer b = BufferUtils.createFloatBuffer(vertices.size()*3);
+		for(Vector3f f: vertices){
+			b.put((f.x)).put(f.y).put(f.z);
+		}
+		b.rewind();
+		return b;
+	}
+	
 	public void loadModel(){
 		try {
-			OBJLoader.loadModel(pathf, this);
+			OBJLoader.loadModel(modelPath, this);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -66,55 +84,8 @@ public class Model{
 		}
 	}
 	
-	public void scale(float s){
-		if(!initialized){ //can still modify vertices
-			for(Vector3f v: vertices){
-				v.mul(s);
-			}
-		}else{
-			if(offset == null){
-				offset = new Transform();
-				offset.setIdentity();
-			}
-			offset.scale(s);
-		}	
-	}
-	
-	public void translate(Vector3f v2){
-		if(!initialized){
-			for(Vector3f v: vertices){
-				v.add(v2);
-			}
-		}else{
-			if(offset == null){
-				offset = new Transform();
-				offset.setIdentity();
-			}
-			offset.origin.add(v2);
-		}
-	}
-	
-	public void setRotation(Quat4f q){
-		if(offset == null){
-			offset = new Transform();
-			offset.setIdentity();
-		}
-		offset.setRotation(q);
-	}
 	
 	public void render(){
-		if(offset != null){
-			float[] f = new float[16];
-
-			offset.getOpenGLMatrix(f);
-			
-			FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-			fb.put(f);
-			fb.rewind();
-			
-			glMultMatrix(fb);
-		}
-
 		renderSubModels();
 	}
 	
@@ -133,7 +104,7 @@ public class Model{
 		}
 		if(allTex)
 			isTextured = true;
-		initialized = true; //vbo created
+		VBOCreated = true; //vbo created
 	}
 	
 	public void dispose(){
@@ -173,6 +144,14 @@ public class Model{
 	
 	public static boolean drawMaterial(){
 		return drawMaterial;
+	}
+	
+	public boolean isVBOCreated(){
+		return VBOCreated;
+	}
+	
+	public List<Vector3f> getVerticesList(){
+		return vertices;
 	}
 
 }

@@ -1,7 +1,11 @@
 package blender.model;
 
-import javax.vecmath.Vector3f;
+import java.util.ArrayList;
+import java.util.List;
 
+
+
+import utils.math.Vector3f;
 import utils.math.Vector4f;
 
 /**
@@ -13,23 +17,28 @@ public class Face
 {
 
     // Vertex indices
-    private Vector4f vertex;
+	private Vector3f vertexIndices = new Vector3f();
+    //private Vector4f vertex;
     // Normal indices
-    private Vector4f normal;
+	private Vector3f normalIndices = new Vector3f();
+    //private Vector4f normal;
     // TexCoord indices
-    private Vector4f texCoords;
+	private Vector3f textureIndices = new Vector3f();
+    //private Vector4f texCoords;
     
     private Material material;
-
-
+    
+    public Face(){
+    	
+    }
     /**
      * Create a new Face with vertex indices, normal indices, texture indices
      * and material
      */
-    public Face(Vector4f vertex, Vector4f normal, Vector4f texCoords, Material m){
-        this.vertex = vertex;
-        this.normal = normal;
-        this.texCoords = texCoords;
+    public Face(Vector3f vertexIndices, Vector3f normalIndices, Vector3f texIndices, Material m){
+        this.vertexIndices = vertexIndices;
+        this.normalIndices = normalIndices;
+        this.textureIndices = texIndices;
         
         if(m != null)
         	material = m;
@@ -43,27 +52,27 @@ public class Face
     /**
      * @return The vertex indices
      */
-    public Vector4f getVertex()
-    {
-        return vertex;
+    public Vector3f getVertexIndices(){
+        return vertexIndices;
     }
 
     /**
      * @return The normal indices
      */
-    public Vector4f getNormal()
-    {
-        return normal;
+    public Vector3f getNormalIndices(){
+        return normalIndices;
     }
 
     /**
      * @return The Texture Indices
      */
-    public Vector4f getTexCoord()
-    {
-        return texCoords;
+    public Vector3f getTexIndices(){
+        return textureIndices;
     }
-    
+    public void setMaterial(Material m){
+    	material = m;
+    }
+
     public Material getMaterial(){
     	return material;
     }

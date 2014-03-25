@@ -34,6 +34,11 @@ public class UpdateThread implements Runnable{
 			}
 		}
 		
+		//Initialize gameStates
+		for(State s: threadManager.getStates()){
+			s.postRenderInit();
+		}
+		
 		Game.print("Starting updateThread loop");
 		
 		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){

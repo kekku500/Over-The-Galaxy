@@ -14,18 +14,23 @@ import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glUniform1i;
 import game.world.World;
-import game.world.entities.Entity;
 import game.world.graphics.RenderEngine3D;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBVertexShader;
 
+import com.bulletphysics.collision.shapes.IndexedMesh;
+import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
+
 import utils.math.Vector2f;
 import utils.math.Vector3f;
+import utils.math.Vector4f;
 
 public class SubModel {
 	
@@ -40,6 +45,8 @@ public class SubModel {
 	public int vboColorID;
 	public int vboTexVertexID;
 	
+	public int vertexCount, textureCount, normalCount;
+	
 	public boolean reverseCull = false;
 	
 	private Model masterModel;
@@ -49,6 +56,16 @@ public class SubModel {
 	}
 	
 	public SubModel(){}
+	
+	public IntBuffer getVertexIndices(){
+		IntBuffer b = BufferUtils.createIntBuffer(faces.size()*3);
+		for(Face f: faces){
+			Vector3f v = f.getVertexIndices();
+			b.put(((int)v.x)).put((int)v.y).put((int)v.z);
+		}
+		b.rewind();
+		return b;
+	}
 	
 	public void render(){
 		if(!Model.drawVertices()) //no point trying to draw without vertices enabled
@@ -95,12 +112,7 @@ public class SubModel {
 			glUniform1i(World.renderEngine.preprocess.uniformLocations[2], 1); //Inform shader of god rays
 		}
 		
-		//Draw call
-		if(masterModel.quadFaces){
-			glDrawArrays(GL_QUADS, 0, 12 * faces.size());  
-		}else{
-			glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());  
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());  
 		
 		if(masterModel.isGodRays){
 			glUniform1i(World.renderEngine.preprocess.uniformLocations[2], 0); //Inform shader of god rays
@@ -131,7 +143,7 @@ public class SubModel {
 		vboVertexID = glGenBuffers();
 		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.length * 3);
 		for(Vector3f v: vertices){
-			vertexBuffer.put(v.x*2).put(v.y*2).put(v.z*2);
+			vertexBuffer.put(v.x*4).put(v.y*4).put(v.z*4);
 		}
         vertexBuffer.rewind();
         
@@ -152,26 +164,23 @@ public class SubModel {
 	    		isNormalMapped = true;
 	    	vboTexVertexID = glGenBuffers();
 	    }
-	    int faceVertexCount = 3;
-		if(masterModel.quadFaces)
-			faceVertexCount = 4;
-		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
-		FloatBuffer normalBuffer  = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
-        FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(3 * faceVertexCount * faces.size());
+		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(3 * 3 * faces.size());
+		FloatBuffer normalBuffer  = BufferUtils.createFloatBuffer(3 * 3 * faces.size());
+        FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(3 * 3 * faces.size());
         FloatBuffer textureBuffer = null;
         if (isTextured){
-            textureBuffer = BufferUtils.createFloatBuffer(2 * faceVertexCount * faces.size());
+            textureBuffer = BufferUtils.createFloatBuffer(2 * 3 * faces.size());
         }
         
         List<Vector3f> vertices = masterModel.vertices;
         List<Vector3f> normals = masterModel.normals;
         List<Vector2f> texCoords = masterModel.texCoords;
 		for(Face face: faces){
+			//http://www.vrarchitect.net/anu/cg/surfaceModeling/polygonMesh.en.html
 			Material material = face.getMaterial();
-            // Retrieve the material of the face
             
             // Get the first vertex of the face
-            Vector3f v1 = vertices.get((int) face.getVertex().x - 1);
+            Vector3f v1 = vertices.get((int) face.getVertexIndices().x);
             vertexBuffer.put(v1.x).put(v1.y).put(v1.z);
             // Get the color of the vertex
             colorBuffer.put(material.diffuse.get(0))
@@ -179,7 +188,7 @@ public class SubModel {
                        .put(material.diffuse.get(2));
             
             // Get the second vertex of the face
-            Vector3f v2 = vertices.get((int) face.getVertex().y - 1);
+            Vector3f v2 = vertices.get((int) face.getVertexIndices().y);
             vertexBuffer.put(v2.x).put(v2.y).put(v2.z);
             // Get the color of the face
             colorBuffer.put(material.diffuse.get(0))
@@ -187,60 +196,39 @@ public class SubModel {
             .put(material.diffuse.get(2));
 
             // Get the third vertex of the face
-            Vector3f v3 = vertices.get((int) face.getVertex().z - 1);
+            Vector3f v3 = vertices.get((int) face.getVertexIndices().z);
             vertexBuffer.put(v3.x).put(v3.y).put(v3.z);
             // Get the color of the face
             colorBuffer.put(material.diffuse.get(0))
             .put(material.diffuse.get(1))
             .put(material.diffuse.get(2));
-            
-            if(masterModel.quadFaces){
-                // Get the fourth vertex of the face
-                Vector3f v4 = vertices.get((int) face.getVertex().w - 1);
-                vertexBuffer.put(v4.x).put(v4.y).put(v4.z);
-                // Get the color of the face
-                colorBuffer.put(material.diffuse.get(0))
-                .put(material.diffuse.get(1))
-                .put(material.diffuse.get(2));
-            }
 
             // Get the first normal of the face
-            Vector3f n1 = normals.get((int) face.getNormal().x - 1);
+            Vector3f n1 = normals.get((int) face.getNormalIndices().x);
             normalBuffer.put(n1.x).put(n1.y).put(n1.z);
 
             // Get the second normal of the face
-            Vector3f n2 = normals.get((int) face.getNormal().y - 1);
+            Vector3f n2 = normals.get((int) face.getNormalIndices().y);
             normalBuffer.put(n2.x).put(n2.y).put(n2.z);
 
             // Get the third normal of the face
-            Vector3f n3 = normals.get((int) face.getNormal().z - 1);
+            Vector3f n3 = normals.get((int) face.getNormalIndices().z);
             normalBuffer.put(n3.x).put(n3.y).put(n3.z);
-            
-            if(masterModel.quadFaces){
-                // Get the fourth normal of the face
-                Vector3f n4 = normals.get((int) face.getNormal().w - 1);
-                normalBuffer.put(n4.x).put(n4.y).put(n4.z);
-            }
 
             
-            if (isTextured){
+           if (isTextured){
                 // Get the first texCoords of the face
-                Vector2f t1 = texCoords.get((int) face.getTexCoord().x - 1); 
+                Vector2f t1 = texCoords.get((int) face.getTexIndices().x); 
                 textureBuffer.put(t1.x).put(1 - t1.y);
 
                 // Get the second texCoords of the face
-                Vector2f t2 = texCoords.get((int) face.getTexCoord().y - 1);
+                Vector2f t2 = texCoords.get((int) face.getTexIndices().y);
                 textureBuffer.put(t2.x).put(1 - t2.y);
 
                 // Get the third texCoords of the face
-                Vector2f t3 = texCoords.get((int) face.getTexCoord().z - 1);
+                Vector2f t3 = texCoords.get((int) face.getTexIndices().z);
                 textureBuffer.put(t3.x).put(1 - t3.y);
                 
-                if(masterModel.quadFaces){
-                    // Get the third texCoords of the face
-                    Vector2f t4 = texCoords.get((int) face.getTexCoord().w - 1);
-                    textureBuffer.put(t4.x).put(1 - t4.y);
-                }
             }
 		    
 		}

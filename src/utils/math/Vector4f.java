@@ -30,6 +30,26 @@ public class Vector4f extends javax.vecmath.Vector4f{
 		return this;
 	}
 	
+	public Vector4f mul(Matrix4f m){
+		Vector4f r = new Vector4f();
+		
+		r.x = m.m00*x + m.m10*y + m.m20*z + m.m30*w;
+		r.y = m.m01*x + m.m11*y + m.m21*z + m.m31*w;
+		r.z = m.m02*x + m.m12*y + m.m22*z + m.m32*w;
+		
+		set(r);
+		
+		return this;
+	}
+	
+	public Vector4f set(Vector4f v){
+		x = v.x;
+		y = v.y;
+		z = v.z;
+		w = v.w;
+		return this;
+	}
+	
 	public void setPositive(){
 		if(x < 0)
 			x = 0;

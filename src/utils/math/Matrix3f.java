@@ -5,6 +5,10 @@ import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 
 public class Matrix3f extends javax.vecmath.Matrix3f{
+	
+	public Matrix3f(){
+		super();
+	}
 
 	public Matrix3f(Matrix4f in) {
 		super();

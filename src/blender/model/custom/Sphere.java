@@ -32,6 +32,10 @@ public class Sphere extends Model{
 			glUniform1i(World.renderEngine.preprocess.uniformLocations[2], 0); //Inform shader of god rays
 		}
 	}
+	
+	public float getRadius(){
+		return radius;
+	}
 
 
 	public void prepareVBO() {}

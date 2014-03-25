@@ -2,9 +2,9 @@ package game.world.sync;
 
 import game.RenderState;
 import game.world.World;
-import game.world.entities.Entity;
-import game.world.entities.LightSource;
 import game.world.gui.Component;
+import game.world.sync.Request.Action;
+import game.world.sync.Request.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +41,9 @@ public class UpdateRequest<T> implements Request{
 	
 	public void setAction(Action t){
 		action = t;
+		if(getAction() == Action.RENEWNEXT || getAction() == Action.RENEWALL){
+			changedWorlds.add(RenderState.updatingId);
+		}
 	}
 	
 	public Status requestStatus(World world){
@@ -48,13 +51,8 @@ public class UpdateRequest<T> implements Request{
 			if(!waitFor.isDone()){
 				return Status.IDLE;
 			}
-		if(getAction() == Action.CAMERAFOCUS){
-			if(item instanceof Entity){
-				if(((Entity)item).getWorld() == null){
-					return Status.IDLE;
-				}
-			}
-		}
+		if(getAction() == Action.RENEWNEXT) //update only once
+			return Status.FINAL;
 		if(changedWorlds.contains(world.getUniqueID())){
 			return Status.IDLE;
 		}else
@@ -80,7 +78,7 @@ public class UpdateRequest<T> implements Request{
 	}
 	
 	public String toString(){
-		return "UpdateRequest: " + item + " " + getAction();
+		return "UpdateRequest [Item=" + getItem() + " Action=" + getAction() + "]";
 	}
 
 }

@@ -1,5 +1,6 @@
 package game.world.entities;
 
+import game.resources.Resources;
 import game.world.World;
 import game.world.input.Input;
 import game.world.input.InputListener;
@@ -11,10 +12,11 @@ import org.lwjgl.input.Mouse;
 
 import utils.R;
 import utils.Utils;
+import utils.math.Matrix3f;
 import utils.math.Matrix4f;
+import utils.math.Transform;
 import utils.math.Vector3f;
 import blender.model.Model;
-import blender.model.custom.Cuboid;
 import blender.model.custom.Sphere;
 
 import com.bulletphysics.collision.dispatch.CollisionObject;
@@ -26,13 +28,12 @@ import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
-import com.bulletphysics.linearmath.Transform;
 
 /**
  * This is temporary.
  */
 
-public class Player extends DefaultEntity implements Input{
+public class Player extends DynamicEntity implements Input{
 	
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
@@ -43,26 +44,32 @@ public class Player extends DefaultEntity implements Input{
 	public Player(float x, float y, float z) {
 		new InputListener(this); //to be able to register input
 		//super(new Vector3f(x,y,z), 5, 5, 15);
+		Model model2 = null;
 		try {
-			Model model2 = new Model("F-35_Lightning_II\\F-35_Lightning_II.obj");
-			Quat4f quat = new Quat4f();
-			QuaternionUtil.setRotation(quat, new Vector3f(1,0,0), Utils.rads(-90));
-			Quat4f quat2 = new Quat4f();
-			QuaternionUtil.setRotation(quat2, new Vector3f(0,0,1), Utils.rads(180));
-			quat.mul(quat2); 
-			quat.normalize();
-			Transform t = new Transform(new Matrix4f(
-					quat,
-					new Vector3f(0,0,0), 1.0f));
-			Matrix4f ne = new Matrix4f();
-			t.getMatrix(ne);
-			model2.setRotation(quat);
-			setModel(model2);
+			model2 = Resources.getModel("F-35_Lightning_II\\F-35_Lightning_II.obj");
 		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		Quat4f quat = new Quat4f();
+		QuaternionUtil.setRotation(quat, new Vector3f(1,0,0), Utils.rads(-90));
+		Quat4f quat2 = new Quat4f();
+		QuaternionUtil.setRotation(quat2, new Vector3f(0,0,1), Utils.rads(180));
+		quat.mul(quat2); 
+		quat.normalize();
+		Transform t = new Transform(new Matrix4f(
+				quat,
+				new Vector3f(0,0,0), 1.0f));
+		
+		this.rotate(t);
+		
+		//setDynamic();
+		
+		createBody(model2);
+		/*CollisionShape testShape = model2.getConvexHull();
+		
 		//physics
-		CollisionShape testShape = new BoxShape(new Vector3f(12/2, 3/2, 15/2));
+		//CollisionShape testShape = new BoxShape(new Vector3f(12/2, 3/2, 15/2));
 		MotionState testMotionState = new DefaultMotionState(new Transform(new Matrix4f(
 				new Quat4f(0,0,0,1),
 				new Vector3f(x,y,z), 1.0f)));
@@ -74,19 +81,30 @@ public class Player extends DefaultEntity implements Input{
 		testConstructionInfo.friction = 0.95f;
 		RigidBody testBody;
 		//testBody = new RigidBody(testConstructionInfo);
-		createRigidBody(testConstructionInfo);
-		getRigidBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
+		createRigidBody(testConstructionInfo);*/
+		getBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
 		//controlBall.setLinearVelocity(new Vector3f(0,0,0));
 		//testBody.setCollisionFlags(CollisionFlags.KINEMATIC_OBJECT);
 		//setDynamic();
 		//rigidShape = testBody;	
 	}
 	
+	
 	@Override
 	public Entity getLinked(){
-		Player p = new Player();
-		p.shootBoxes = shootBoxes;
-		return p.linkTo(this);
+		return new Player().setLink(this);
+	}
+	
+	@Override
+	public Entity setLink(Entity t) {
+		super.setLink(t);
+		if(t instanceof Player){
+			Player ve = (Player)t;
+			
+			shootBoxes = ve.shootBoxes;
+		}
+
+		return this;
 	}
 	
 	boolean applyForce = false;
@@ -106,12 +124,12 @@ public class Player extends DefaultEntity implements Input{
 	@Override
 	public void update(float dt){
 		//rigidShape.setGravity(new Vector3f(0,0,0));
-		if(Mouse.isButtonDown(0)){
+		/*if(Mouse.isButtonDown(0)){
 			applyForce = true;
 		}else{
 			applyForce = false;
 		}
-		/*if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)){
+		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)){
 			rotate = Rotate.RIGHT;
 		}else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)){
 			rotate = Rotate.LEFT;
@@ -121,13 +139,13 @@ public class Player extends DefaultEntity implements Input{
 		}else if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)){
 			turn = Turn.DOWN;
 		}*/
-		Vector3f cam = getWorld().getCamera().getPos();
+		Vector3f cam = getWorld().getCamera().getPosition();
 		Vector3f cameraPosition = new Vector3f(cam.x , cam.y, cam.z);
 		Vector3f viewRay = getWorld().getCamera().getViewRay();
-		/*float changeby = 40*dt;
-		if(turn != Turn.NONE){
+		float changeby = 40*dt;
+		/*if(turn != Turn.NONE){
 			Transform t = new Transform();
-			rigidShape.getWorldTransform(t);
+			getRigidBody().getWorldTransform(t);
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -139,13 +157,13 @@ public class Player extends DefaultEntity implements Input{
 			orientation.mul(qRotatedy);
 			
 			t.setRotation(orientation);
-			rigidShape.setWorldTransform(t);
+			getRigidBody().setWorldTransform(t);
 			turn = Turn.NONE;
 		}
 		changeby = 40*dt;
 		if(rotate != Rotate.NONE){
 			Transform t = new Transform();
-			rigidShape.getWorldTransform(t);
+			getRigidBody().getWorldTransform(t);
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -158,12 +176,12 @@ public class Player extends DefaultEntity implements Input{
 			orientation.mul(qRotatedy);
 			
 			t.setRotation(orientation);
-			rigidShape.setWorldTransform(t);
+			getRigidBody().setWorldTransform(t);
 			rotate = Rotate.NONE;
 		}
 		if(applyForce){
 			Transform t = new Transform();
-			rigidShape.getMotionState().getWorldTransform(t);
+			getRigidBody().getMotionState().getWorldTransform(t);
 			Matrix4f m = new Matrix4f();
 			t.getMatrix(m);
 			m.invert();
@@ -174,13 +192,13 @@ public class Player extends DefaultEntity implements Input{
 			
 			getGoodPos.sub(aim);
 			getGoodPos.scale(7.5f);
-			rigidShape.activate(true);
+			getRigidBody().activate(true);
 			//force strength
 			aim.scale(50);
-			rigidShape.applyForce(aim, getGoodPos);
+			getRigidBody().applyForce(aim, getGoodPos);
 		}*/
 		if(createNewShape){
-			Entity testObject = new DefaultEntity();
+			/*OldEntity testObject = new OldDefaultEntity();
 			//visual
 			Model testModel = new Sphere(3.0f,30,30);
 			testObject.setModel(testModel);
@@ -196,39 +214,34 @@ public class Player extends DefaultEntity implements Input{
 			constructionInfo.angularDamping = 0.95f;
 			//RigidBody body = new RigidBody(constructionInfo);
 			//setDynamic();
-			testObject.createRigidBody(constructionInfo);
+			
+			testObject.createBody(testModel, constructionInfo);
+
+			//testObject.createRigidBody(constructionInfo);
 			//testObject.setRigidBody(body);
 			getWorld().addEntity(testObject);
-			createNewShape = false;
+			createNewShape = false;*/
 		}
 		if(shootBoxes.get()){
-			float w = 5, h = 5, d = 5;
-			float I = 2f;
-			float impluseForce = 10;
-			Entity testObject = new DefaultEntity();
-			//visual
-			Model testModel = new Cuboid(w,h,d);
-			testObject.setModel(testModel);
+			float w = 2+(float)Math.random()*5, h = 2+(float)Math.random()*5, d = 2+(float)Math.random()*5;
+			float impluseForce = 200;
 			
-			CollisionShape shape = new BoxShape(new Vector3f(w/2, h/2, d/2));
-			DefaultMotionState motionState = new DefaultMotionState(new Transform(new Matrix4f(
-					new Quat4f(0,0,0,1),
-					new Vector3f(cameraPosition.x+viewRay.x*10,cameraPosition.y+viewRay.y*10,cameraPosition.z+viewRay.z*10), 1)));
-			Vector3f intertia = new Vector3f();
-			shape.calculateLocalInertia(I,  intertia);
-			RigidBodyConstructionInfo constructionInfo = new RigidBodyConstructionInfo(I, motionState, shape, intertia);
-			constructionInfo.restitution = 0.1f;
-			constructionInfo.friction = 0.95f;
-			testObject.createRigidBody(constructionInfo);
-			System.out.println("created rigid body for box " + testObject.getRigidBody());
-			//RigidBody body = new RigidBody(constructionInfo);
-			setDynamic();
+			DynamicEntity box = new DynamicEntity();
+			box.setPosition(cameraPosition.copy().add(viewRay.copy().mul((float)Math.sqrt(w+h+d))));
+			box.scale(w, h, d);
+			try {
+				box.createBody(Resources.getModel("common\\cuboid.obj"));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 			
-			testObject.getRigidBody().activate();
-			testObject.getRigidBody().applyCentralImpulse(new Vector3f(viewRay.x*impluseForce, viewRay.y*impluseForce, viewRay.z*impluseForce));
+			box.getBody().activate();
+			box.getBody().applyCentralImpulse(viewRay.copy().scaleGet(impluseForce));
 			
-			//testObject.setRigidBody(body);
-			getWorld().addEntity(testObject);
+			getWorld().addEntity(box);
+			
 			shootBoxes.set(false);
 		}
 		

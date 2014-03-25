@@ -48,4 +48,10 @@ public class IntroState extends State{
 		
 	}
 
+	@Override
+	public void postRenderInit() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -34,6 +34,33 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		super();
 	}
 	
+	public void scale(float s){
+		Matrix4f scaleMatrix = new Matrix4f();
+		scaleMatrix.setIdentity();
+		scaleMatrix.set(0, scaleMatrix.get(0)*s);
+		scaleMatrix.set(5, scaleMatrix.get(5)*s);
+		scaleMatrix.set(10, scaleMatrix.get(10)*s);
+		mul(scaleMatrix);
+	}
+	
+	
+	public void scale(float x, float y, float z){
+		Matrix4f scaleMatrix = new Matrix4f();
+		scaleMatrix.setIdentity();
+		scaleMatrix.set(0, scaleMatrix.get(0)*x);
+		scaleMatrix.set(5, scaleMatrix.get(5)*y);
+		scaleMatrix.set(10, scaleMatrix.get(10)*z);
+		mul(scaleMatrix);
+	}
+	
+	public void rotate(Quat4f q){
+		Matrix4f rotatedMatrix = new Matrix4f();
+		rotatedMatrix.setIdentity();
+		q.normalize();
+		rotatedMatrix.setRotation(q);
+		mul(rotatedMatrix);
+	}
+	
 	public Matrix4f transposeGet(){
 		super.transpose();
 		return this;
@@ -70,7 +97,7 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		m.m02 = m02;		m.m12 = m12;		m.m22 = m22;		m.m32 = m32;
 		m.m03 = m03;		m.m13 = m13;		m.m23 = m23;		m.m33 = m33;
 		return m;
-	}
+	} 
 	
 	private Matrix4f set(org.lwjgl.util.vector.Matrix4f m){
 		m00 = m.m00;		m10 = m.m10;		m20 = m.m20;		m30 = m.m30;

@@ -28,6 +28,58 @@ public class Vector3f extends javax.vecmath.Vector3f{
 		return this;
 	}
 	
+	public Vector3f mul(Matrix3f m){
+		Vector3f r = new Vector3f();
+		r.x = m.m00*x + m.m01*y + m.m02*z;
+		r.y = m.m10*x + m.m11*y + m.m12*z;
+		r.z = m.m20*x + m.m21*y + m.m22*z;
+		
+		set(r);
+		
+		return this;
+	}
+
+	public Vector3f mul(Matrix4f m){
+		Vector3f r = new Vector3f();
+		
+		r.x = m.m00*x + m.m10*y + m.m20*z + m.m30*1.0f;
+		r.y = m.m01*x + m.m11*y + m.m21*z + m.m31*1.0f;
+		r.z = m.m02*x + m.m12*y + m.m22*z + m.m32*1.0f;
+		
+		set(r);
+		
+		return this;
+	}
+	
+    public Vector3f rotateGet(float angle, Vector3f l){
+    	Vector4f vecPosMod = new Vector4f(x, y, z, 1.0f);
+    	
+    	Matrix4f transMat = new Matrix4f();
+    	transMat.rotate((float)Math.toRadians(angle), l);
+    	transMat.transform(vecPosMod);
+    	return new Vector3f(vecPosMod.x, vecPosMod.y, vecPosMod.z);
+    }
+	
+	public Vector3f addGet(float x, float y, float z){
+		Vector3f a = copy();
+		a.x += x;
+		a.y += y;
+		a.z += z;
+		return a;
+	}
+	
+	public Vector3f scaleGet(float m){
+		super.scale(m);
+		return this;
+	}
+	
+	public Vector3f add(float v){
+		x +=v;
+		y +=v;
+		z +=v;
+		return this;
+	}
+	
 	public Vector3f reverse(){
 		x = 1/x;
 		y = 1/y;

@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.glViewport;
 import game.Game;
 import game.RenderState;
 import game.State;
+import game.resources.Resources;
 import game.world.World;
 import game.world.graphics.Graphics2D;
 
@@ -43,8 +44,8 @@ public class RenderThread implements Runnable{
 	        System.exit(-1); 
 	    }
 	    
-	    //hide the mouse
-	    //Mouse.setGrabbed(true);
+	    //Load models
+	    Resources.loadResources(Resources.RESOURCESPATH);
 	}
 	
 
@@ -122,6 +123,7 @@ public class RenderThread implements Runnable{
 	 * Clears up memory
 	 */
 	private void dispose(){
+		Resources.destoryResources();
 		for(State state: threadManager.getStates()){
 			state.dispose();
 		}
@@ -131,7 +133,7 @@ public class RenderThread implements Runnable{
 		displayWidth = Display.getWidth();
 		displayHeight = Display.getHeight();
 		//glViewport(0, 0, displayWidth, displayHeight);
-		World.renderEngine.resized();
+		World.renderEngine.resized(displayWidth, displayHeight);
 	}
 	
 	//Display fps counter

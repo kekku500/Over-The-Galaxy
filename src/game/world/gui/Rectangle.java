@@ -7,6 +7,7 @@ import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+import game.world.World;
 
 import java.nio.FloatBuffer;
 
@@ -30,7 +31,7 @@ public class Rectangle extends AbstractComponent{
 		vertices.rewind();
 		
 		//testing texture
-		isTextured = true;
+		isTextured = false;
 		
 		if(isTextured){
 			texVertices = BufferUtils.createFloatBuffer(2 * 4);
@@ -58,13 +59,13 @@ gl.disable(GL.BLEND);*/
 	@Override
 	public void renderInitStart() {
 		if(isTextured){
-			Texture tex = Texture.loadTexture2D(texPath);
-			texture = tex.id;
+			/*Texture tex = Texture.loadTexture2D(texPath);
+			texture = tex.getID();
 			vboTexVertexID = glGenBuffers();
 			
             glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STATIC_DRAW);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);*/
 		}
 		
 	}
