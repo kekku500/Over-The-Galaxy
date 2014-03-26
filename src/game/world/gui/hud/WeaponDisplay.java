@@ -22,9 +22,10 @@ import Weapon.Weapon;
 import blender.model.Texture;
 
 public class WeaponDisplay extends HudComponent{
-	Weapon weapon;
+	private Weapon weapon;
 	private float x;
 	private boolean textured = false;
+	private int id;
 
 	public WeaponDisplay(Weapon weapon){
 		this.weapon = weapon;		
@@ -59,14 +60,14 @@ public class WeaponDisplay extends HudComponent{
 			RenderThread.spritesheet.getUpLeftCoordNormal(1)[0],
 			RenderThread.spritesheet.getUpLeftCoordNormal(1)[1],
 			
-			RenderThread.spritesheet.getBottomLeftCoordNormal(2)[0],
-			RenderThread.spritesheet.getBottomLeftCoordNormal(2)[1],
-			RenderThread.spritesheet.getBottomRightCoordNormal(6)[0],
-			RenderThread.spritesheet.getBottomRightCoordNormal(6)[1],
-			RenderThread.spritesheet.getUpRightCoordNormal(6)[0],
-			RenderThread.spritesheet.getUpRightCoordNormal(6)[1],
-			RenderThread.spritesheet.getUpLeftCoordNormal(2)[0],
-			RenderThread.spritesheet.getUpLeftCoordNormal(2)[1],
+			RenderThread.spritesheet.getBottomLeftCoordNormal(weapon.getTexture().x)[0],
+			RenderThread.spritesheet.getBottomLeftCoordNormal(weapon.getTexture().x)[1],
+			RenderThread.spritesheet.getBottomRightCoordNormal(weapon.getTexture().y)[0],
+			RenderThread.spritesheet.getBottomRightCoordNormal(weapon.getTexture().y)[1],
+			RenderThread.spritesheet.getUpRightCoordNormal(weapon.getTexture().y)[0],
+			RenderThread.spritesheet.getUpRightCoordNormal(weapon.getTexture().y)[1],
+			RenderThread.spritesheet.getUpLeftCoordNormal(weapon.getTexture().x)[0],
+			RenderThread.spritesheet.getUpLeftCoordNormal(weapon.getTexture().x)[1],
 			
 			RenderThread.spritesheet.getBottomLeftCoordNormal(12)[0],
 			RenderThread.spritesheet.getBottomLeftCoordNormal(12)[1],
@@ -121,7 +122,9 @@ public class WeaponDisplay extends HudComponent{
 
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
+		if(id != weapon.getID()){
+			setTexture();
+		}
 		
 	}
 

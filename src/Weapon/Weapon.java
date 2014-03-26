@@ -1,7 +1,10 @@
 package Weapon;
 
+import utils.math.Vector2i;
+
 public interface Weapon {
-	public String getTexture();
+	public Vector2i getTexture();
+	public int getID();
 	
 	//Laskemoon
 	public int getAmmo();

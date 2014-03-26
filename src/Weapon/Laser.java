@@ -1,11 +1,14 @@
 package Weapon;
 
+import utils.math.Vector2i;
+
 public class Laser implements Weapon{
 	private int Ammo;
 	private int MaxAmmo;
 	private int ClipCount;
 	private int MaxClips;
-	private String texture = "res/models/hud/HUD2.png";
+	private int id;
+	private Vector2i texture = new Vector2i(32,35);
 	
 	public Laser(){
 		Ammo = 100;
@@ -15,7 +18,7 @@ public class Laser implements Weapon{
 	}
 
 	@Override
-	public String getTexture() {
+	public Vector2i getTexture() {
 		return texture;
 	}
 
@@ -69,6 +72,11 @@ public class Laser implements Weapon{
 		if(Ammo > 0){
 			Ammo --;
 		}
+	}
+
+	@Override
+	public int getID() {
+		return id;
 	}
 
 }
