@@ -8,7 +8,7 @@ public class Laser implements Weapon{
 	private int ClipCount;
 	private int MaxClips;
 	private int id;
-	private Vector2i texture = new Vector2i(32,35);
+	private Vector2i texture = new Vector2i(31,35);
 	
 	public Laser(){
 		Ammo = 100;
