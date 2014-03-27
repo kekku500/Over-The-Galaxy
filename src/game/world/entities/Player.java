@@ -36,6 +36,7 @@ public class Player extends DefaultEntity{
 	private float movementSpeed = 20; //Pixels per second
 	private float rotationSpeed = 90; //degrees per second
 	private static Weapon weapon;
+	private static int fuel = 100;
 	
 	
 	public Player(){
@@ -113,6 +114,8 @@ public class Player extends DefaultEntity{
 			weapon.fire(); break;
 		case Keyboard.KEY_U:
 			weapon.reload(); break;
+		case Keyboard.KEY_P:
+			fuel -= 5; break;
 		}
 	}
 	
@@ -252,6 +255,10 @@ public class Player extends DefaultEntity{
 	
 	public Weapon getWeapon(){
 		return weapon;
+	}
+	
+	public int getFuel(){
+		return fuel;
 	}
 
 }

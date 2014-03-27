@@ -236,7 +236,7 @@ public class World{
 		
 
 		container.update();
-		HUD.update();
+		//HUD.update();
 		
 	
 		
