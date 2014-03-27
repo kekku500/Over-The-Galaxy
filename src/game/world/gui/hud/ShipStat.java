@@ -29,13 +29,14 @@ public class ShipStat extends HudComponent {
 		this.currentHP = currentHP;
 		this.currentFuel = currentFuel;
 		
-		position = new Vector2f(0,0);
+		position = new Vector2f(0,487);
 		width = 205;
 		height = 113;
 		
 		vertices = BufferUtils.createFloatBuffer(2 * 4); //(x,y)*(4 vertices on a rectangle)
 		float[] vertex = {
-			0,height, width,height, width,0, 0,0,						
+			0,height, width,height, width,0, 0,0,
+			
 		};
 		vertices.put(vertex);
 		vertices.rewind();
