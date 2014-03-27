@@ -1,12 +1,5 @@
 package controller;
 
-import game.Game;
-import game.world.World;
-import game.world.culling.ViewFrustum;
-import game.world.entities.AbstractEntity;
-import game.world.entities.Entity;
-import game.world.entities.VisualEntity;
-
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 
@@ -14,11 +7,18 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.glu.GLU;
 
+import resources.model.Model;
+import resources.model.custom.Sphere;
+import state.Game;
 import utils.R;
 import utils.Utils;
 import utils.math.Vector3f;
-import blender.model.Model;
-import blender.model.custom.Sphere;
+import world.World;
+import world.culling.ViewFrustum;
+import world.entity.AbstractEntity;
+import world.entity.Entity;
+import world.entity.VisualEntity;
+import world.entity.WorldEntity;
 
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.dispatch.CollisionObject;
@@ -40,7 +40,7 @@ public class Camera extends AbstractEntity{
     private enum CamType{FP, _6DOF, LOCK}
     private CamType type = CamType.FP;
     
-    private R<Entity> following = new R<Entity>();
+    private WorldEntity following;
     private float viewRadius = 30;
     
     //Camera frustum
@@ -52,11 +52,11 @@ public class Camera extends AbstractEntity{
     private Transform uniformTransform = new Transform(new Matrix4f(new Quat4f(0,0,0,1), new Vector3f(0,0,0), 1));
     
 
-	@Override
+	/*@Override
 	public void dispose() {}
 
 	@Override
-	public void openGLInitialization() {}
+	public void openGLInitialization() {}*/
 
 	@Override
 	public Entity getLinked() {
@@ -75,11 +75,17 @@ public class Camera extends AbstractEntity{
 		return this;
 	}
 	
-	public void setFollowing(Entity e){
-		following.set(e);
+	public void setFollowing(WorldEntity e){
+		following = e;
 	}
 	
-	public R<Entity> getFollowingWrapper(){
+	public boolean isFollowing(){
+		if(following != null)
+			return true;
+		return false;
+	}
+	
+	public WorldEntity getFollowingWrapper(){
 		return following;
 	}
     
@@ -88,18 +94,35 @@ public class Camera extends AbstractEntity{
 		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
     }
    
-    World world;
+    /*World world;
     public Camera(float x, float y, float z, World w){
     	uniformTransform.origin.set(x, y, z);
     	world = w;
     	
     	cameraFrustum = new ViewFrustum();
 		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
+    }*/
+    
+    public Camera(float x, float y, float z){
+    	uniformTransform.origin.set(x, y, z);
+    	
+    	cameraFrustum = new ViewFrustum();
+		cameraFrustum.setProjection(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
     }
     
     private void rotation(float dt){
-		float dx = Mouse.getDX() * mouseSensitivity;
-		float dy = Mouse.getDY() * mouseSensitivity;
+		float dx = 0;
+		float dy = 0;
+    	if(Mouse.isGrabbed()){
+    		dx = Mouse.getDX() * mouseSensitivity;
+    		dy = Mouse.getDY() * mouseSensitivity;
+    	}
+		float dz = 0;
+		int wheel = Mouse.getDWheel();
+		if(wheel > 0)
+			dz += 50 * mouseSensitivity;
+		else if(wheel < 0)
+			dz -= 50 * mouseSensitivity; 
 		if(type == CamType._6DOF){
 			Transform t = uniformTransform;
 			
@@ -115,6 +138,13 @@ public class Camera extends AbstractEntity{
 			QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(dx));
 			qRotatedx.mul(orientation); // vv
 			orientation = qRotatedx; //  this makes it DOF6
+			
+			
+			Quat4f qRotatedz = new Quat4f();
+			QuaternionUtil.setRotation(qRotatedz, new Vector3f(0,0,1), Utils.rads(dz));
+			qRotatedz.mul(orientation); // vv
+			orientation = qRotatedz; //  this makes it DOF6
+			
 			orientation.normalize();
 			
 			t.setRotation(orientation);
@@ -132,12 +162,17 @@ public class Camera extends AbstractEntity{
 			Quat4f qRotatedx = new Quat4f();
 			QuaternionUtil.setRotation(qRotatedx, new Vector3f(0,1,0), Utils.rads(dx));
 			orientation.mul(qRotatedx); //this line makes it fps
+			
+			Quat4f qRotatedz = new Quat4f();
+			QuaternionUtil.setRotation(qRotatedz, new Vector3f(0,0,1), Utils.rads(dz));
+			orientation.mul(qRotatedz); //this line makes it fps
 			orientation.normalize();
+			
 			
 			t.setRotation(orientation);
 		}else if(type == CamType.LOCK){
-			if(following.get() != null){
-				Transform t = following.get().getTransform();
+			if(following != null){
+				Transform t = following.getTransform();
 				
 				Quat4f orientation = new Quat4f();
 				t.getRotation(orientation);
@@ -179,7 +214,7 @@ public class Camera extends AbstractEntity{
 		float speed = movementSpeed*dt;
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 			speed *= shiftBoost;
-		if(following.get() == null){
+		if(following == null){
 			Transform tr = uniformTransform;
 			Matrix4f mr = new Matrix4f();
 			tr.getMatrix(mr);
@@ -229,7 +264,7 @@ public class Camera extends AbstractEntity{
 		}else{
 			Transform tcam = uniformTransform;
 			
-			Transform tfollow = following.get().getTransform();
+			Transform tfollow = following.getTransform();
 			
 			Vector3f camPos = new Vector3f();
 			viewRay.normalize();
@@ -254,7 +289,7 @@ public class Camera extends AbstractEntity{
 		cameraFrustum.setPos(getPosition());
 		//frustum.update(); //Update variables required for culling check
 		
-		cameraFrustum.cullEntities(world.getVisualEntities());
+		cameraFrustum.cullEntities(getWorld().getVisualEntities());
     }
     
     public void lookAt(){

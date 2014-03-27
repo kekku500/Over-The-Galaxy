@@ -55,7 +55,7 @@ public class Vector3f extends javax.vecmath.Vector3f{
     	Vector4f vecPosMod = new Vector4f(x, y, z, 1.0f);
     	
     	Matrix4f transMat = new Matrix4f();
-    	transMat.rotate((float)Math.toRadians(angle), l);
+    	transMat.rotateLwjgl((float)Math.toRadians(angle), l);
     	transMat.transform(vecPosMod);
     	return new Vector3f(vecPosMod.x, vecPosMod.y, vecPosMod.z);
     }

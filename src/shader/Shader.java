@@ -7,7 +7,6 @@ import static org.lwjgl.opengl.GL20.glDetachShader;
 import static org.lwjgl.opengl.GL20.glGetProgrami;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glValidateProgram;
-import game.Game;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +18,7 @@ import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ARBVertexShader;
 import org.lwjgl.opengl.GL11;
 
+import state.Game;
 import utils.Utils;
 import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;

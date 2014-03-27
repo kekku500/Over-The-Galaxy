@@ -1,8 +1,8 @@
 package main;
 
-import game.Game;
-import game.State;
-import game.world.graphics.Graphics2D;
+import state.Game;
+import state.State;
+import world.graphics.Graphics2D;
 
 /**
  * A simple example of a state.
@@ -18,7 +18,7 @@ public class IntroState extends State{
 
 	@Override
 	public void init() {
-		Game.print("Init intro");
+		Game.println("Init intro");
 		
 	}
 

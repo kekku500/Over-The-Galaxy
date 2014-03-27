@@ -1,8 +1,5 @@
 package utils;
 
-import game.Game;
-import game.resources.Resources;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +10,8 @@ import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
 
+import resources.Resources;
+import state.Game;
 import utils.math.Matrix4f;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
@@ -50,15 +49,14 @@ public class Utils {
 	public static float rads(float degrees){
 		return (float)Math.toRadians(degrees);
 	}
-    
-    public static Vector3f rotate(Vector3f v, float angle, Vector3f l){
-    	Vector4f vecPosMod = new Vector4f(v.x, v.y, v.z, 1.0f);
-    	
-    	Matrix4f transMat = new Matrix4f();
-    	transMat.rotate((float)Math.toRadians(angle), l);
-    	transMat.transform(vecPosMod);
-    	return new Vector3f(vecPosMod.x, vecPosMod.y, vecPosMod.z);
-    }
+	
+	public static float cos(float val){
+		return (float)Math.cos(val);
+	}
+	
+	public static float sin(float val){
+		return (float)Math.sin(val);
+	}
     
 	public static FloatBuffer combineFloatBuffers(FloatBuffer...fbs){
         FloatBuffer send = BufferUtils.createFloatBuffer(fbs[0].capacity()*fbs.length);

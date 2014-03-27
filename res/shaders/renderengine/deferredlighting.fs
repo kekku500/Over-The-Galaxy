@@ -7,7 +7,7 @@ uniform sampler2D ColorBuffer, NormalBuffer, DepthBuffer, SSAOTexture, RotationT
 uniform sampler2DShadow ShadowCubeMap;
 uniform mat4x4 ProjectionBiasInverse, ViewInverse, LightTexture;
 uniform vec2 Samples[16];
-uniform int Shadows[MAX_LIGHTS], Filtering, Occlusion, CubeLight[MAX_LIGHTS];
+uniform int Shadows, Filtering, Occlusion, CubeLight[MAX_LIGHTS];
 
 uniform sampler2D MaterialAmbient, MaterialDiffuse, MaterialSpecular, MaterialEmission, MaterialShininess;
 
@@ -62,29 +62,27 @@ void main(){
 		//find shadow
 		// shadows ------------------------------------------------------------------------------------------------------------
 		float Shadow = 1.0;
-		for(int i = 0; i < LightCount; i++){
-			if(Shadows[i] == 1){
-				vec4 ShadowTexCoord = LightTexture * vec4(Position.xyz, 1.0);
 
-				if(Filtering == 1){
-					vec2 r = normalize(texture2D(RotationTexture, gl_TexCoord[1].st).rg * 2.0 - 1.0);
+		if(Shadows == 1){
+			vec4 ShadowTexCoord = LightTexture * vec4(Position.xyz, 1.0);
 
-					mat2x2 RotationMatrix = mat2x2(r.x, r.y, -r.y, r.x);
+			if(Filtering == 1){
+				vec2 r = normalize(texture2D(RotationTexture, gl_TexCoord[1].st).rg * 2.0 - 1.0);
 
-					Shadow = 0.0;
+				mat2x2 RotationMatrix = mat2x2(r.x, r.y, -r.y, r.x);
 
-					for(int n = 0; n < 16; n++){
-						Shadow += shadow2DProj(ShadowCubeMap, ShadowTexCoord + vec4(RotationMatrix * Samples[n] * ShadowTexCoord.w, -0.0009765625 * ShadowTexCoord.w, 0.0)).r;
-					}
+				Shadow = 0.0;
 
-					Shadow *= 0.0625;
-				}else{
-					ShadowTexCoord.z -= 0.0009765625 * ShadowTexCoord.w;
-
-					Shadow = shadow2DProj(ShadowCubeMap, ShadowTexCoord).r;
+				for(int n = 0; n < 16; n++){
+					Shadow += shadow2DProj(ShadowCubeMap, ShadowTexCoord + vec4(RotationMatrix * Samples[n] * ShadowTexCoord.w, -0.0009765625 * ShadowTexCoord.w, 0.0)).r;
 				}
-				break;
-			}
+
+				Shadow *= 0.0625;
+			}else{
+				ShadowTexCoord.z -= 0.0009765625 * ShadowTexCoord.w;
+
+				Shadow = shadow2DProj(ShadowCubeMap, ShadowTexCoord).r;
+			};
 		}
 		
 		vec4 TotalAmbient = vec4(0);

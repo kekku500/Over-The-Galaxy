@@ -6,6 +6,8 @@ import org.lwjgl.BufferUtils;
 
 public class Matrix3f extends javax.vecmath.Matrix3f{
 	
+	private static final long serialVersionUID = 1L;
+
 	public Matrix3f(){
 		super();
 	}
@@ -22,12 +24,12 @@ public class Matrix3f extends javax.vecmath.Matrix3f{
 		m21 = in.m21;
 		m22 = in.m22;
 	}
-	public Matrix3f getInvert(){
+	public Matrix3f invertGet(){
 		invert();
 		return this;
 	}
 	
-	public Matrix3f getTranspose(){
+	public Matrix3f transposeGet(){
 		transpose();
 		return this;
 	}

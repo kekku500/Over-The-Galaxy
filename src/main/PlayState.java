@@ -5,23 +5,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 
-import game.Game;
-import game.State;
-import game.resources.Resources;
-import game.world.World;
-import game.world.entities.DynamicEntity;
-import game.world.entities.Player;
-import game.world.entities.StaticEntity;
-import game.world.entities.lighting.DefaultPointLight;
-import game.world.entities.lighting.DefaultSpotLight;
-import game.world.entities.lighting.SunLight;
-import game.world.graphics.Graphics2D;
-import game.world.graphics.ShadowMapper;
-import game.world.gui.Rectangle;
-import game.world.sync.Request;
-import game.world.sync.Request.Action;
-import game.world.sync.UpdateRequest;
-
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 
@@ -29,12 +12,25 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector2f;
 
+import resources.Resources;
+import resources.model.Model;
+import resources.model.custom.Sphere;
+import state.Game;
+import state.State;
 import utils.Utils;
 import utils.math.Matrix3f;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
-import blender.model.Model;
-import blender.model.custom.Sphere;
+import world.World;
+import world.entity.DynamicEntity;
+import world.entity.Player;
+import world.entity.StaticEntity;
+import world.entity.lighting.DefaultPointLight;
+import world.entity.lighting.DefaultSpotLight;
+import world.entity.lighting.SunLight;
+import world.graphics.Graphics2D;
+import world.graphics.ShadowMapper;
+import world.sync.Request;
 
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
@@ -53,6 +49,8 @@ import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
 
+import controller.Camera;
+
 public class PlayState extends State{
 	
 	private int stateId;
@@ -67,14 +65,16 @@ public class PlayState extends State{
 	
 	@Override
 	public void postRenderInit() {
-		Game.print("PlayState init");
+		Game.println("PlayState init");
 		World world = this.getUpToDateState().getWorld();
 
-		Player player = new Player(15,2,35);
-		
+		Player player = new Player(15,30,35);
 		world.addEntity(player);
+		
+		Camera cam = new Camera(10,10,10);
+		//cam.setFollowing(player);
+		world.addEntity(cam);
 
-		//world.setCameraFocus(player);
 		
 		DynamicEntity testBox = new DynamicEntity();
 		testBox.setPosition(10, 15, 10);
@@ -114,11 +114,6 @@ public class PlayState extends State{
 			world.addEntity(testRock);
 		}
 
-		
-		
-
-		world.addComponent(new Rectangle(new Vector2f(100,100), 200, 50));
-
 		//Brick normal map
 		DynamicEntity testNormalMap = new DynamicEntity();
 		testNormalMap.setPosition(50,-2,0);
@@ -156,13 +151,12 @@ public class PlayState extends State{
 
 		//Sun
 		SunLight sun = new SunLight();
-		sun.setShadowMapper(new ShadowMapper(true));
-		sun.setModel(new Sphere(80, 16, 16));
+		sun.setModel(new Sphere(100, 16, 16));
 		sun.setPosition(1000, 1000, 1000);
 		sun.setLightScattering(true);
 		world.addEntity(sun);
 		
-		DefaultPointLight pointLight = new DefaultPointLight();
+		/*DefaultPointLight pointLight = new DefaultPointLight();
 		pointLight.setDiffuse(new Vector4f(.1f, 0.6f, 0.1f, 1.0f));
 		pointLight.setPosition(100, 50, 100);
 		world.addEntity(pointLight);
@@ -179,12 +173,12 @@ public class PlayState extends State{
 		
 		DefaultSpotLight spotLight = new DefaultSpotLight();
 		spotLight.setPosition(50, 50, 50);
-		world.addEntity(spotLight);
+		world.addEntity(spotLight);*/
 	}
 
 	@Override
 	public void init() {
-		Game.print("PlayState init");
+		Game.println("PlayState init");
 		World world = this.getUpToDateState().getWorld();
 
 	}
@@ -214,7 +208,7 @@ public class PlayState extends State{
 	@Override
 	public void dispose(){
 		World world = getUpToDateState().getWorld();
-		world.dispose();
+		//world.dispose();
 		//container.dispose();
 		//model.dispose();
 	}
