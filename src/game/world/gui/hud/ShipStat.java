@@ -10,10 +10,15 @@ import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.GL_STREAM_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+
+import java.nio.FloatBuffer;
+
 import game.threading.RenderThread;
 import game.world.entities.Player;
 
@@ -31,33 +36,33 @@ public class ShipStat extends HudComponent {
 	private int hull;
 	private int fuel;
 	private Player player;
+	FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 12);
 	
 	public ShipStat(Player player){
 		this.currentHP = player.getFuel();
 		this.currentFuel = player.getFuel();
 		this.player = player;
 		
-		position = new Vector2f(0,373);
-		width = 410;
-		height = 227;
+		position = new Vector2f(0,487);
+		width = 205;
+		height = 113;
 		x = 0.304F;
 		y = 0.195F;
-		hull = 243;
-		fuel = 243;
+		hull = 121;
+		fuel = 121;
 		
 		
 		vertices = BufferUtils.createFloatBuffer(2 * 12); //(x,y)*(4 vertices on a rectangle)
 		float[] vertex = {
 			0,height, width,height, width,0, 0,0,
-			width*x,height*y+10,width*x+hull,height*y+10,width*x+hull,height*y,width*x,height*y,
-			width*x,height*y+44,width*x+hull,height*y+44,width*x+hull,height*y+34,width*x,height*y+34
+			width*x,height*y+5,width*x+hull,height*y+5,width*x+hull,height*y,width*x,height*y,
+			width*x,height*y+22,width*x+fuel,height*y+22,width*x+fuel,height*y+17,width*x,height*y+17
 			
 		};
 		vertices.put(vertex);
 		vertices.rewind();
 		
 		isTextured = true;
-		
 	}
 	
 	public void setTexture(){
@@ -113,6 +118,9 @@ public class ShipStat extends HudComponent {
 
 	@Override
 	public void renderDraw() {
+		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+		glBufferSubData(GL_ARRAY_BUFFER,0,Vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDrawArrays(GL_QUADS, 0, 24);
@@ -121,17 +129,15 @@ public class ShipStat extends HudComponent {
 
 	@Override
 	public void update() {
-		if(currentFuel != player.getFuel()){
-			currentFuel = player.getFuel();
-			vertices = BufferUtils.createFloatBuffer(2 * 12); //(x,y)*(4 vertices on a rectangle)
-			float[] vertex = {
-				0,height, width,height, width,0, 0,0,
-				width*x,height*y+10,width*x+hull*(player.getFuel()/100),height*y+10,width*x+hull*(player.getFuel()/100),height*y,width*x,height*y,
-				width*x,height*y+44,width*x+fuel*(player.getFuel()/100),height*y+44,width*x+fuel*(player.getFuel()/100),height*y+34,width*x,height*y+34
-				
-			};
-			vertices.put(vertex);
-			vertices.rewind();
-		}
+		currentFuel = player.getFuel();
+		float[] vertex = {
+			0,height, width,height, width,0, 0,0,
+			width*x,height*y+5,width*x+hull*(player.getFuel()/100F),height*y+5,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
+			width*x,height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+17,width*x,height*y+17
+			
+		};
+		Vertices.put(vertex);
+		Vertices.rewind();
+		
 	}
 }
