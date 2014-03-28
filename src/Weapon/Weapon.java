@@ -19,4 +19,6 @@ public interface Weapon {
 	public void reload();
 	public void fire();
 	
+	public int getDurability();
+	
 }

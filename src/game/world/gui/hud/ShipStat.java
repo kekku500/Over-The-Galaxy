@@ -36,7 +36,7 @@ public class ShipStat extends HudComponent {
 	private int hull;
 	private int fuel;
 	private Player player;
-	FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 12);
+	FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 8);
 	
 	public ShipStat(Player player){
 		this.currentHP = player.getFuel();
@@ -119,7 +119,7 @@ public class ShipStat extends HudComponent {
 	@Override
 	public void renderDraw() {
 		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glBufferSubData(GL_ARRAY_BUFFER,0,Vertices);
+		glBufferSubData(GL_ARRAY_BUFFER,32,Vertices);//1 v‰‰rtus = 4 bitti. 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -131,7 +131,6 @@ public class ShipStat extends HudComponent {
 	public void update() {
 		currentFuel = player.getFuel();
 		float[] vertex = {
-			0,height, width,height, width,0, 0,0,
 			width*x,height*y+5,width*x+hull*(player.getFuel()/100F),height*y+5,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
 			width*x,height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+17,width*x,height*y+17
 			
