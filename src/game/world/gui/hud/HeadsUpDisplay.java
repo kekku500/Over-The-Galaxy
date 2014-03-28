@@ -19,7 +19,7 @@ public class HeadsUpDisplay{
 		this.world = world;
 		
 	//	components.add(new HudBase());
-		components.add(new WeaponDisplay(player.getWeapon()));
+		components.add(new WeaponDisplay(player));
 		components.add(new ShipStat(player));
 	//	components.add(new DialogueBox());
 		

@@ -8,6 +8,7 @@ public class Laser implements Weapon{
 	private int ClipCount;
 	private int MaxClips;
 	private int id;
+	private int durability = 100;
 	private Vector2i texture = new Vector2i(31,35);
 	
 	public Laser(){
@@ -77,6 +78,11 @@ public class Laser implements Weapon{
 	@Override
 	public int getID() {
 		return id;
+	}
+
+	@Override
+	public int getDurability() {
+		return durability;
 	}
 
 }

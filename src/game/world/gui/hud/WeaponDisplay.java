@@ -9,11 +9,16 @@ import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.GL_STREAM_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+
+import java.nio.FloatBuffer;
+
 import game.threading.RenderThread;
+import game.world.entities.Player;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
@@ -23,24 +28,33 @@ import blender.model.Texture;
 
 public class WeaponDisplay extends HudComponent{
 	private Weapon weapon;
+	private Player player;
 	private float x;
-	private boolean textured = false;
+	private float y;
+	private float z;
 	private int id;
+	private int durability;
+	FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 4);
+	FloatBuffer Texture = BufferUtils.createFloatBuffer(2 * 4);
 
-	public WeaponDisplay(Weapon weapon){
-		this.weapon = weapon;		
+	public WeaponDisplay(Player player){
+		this.weapon = player.getWeapon();		
 		position = new Vector2f(0,0);
 		width = 205;
 		height = 113;
 		x = 0.15F;
+		y = 0.475F;
+		z = 0.769F;
+		durability = 86;
 		
 		//Create Vertex Buffer
-		vertices = BufferUtils.createFloatBuffer(2 * 28); //(x,y)*(4 vertices on a rectangle)
+		vertices = BufferUtils.createFloatBuffer(2 * 32); //(x,y)*(4 vertices on a rectangle)
 		float[] vertex = {
 			0,height, width*x,height, width*x,0, 0,0,						
 			width*x,height/3,  width, height/3, width,0, width*x,0,			
 			width*x ,2*height/3, width,2*height/3, width,height/3,  width*x,height/3,			
-			width*x,height,  width,height,  width, 2*height/3, width*x,2*height/3
+			width*x,height,  width,height,  width, 2*height/3, width*x,2*height/3,
+			width*y, height*z+4, width*y+durability,height*z+4, width*y+durability,height*z, width*y,height*z
 		};
 		vertices.put(vertex);
 		vertices.rewind();
@@ -49,7 +63,7 @@ public class WeaponDisplay extends HudComponent{
 	}
 	
 	private void setTexture(){
-		texVertices = BufferUtils.createFloatBuffer(2 * 28);
+		texVertices = BufferUtils.createFloatBuffer(2 * 32);
 		float[] texturea = {
 			RenderThread.spritesheet.getBottomLeftCoordNormal(21)[0],
 			RenderThread.spritesheet.getBottomLeftCoordNormal(21)[1],
@@ -87,32 +101,46 @@ public class WeaponDisplay extends HudComponent{
 			RenderThread.spritesheet.getUpLeftCoordNormal(22)[0],
 			RenderThread.spritesheet.getUpLeftCoordNormal(22)[1],
 			
+			RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
+			RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
+			RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
+			RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
+			RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
+			RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
+			RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
+			RenderThread.spritesheet.getUpLeftCoordNormal(51)[1]
 		};
 		texVertices.put(texturea);
 		texVertices.rewind();
-		textured= true;
 	}
 
 	@Override
 	public void renderInitStart() {	
-		if(!textured){
-			setTexture();
-		}
+		setTexture();
 		Texture tex = RenderThread.spritesheet.getTex();
 		texture = tex.id;
 		vboTexVertexID = glGenBuffers();
 			
         glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-        glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STREAM_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 				
 	}
 
 	@Override
 	public void renderDraw() {
-		glEnable(GL_BLEND);
+		//Uuendatud Durability
+		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+		glBufferSubData(GL_ARRAY_BUFFER,224,Vertices);//1 v‰‰rtus = 4 bitti. 
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //Uuendatud relva logo
+		glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
+        glBufferSubData(GL_ARRAY_BUFFER,224,Texture);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+        glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawArrays(GL_QUADS, 0, 28);
+		glDrawArrays(GL_QUADS, 0, 32);
 		RenderThread.graphics2D.drawString(88, 40, weapon.getClipAmount() + "/" + weapon.getMaxClips());
 		RenderThread.graphics2D.drawString(70, 55, weapon.getAmmo() + "/" + weapon.getMaxAmmo());
 		glDisable(GL_BLEND);
@@ -122,10 +150,26 @@ public class WeaponDisplay extends HudComponent{
 
 	@Override
 	public void update() {
+		float[] vertex = {
+			width*y, height*z+4, width*y+durability,height*z+4, width*y+durability,height*z, width*y,height*z
+		};
+		Vertices.put(vertex);
+		Vertices.rewind();
+		weapon = player.getWeapon();
 		if(id != weapon.getID()){
-			setTexture();
+			float[] texture = {
+				RenderThread.spritesheet.getBottomLeftCoordNormal(weapon.getTexture().x)[0],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(weapon.getTexture().x)[1],
+				RenderThread.spritesheet.getBottomRightCoordNormal(weapon.getTexture().y)[0],
+				RenderThread.spritesheet.getBottomRightCoordNormal(weapon.getTexture().y)[1],
+				RenderThread.spritesheet.getUpRightCoordNormal(weapon.getTexture().y)[0],
+				RenderThread.spritesheet.getUpRightCoordNormal(weapon.getTexture().y)[1],
+				RenderThread.spritesheet.getUpLeftCoordNormal(weapon.getTexture().x)[0],
+				RenderThread.spritesheet.getUpLeftCoordNormal(weapon.getTexture().x)[1],	
+			};
+			Texture.put(texture);
+			Texture.rewind();
 		}
-		
 	}
 
 }
