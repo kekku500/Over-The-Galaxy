@@ -14,7 +14,6 @@ import static org.lwjgl.opengl.GL15.GL_STREAM_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glBufferSubData;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 
 import java.nio.FloatBuffer;
@@ -28,8 +27,6 @@ import org.lwjgl.util.vector.Vector2f;
 import blender.model.Texture;
 
 public class ShipStat extends HudComponent {
-	private int currentHP;
-	private int currentFuel;
 	private boolean textured = false;
 	private float x;
 	private float y;
@@ -39,8 +36,6 @@ public class ShipStat extends HudComponent {
 	FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 8);
 	
 	public ShipStat(Player player){
-		this.currentHP = player.getFuel();
-		this.currentFuel = player.getFuel();
 		this.player = player;
 		
 		position = new Vector2f(0,487);
@@ -129,7 +124,6 @@ public class ShipStat extends HudComponent {
 
 	@Override
 	public void update() {
-		currentFuel = player.getFuel();
 		float[] vertex = {
 			width*x,height*y+5,width*x+hull*(player.getFuel()/100F),height*y+5,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
 			width*x,height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+17,width*x,height*y+17

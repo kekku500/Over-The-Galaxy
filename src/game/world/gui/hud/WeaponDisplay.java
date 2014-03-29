@@ -38,6 +38,7 @@ public class WeaponDisplay extends HudComponent{
 	FloatBuffer Texture = BufferUtils.createFloatBuffer(2 * 4);
 
 	public WeaponDisplay(Player player){
+		this.player = player;
 		this.weapon = player.getWeapon();		
 		position = new Vector2f(0,0);
 		width = 205;
@@ -155,7 +156,7 @@ public class WeaponDisplay extends HudComponent{
 		};
 		Vertices.put(vertex);
 		Vertices.rewind();
-		weapon = player.getWeapon();
+		this.weapon = player.getWeapon();
 		if(id != weapon.getID()){
 			float[] texture = {
 				RenderThread.spritesheet.getBottomLeftCoordNormal(weapon.getTexture().x)[0],
