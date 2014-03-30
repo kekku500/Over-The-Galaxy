@@ -21,10 +21,9 @@ import org.lwjgl.util.vector.Vector2f;
 import blender.model.Texture;
 
 public class DialogueBox extends HudComponent{
-	private String texture1 = "res/models/hud/Dialogue box.png";
 	public DialogueBox(){
-		position = new Vector2f(200,200);
-		width = 250;
+		position = new Vector2f(500,413);
+		width = 300;
 		height = 187;
 		
 		
@@ -34,15 +33,26 @@ public class DialogueBox extends HudComponent{
 		vertices.rewind();
 		
 		isTextured = true;
-		
+	}
+
+	private void setTexture(){
 		texVertices = BufferUtils.createFloatBuffer(2 * 4);
-		texVertices.put(new float[]{0,1, 1,1, 1,0, 0,0});
+		texVertices.put(new float[]{
+				RenderThread.spritesheet.getBottomLeftCoordNormal(81)[0],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(81)[1],
+				RenderThread.spritesheet.getBottomRightCoordNormal(85)[0],
+				RenderThread.spritesheet.getBottomRightCoordNormal(85)[1],
+				RenderThread.spritesheet.getUpRightCoordNormal(65)[0],
+				RenderThread.spritesheet.getUpRightCoordNormal(65)[1],
+				RenderThread.spritesheet.getUpLeftCoordNormal(61)[0],
+				RenderThread.spritesheet.getUpLeftCoordNormal(61)[1]
+				});
 		texVertices.rewind();
 	}
-	//Kirjutada meetod mis vtab vastu teate, töötleb seda ja siis paneb esitlus listi.
 	@Override
 	public void renderInitStart() {
-		Texture tex = Texture.loadTexture(texture1);
+		setTexture();
+		Texture tex =  RenderThread.spritesheet.getTex();
 		texture = tex.id;
 		vboTexVertexID = glGenBuffers();
 			
