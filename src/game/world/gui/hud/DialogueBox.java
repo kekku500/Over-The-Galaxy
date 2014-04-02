@@ -13,24 +13,35 @@ import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
+
+import java.util.ArrayList;
+
+import game.Game;
 import game.threading.RenderThread;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
+import org.newdawn.slick.Color;
 
+import utils.Stringcutter;
 import blender.model.Texture;
 
 public class DialogueBox extends HudComponent{
+	private ArrayList<String> tekst = new ArrayList<String>();
+	private int algus = 0;
+	private int lopp = 7;
+	private int tekst_suurus;
 	public DialogueBox(){
-		position = new Vector2f(500,413);
-		width = 300;
-		height = 187;
-		
+		width = 250;
+		height = 138;
+		position = new Vector2f(Game.width-width,Game.height-height);
 		
 		//Create Vertex Buffer
 		vertices = BufferUtils.createFloatBuffer(2 * 4); //(x,y)*(4 vertices on a rectangle)
 		vertices.put(new float[]{0,height, width,height, width,0, 0,0});
 		vertices.rewind();
+		
+		addText("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 		
 		isTextured = true;
 	}
@@ -48,6 +59,14 @@ public class DialogueBox extends HudComponent{
 				RenderThread.spritesheet.getUpLeftCoordNormal(61)[1]
 				});
 		texVertices.rewind();
+	}
+	
+	public void addText(String tekst){
+		String[] lõigutud = Stringcutter.cut(tekst, 40);
+		for(String s : lõigutud){
+		this.tekst.add(s);
+		}
+		tekst_suurus = this.tekst.size();
 	}
 	@Override
 	public void renderInitStart() {
@@ -67,13 +86,20 @@ public class DialogueBox extends HudComponent{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDrawArrays(GL_QUADS, 0, 4);
+		for(int i = algus; i < lopp; i++){
+			RenderThread.graphics2D.drawString(10, 10+(i*15), (i < tekst.size())?tekst.get(i):" ");
+		}
 		glDisable(GL_BLEND);
 		
 	}
 
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
+		if(tekst.size() != tekst_suurus){
+			algus +=1;
+			lopp += 1;
+			tekst_suurus = tekst.size();
+		}
 		
 	}
 }

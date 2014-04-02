@@ -17,6 +17,7 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 
 import java.nio.FloatBuffer;
 
+import game.Game;
 import game.threading.RenderThread;
 import game.world.entities.Player;
 
@@ -40,13 +41,13 @@ public class WeaponDisplay extends HudComponent{
 	public WeaponDisplay(Player player){
 		this.player = player;
 		this.weapon = player.getWeapon();		
-		position = new Vector2f(0,0);
 		width = 205;
 		height = 113;
 		x = 0.15F;
 		y = 0.475F;
 		z = 0.769F;
 		durability = 86;
+		position = new Vector2f(0,0);
 		
 		//Create Vertex Buffer
 		vertices = BufferUtils.createFloatBuffer(2 * 32); //(x,y)*(4 vertices on a rectangle)

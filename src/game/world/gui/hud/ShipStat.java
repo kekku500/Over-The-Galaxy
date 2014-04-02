@@ -18,6 +18,7 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 
 import java.nio.FloatBuffer;
 
+import game.Game;
 import game.threading.RenderThread;
 import game.world.entities.Player;
 
@@ -38,20 +39,20 @@ public class ShipStat extends HudComponent {
 	public ShipStat(Player player){
 		this.player = player;
 		
-		position = new Vector2f(0,487);
-		width = 205;
-		height = 113;
+		width = 250;
+		height = 138;
 		x = 0.304F;
 		y = 0.195F;
-		hull = 121;
-		fuel = 121;
+		hull = 148;
+		fuel = 148;
+		position = new Vector2f(0,Game.height-height);
 		
 		
 		vertices = BufferUtils.createFloatBuffer(2 * 12); //(x,y)*(4 vertices on a rectangle)
 		float[] vertex = {
 			0,height, width,height, width,0, 0,0,
-			width*x,height*y+5,width*x+hull,height*y+5,width*x+hull,height*y,width*x,height*y,
-			width*x,height*y+22,width*x+fuel,height*y+22,width*x+fuel,height*y+17,width*x,height*y+17
+			width*x,height*y+6,width*x+hull,height*y+6,width*x+hull,height*y,width*x,height*y,
+			width*x,height*y+27,width*x+fuel,height*y+27,width*x+fuel,height*y+21,width*x,height*y+21
 			
 		};
 		vertices.put(vertex);
@@ -125,8 +126,8 @@ public class ShipStat extends HudComponent {
 	@Override
 	public void update() {
 		float[] vertex = {
-			width*x,height*y+5,width*x+hull*(player.getFuel()/100F),height*y+5,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
-			width*x,height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+22,width*x+fuel*(player.getFuel()/100F),height*y+17,width*x,height*y+17
+			width*x,height*y+6,width*x+hull*(player.getFuel()/100F),height*y+6,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
+			width*x,height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+21,width*x,height*y+21
 			
 		};
 		Vertices.put(vertex);
