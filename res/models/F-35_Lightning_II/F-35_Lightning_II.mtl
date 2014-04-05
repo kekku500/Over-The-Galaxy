@@ -5,8 +5,10 @@
 # http://www.righthemisphere.com/
 # 
 
+ta F-35_Lightning_II_Texture_Atlas.ta #TextureAtlas
+
 newmtl plane
-Ka 0.817647 0.217647 0.117647
+Ka 0.117647 0.117647 0.117647
 Kd .3f .3f .3f
 Ks 0.752941 0.752941 0.752941
 illum 2

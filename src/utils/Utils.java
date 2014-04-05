@@ -45,6 +45,10 @@ public class Utils {
 		return new Vector3f[]{min, max};	
 	}
 	
+	public static String removeFileExt(String extensionFile){
+		return extensionFile.substring(0, extensionFile.indexOf("."));
+	}
+	
 	
 	public static float rads(float degrees){
 		return (float)Math.toRadians(degrees);

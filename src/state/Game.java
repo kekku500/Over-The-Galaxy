@@ -11,7 +11,7 @@ public class Game extends ThreadManager{
 	
 	public static boolean debug = true;
 	
-	public static final String VERSION = "1.4";
+	public static final String VERSION = "1.5";
 	
 	public static int fps = 60;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60

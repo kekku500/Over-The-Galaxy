@@ -1,0 +1,4 @@
+Eject_Seat = 1024 0 256 64
+F-35_Lightning_II_P01 = 0 0 1024 1024
+Glass_Cockpit = 0 1024 1024 512
+Pilot_usa = 1024 64 128 128

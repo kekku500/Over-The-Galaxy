@@ -15,10 +15,13 @@ public class MTLLoader {
 		String path = f.getAbsolutePath().replace(f.getName(), "");
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 		String line;
-		boolean foundTexture = false;
+		//boolean foundTexture = false;
 		Material ma = new Material();
 		while((line = reader.readLine()) != null){
-			if(line.startsWith("newmtl ")){
+			if(line.startsWith("ta ")){ //Texture Altas
+				m.useTextureAtlas = true;
+				m.atlasFile = path + line.split("\\s+")[1];
+			}else if(line.startsWith("newmtl ")){
 				if(ma.getName() != null){
 					m.materials.put(ma.getName(), ma);
 					ma = new Material();
@@ -46,7 +49,7 @@ public class MTLLoader {
 			}else if(line.startsWith("d ")){
 				ma.setAlpha(Float.valueOf(line.split(" ")[1]));
 			}else if (line.startsWith("map_Kd ")){
-				foundTexture = true;
+				//foundTexture = true;
 				String name = line.split("\\s+")[1];
 				ma.textureFile = path + name;
 			}else if(line.startsWith("map_bump ")){
@@ -54,8 +57,8 @@ public class MTLLoader {
 				ma.normalFile = path + name;
 			}
 		}
-		if(m.isTextured && !foundTexture)
-			m.isTextured = false;
+		//if(m.isTextured && !foundTexture)
+		//	m.isTextured = false;
 		m.materials.put(ma.getName(), ma);
 		reader.close();		
 	}

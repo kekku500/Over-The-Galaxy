@@ -17,6 +17,7 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.util.glu.GLU.gluLookAt;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
 import input.Input;
+import input.InputConfig;
 import input.InputListener;
 
 import java.nio.ByteBuffer;
@@ -44,7 +45,7 @@ import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 
-import controller.Camera;
+import controller.Controller;
 import resources.Resources;
 import resources.model.Material;
 import resources.model.Model;
@@ -70,7 +71,7 @@ import world.entity.lighting.SpotLighting;
 import world.entity.lighting.SunLight;
 
 public class Graphics3D implements Input{
-	
+
 	//Store materials, bind textures, normal mapping
     public Shader preprocess = new Shader();
     
@@ -124,6 +125,8 @@ public class Graphics3D implements Input{
     public FloatBuffer cameraProjectionMatrix = BufferUtils.createFloatBuffer(16);
     public FloatBuffer cameraViewMatrix = BufferUtils.createFloatBuffer(16);
     
+    private World world; //world currently being rendered
+    
 	public void init(){
 		//new InputListener(this);
 		InputListener.addGlobalInput(this);
@@ -172,7 +175,7 @@ public class Graphics3D implements Input{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        skyBoxModel.material.textureHandle = skyBox.getID();
+        skyBoxModel.material.texture = skyBox;
     	skyBoxModel.prepareVBOVertices(new Vector3f[]{
     			new Vector3f( 1.0f, -1.0f, -1.0f), new Vector3f( 1.0f, -1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f,  1.0f), new Vector3f( 1.0f,  1.0f, -1.0f), new Vector3f( 1.0f, -1.0f, -1.0f),
     		    new Vector3f(-1.0f, -1.0f,  1.0f), new Vector3f(-1.0f, -1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f, -1.0f), new Vector3f(-1.0f,  1.0f,  1.0f), new Vector3f(-1.0f, -1.0f,  1.0f),
@@ -327,8 +330,11 @@ public class Graphics3D implements Input{
 	    glUniform1f(glGetUniformLocation(sunRaysLensFlareHalo.i(), "weight"), 8.65f);
 	    Shader.unbind();
 	    
-    	preprocess.attribLocations = new int[1];
+    	preprocess.attribLocations = new int[5];
         preprocess.attribLocations[0] = glGetAttribLocation(preprocess.i(), "vert_Tangent");
+        preprocess.attribLocations[1] = glGetAttribLocation(preprocess.i(), "Material_Ambient");
+        preprocess.attribLocations[2] = glGetAttribLocation(preprocess.i(), "Material_Specular");
+        preprocess.attribLocations[3] = glGetAttribLocation(preprocess.i(), "Material_Emission_Shininess");
         
     	preprocess.uniformLocations = new int[3];
         preprocess.uniformLocations[0] = glGetUniformLocation(preprocess.i(), "Texturing");
@@ -421,23 +427,19 @@ public class Graphics3D implements Input{
     }
 
     public void render(World world){
-    	//Get data from world
-    	Camera cam = world.getCamera();
-    	if(cam == null) //wait for camera to be ready
+    	this.world = world;
+    	if(world.getController() == null) //wait for controller to be ready
     		return;
-
-    	Set<VisualEntity> entities = world.getCamera().cameraFrustum.getInsideFrustumEntities();//world.cameraFrustum.getInsideFrustumEntities();
-    	//set camera view/perspective ready
-    	cameraStuff(cam);
+    	
+        world.getController().updateViewMatrix(cameraViewMatrix);
     	
     	//Random input
-    	moveLight(world.getLightingEntities());
+    	//moveLight(world.getLightingEntities());
     	if(Mouse.isButtonDown(1)){
     		Mouse.setGrabbed(true);
     	}else if(Mouse.isButtonDown(0)){
     		Mouse.setGrabbed(false);
     	}
-    	
     	// 1st pass - render scene to textures ------------------------------------------------------------------------------------
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadMatrix(cameraProjectionMatrix);
@@ -477,9 +479,9 @@ public class Graphics3D implements Input{
 	    
 	    //SKYBOX
 	    skyBoxShader.bind();
-	    glUniform3(skyBoxShader.uniformLocations[0], cam.getPosition().asFlippedFloatBuffer());
+	    glUniform3(skyBoxShader.uniformLocations[0], world.getController().getPosition().asFlippedFloatBuffer());
 	    glUniformMatrix4(skyBoxShader.uniformLocations[1], false, viewProjectionMatrix.asFlippedFloatBuffer());
-	    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxModel.material.textureHandle);
+	    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxModel.material.texture.getID());
 	    glBindVertexArray(skyVAO);
 	    glDrawArrays(GL_TRIANGLES, 0, 36);
 	    glBindVertexArray(0);
@@ -526,7 +528,7 @@ public class Graphics3D implements Input{
 	    	}
 	    	if(shadowMapper.isShadowEnabled()){
 	    		//Where shadow frustum looks at
-	    		shadowMapper.setSceneOrigin(world.getCamera().getPosition());
+	    		shadowMapper.setSceneOrigin(world.getController().getPosition());
     			
 	    		//Set shadow lookat
     			shadowMapper.update(new Matrix4f(cameraViewMatrix));
@@ -558,7 +560,7 @@ public class Graphics3D implements Input{
 	    // apply shadows and lightin, 2nd pass ---------------------------------------------------------------
 	    //oldDeferredLightingStuff(lightSources);
 	    
-	    deferredLightingStuff(world.getLightingEntities());
+	    deferredLightingStuff();
 
 	    
 		// applying light scattering to lighting stuff
@@ -577,48 +579,15 @@ public class Graphics3D implements Input{
 					sun = (SunLight)e;
 				}
 			}
-			sunRaysLensFlareHaloStuff(sun, cam);
+			sunRaysLensFlareHaloStuff(sun/*, cam*/);
 		}
+		
+
 	    
 		//Debbuging textures
 	    showTextures();
     }
 
-    public void cameraStuff(Camera cam){
-        //cameraProjectionMatrix.rewind();
-        cameraViewMatrix.rewind();
-        
-        //Projection
-        /*glLoadIdentity();
-        gluPerspective(Game.fov, (float) RenderThread.displayWidth / (float) RenderThread.displayHeight, Game.zNear, Game.zFar);
-        glGetFloat(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);*/
-        
-        //View
-        glLoadIdentity();
-        cam.lookAt();
-        glGetFloat(GL_MODELVIEW_MATRIX, cameraViewMatrix);
-	}
-	
-	private void moveLight(Set<Lighting> lightSources){
-		/*for(Lighting ls: lightSources){
-			int dx = 0, dy = 0, dz = 0;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_UP))
-	    		dx -= 1;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_DOWN))
-	    		dx += 1;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT))
-	    		dz -= 1;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_LEFT))
-	    		dz += 1;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD4))
-	    		dy += 1;
-	    	if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD1))
-	    		dy -= 1;
-	    	Vector3f pos = ls.getPosition();
-	    	ls.setPosition(pos.x+dx,pos.y+dy,pos.z+dz);
-		}*/
-
-	}
 	
 	private void showTextures(){
 		if(showTexture != 0){
@@ -632,7 +601,7 @@ public class Graphics3D implements Input{
 		}
 	}
 	
-    public boolean sunRaysLensFlareHaloStuff(SunLight sun, Camera cam){
+    public boolean sunRaysLensFlareHaloStuff(SunLight sun){
     	if(sun == null)
     		return false;
 	    boolean CalculateSunRaysLensFlareHalo = false;
@@ -643,7 +612,7 @@ public class Graphics3D implements Input{
 	    Matrix4f biasMatrix = Matrix4f.biasMatrix.copy();
 	   // Matrix4f VPB = biasMatrix.mulReverse(new Matrix4f(cameraProjectionMatrix)).mulReverse(new Matrix4f(cameraViewMatrix));
 	    Matrix4f VPB = new Matrix4f(cameraViewMatrix).mul(new Matrix4f(cameraProjectionMatrix)).mul(biasMatrix);
-	    
+	    Controller cam = world.getController();
 	    while(Test < Tests && !CalculateSunRaysLensFlareHalo){
 	    	Vector3f temp2 = cam.getRightVector().rotateGet(Angle, cam.getViewRay()).mul(sun.getRadius()* 1.3f);//Utils.rotate(cam.getRightVector(), Angle, cam.getViewRay()).mul(8.75f * 1.3f);
 	    	Vector4f temp = new Vector4f(sun.getPosition().copy().add(temp2), 1.0f);
@@ -759,7 +728,7 @@ public class Graphics3D implements Input{
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
-    public void deferredLightingStuff(Set<Lighting> lightSources){
+    public void deferredLightingStuff(/*List<Lighting> lightSources*/){
     	//calculate matrices required for lighting
     	Matrix4f modelMatrix = new Matrix4f();
     	modelMatrix.setIdentity();
@@ -808,7 +777,7 @@ public class Graphics3D implements Input{
 		int pointLights = 0;
 		int spotLights = 0;
 		
-		for(Lighting ls: lightSources){
+		for(Lighting ls: world.getLightingEntities()){
 			if(ls.isEnabled()){
 				lightCount++;
 				if(ls instanceof DirectionalLighting)
@@ -846,7 +815,7 @@ public class Graphics3D implements Input{
 		//Lights
 		Matrix4f viewMatrix = new Matrix4f(cameraViewMatrix);
 		Vector3f normal = new Vector3f(-viewMatrix.get(4), -viewMatrix.get(5), -viewMatrix.get(6));
-		for(Lighting ls: lightSources){
+		for(Lighting ls: world.getLightingEntities()){
 			if(ls.isEnabled()){
 	    		Vector4f pos =  new Vector4f(ls.getPosition(), 1.0f);
 	    		pos = viewMatrix.mul(pos);
@@ -1204,76 +1173,75 @@ public class Graphics3D implements Input{
     	return new Vector3f(getResult[0], getResult[1], getResult[2]);
     }
 
-    
-    
 	@Override
 	public void checkKeyboardInput(int k) {
+
 		switch(k){
-		case Keyboard.KEY_F1:
+		case InputConfig.enableTexturing:
 			texturing = !texturing; 
 			System.out.println("Changed texturing to " + texturing);
 			break;
-		case Keyboard.KEY_F2:
+		case InputConfig.enableNormalMapping:
 			normalMapping = !normalMapping;
 			System.out.println("Changed normalMapping to " + normalMapping);
 			break;
-		case Keyboard.KEY_F3:
+		case InputConfig.enableShadows:
 			shadows = !shadows;
 			System.out.println("Changed shadows to " + shadows);
 			break;
-		case Keyboard.KEY_F4:
+		case InputConfig.enableShadowFiltering:
 			filtering = !filtering;
 			System.out.println("Changed filtering to " + filtering);
 			break;
-		case Keyboard.KEY_F5:
+		case InputConfig.enableShadowOcclusion:
 			occlusion = !occlusion;
 			System.out.println("Changed occlusion to " + occlusion);
 			break;
-		case Keyboard.KEY_F6:
+		case InputConfig.enableLightScattering:
 			lightScattering = !lightScattering;
 			System.out.println("Changed lightScattering to " + lightScattering);
 			break;
-		case Keyboard.KEY_NUMPAD7:
+		case InputConfig.showColorTexture:
 			System.out.println("Showing colorBuffer");
 			showTexture = colorBuffer;
 			break;
-		case Keyboard.KEY_NUMPAD8:
+		case InputConfig.showNormalTexture:
 			System.out.println("Showing normalBuffer");
 			showTexture = normalBuffer;
 			break;
-		case Keyboard.KEY_NUMPAD9:
+		case InputConfig.showDepthTexture:
 			System.out.println("Showing depthBuffer");
 			showTexture = depthBuffer;
 			break;
-		case Keyboard.KEY_1:
+		case InputConfig.showMaterialAmbient:
 			System.out.println("Showing materialAmbient");
 			showTexture = materialAmbient;
 			break;
-		case Keyboard.KEY_2:
+		case InputConfig.showMaterialDiffuse:
 			System.out.println("Showing materialDiffuse");
 			showTexture = materialDiffuse;
 			break;
-		case Keyboard.KEY_3:
+		case InputConfig.showMaterialEmission:
 			System.out.println("Showing materialEmission");
 			showTexture = materialEmission;
 			break;
-		case Keyboard.KEY_4:
+		case InputConfig.showMaterialShininess:
 			System.out.println("Showing materialShininess");
 			showTexture = materialShininess;
 			break;
-		case Keyboard.KEY_5:
+		case InputConfig.showMaterialSpecular:
 			System.out.println("Showing materialSpecular");
 			showTexture = materialSpecular;
 			break;
-		case Keyboard.KEY_NUMPAD5:
+		case InputConfig.showGodRaysTexture:
 			System.out.println("Showing godRaysTexture");
 			showTexture = sunTextures.get(0);
 			break;
-		case Keyboard.KEY_NUMPAD2:
+		case InputConfig.showShadowOcclusionTexture:
 			System.out.println("Showing blurred SSAO");
 			showTexture = SSAOTexturesBlurred.get(1); //blurred ssao
 			break;
-		case Keyboard.KEY_NUMPAD0:
+		case InputConfig.resetTexture:
 			System.out.println("Showing normal.");
 			showTexture = 0;
 			break;

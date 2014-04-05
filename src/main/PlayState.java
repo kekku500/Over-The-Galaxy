@@ -22,12 +22,12 @@ import utils.math.Matrix3f;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
 import world.World;
-import world.entity.DynamicEntity;
-import world.entity.Player;
-import world.entity.StaticEntity;
+import world.entity.dumb.DynamicEntity;
+import world.entity.dumb.StaticEntity;
 import world.entity.lighting.DefaultPointLight;
 import world.entity.lighting.DefaultSpotLight;
 import world.entity.lighting.SunLight;
+import world.entity.smart.Player;
 import world.graphics.Graphics2D;
 import world.graphics.ShadowMapper;
 import world.sync.Request;
@@ -49,7 +49,8 @@ import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
 
-import controller.Camera;
+import controller.Controller;
+import controller.Controller.CamType;
 
 public class PlayState extends State{
 	
@@ -71,10 +72,12 @@ public class PlayState extends State{
 		Player player = new Player(15,30,35);
 		world.addEntity(player);
 		
-		Camera cam = new Camera(10,10,10);
-		//cam.setFollowing(player);
+		Controller cam = new Controller(10,10,10);
+		
+		cam.setFollowing(player);
+		cam.setType(CamType.LOCK);
+		
 		world.addEntity(cam);
-
 		
 		DynamicEntity testBox = new DynamicEntity();
 		testBox.setPosition(10, 15, 10);
@@ -156,17 +159,17 @@ public class PlayState extends State{
 		sun.setLightScattering(true);
 		world.addEntity(sun);
 		
-		/*DefaultPointLight pointLight = new DefaultPointLight();
-		pointLight.setDiffuse(new Vector4f(.1f, 0.6f, 0.1f, 1.0f));
-		pointLight.setPosition(100, 50, 100);
+		DefaultPointLight pointLight = new DefaultPointLight();
+		pointLight.setDiffuse(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+		pointLight.setPosition(50, 50, 50);
 		world.addEntity(pointLight);
 
-			StaticEntity testRock = new StaticEntity();
+			/*StaticEntity testRock = new StaticEntity();
 			testRock.setPosition(-100, 50, -100);
 			testRock.createBody(rockModel);
-			world.addEntity(testRock);
+			world.addEntity(testRock);*/
 		
-		DefaultPointLight pointLight2 = new DefaultPointLight();
+		/*DefaultPointLight pointLight2 = new DefaultPointLight();
 		pointLight2.setDiffuse(new Vector4f(.1f, 0.1f, 0.6f, 1.0f));
 		pointLight2.setPosition(-100, 50, -100);
 		world.addEntity(pointLight2);

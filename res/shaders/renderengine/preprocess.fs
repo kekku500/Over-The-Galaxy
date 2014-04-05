@@ -3,17 +3,12 @@
 uniform sampler2D Texture, NormalMap;
 uniform int Texturing, NormalMapping, GodRays;
 
-varying vec3 Tangent, Binormal, Normal;
-
+varying vec3 Tangent, Binormal, Normal, varyAmbient, varyDiffuse, varySpecular;
+varying vec4 varyEmissionAndShininess;
 
 void main()
 {
     gl_FragData[0] = gl_Color;
-	//gl_FragData[0] = gl_FrontMaterial.diffuse;
-    
-    //material stuff
-    
-
     
     //God rays stuff
 	if(GodRays == 1){
@@ -26,16 +21,24 @@ void main()
 		gl_FragData[6] = gl_Color;
 	}else{
 		gl_FragData[7] = vec4(0.0); //black means no god rays
+
+		//gl_FragData[2] = vec4(sendAmbient, 1.0);//gl_FrontMaterial.ambient;
+		//gl_FragData[3] = gl_FrontMaterial.diffuse;
+		//gl_FragData[4] = gl_FrontMaterial.specular;
+		//gl_FragData[5] = gl_FrontMaterial.emission;
+		//gl_FragData[6] = vec4(gl_FrontMaterial.shininess);
 		
-		gl_FragData[2] = gl_FrontMaterial.ambient;
-		gl_FragData[3] = gl_FrontMaterial.diffuse;
-		gl_FragData[4] = gl_FrontMaterial.specular;
-		gl_FragData[5] = gl_FrontMaterial.emission;
-		gl_FragData[6] = vec4(gl_FrontMaterial.shininess);
+		gl_FragData[2] = vec4(varyAmbient, 1.0);
+		gl_FragData[3] = gl_Color;
+		gl_FragData[4] = vec4(varySpecular, 1.0);
+		gl_FragData[5] = vec4(varyEmissionAndShininess.rgb, 1.0);
+		gl_FragData[6] = vec4(varyEmissionAndShininess.a);
 	}
     
     if(Texturing == 1){
-    	gl_FragData[0] *= texture2D(Texture, gl_TexCoord[0].st);
+		///gl_FragData[0] *= texture2D(Texture, gl_TexCoord[0].st);
+		//Replaces diffuse color with texture
+    	gl_FragData[0] = texture2D(Texture, gl_TexCoord[0].st);
     }
     
     

@@ -6,7 +6,7 @@ import resources.model.custom.Sphere;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
 import world.entity.Entity;
-import controller.Camera;
+import controller.Controller;
 
 public class SunLight extends AbstractVisualLight implements DirectionalLighting{
 	
@@ -34,7 +34,7 @@ public class SunLight extends AbstractVisualLight implements DirectionalLighting
 		//setAmbient(new Vector4f(.00f,.00f,.00f,1.0f));
 		//setDiffuse(new Vector4f(0.50f,0.60f,0.00f,1.0f));
 		lightExtension.update(dt); //update shadow mapper position
-		Camera cam = getWorld().getCamera();
+		Controller cam = getWorld().getController();
 		if(cam != null){
 			//Set sun position relative to camera position
 			positionRotation.origin.set(localPosition.copy().add(cam.getPosition()));

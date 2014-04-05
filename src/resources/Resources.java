@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
+import static org.lwjgl.opengl.GL11.*;
 import resources.model.Model;
 import resources.texture.Texture;
 import shader.Shader;
@@ -48,6 +50,8 @@ public class Resources {
 	public static void loadResources(String resourcespath) {
 		readFiles(RESOURCESPATH);
 		
+		Game.println("Max texture size: " + glGetInteger(GL_MAX_TEXTURE_SIZE));
+		
 	    createTextures();
 	    initializeTextures();
 
@@ -64,6 +68,7 @@ public class Resources {
 	private static List<String> modelFiles = new ArrayList<String>();
 	private static List<String> textureFiles = new ArrayList<String>();
 	private static List<String> ctFiles = new ArrayList<String>();
+	private static List<String> taFiles = new ArrayList<String>();
 	private static void readFiles(String mainFolder){
 		File folder = new File(mainFolder);
 		for(File fileOrInnerFolder: folder.listFiles()){
@@ -202,9 +207,10 @@ public class Resources {
 	 */
 	public static Texture getModelTexture(String texturePath) throws Exception{
 		Texture tex = null;
-		for(Texture t: textures.values()){
-			if((texturePath.endsWith(t.getName()))){
-				tex = t;
+		for(Entry<String, Texture> t: textures.entrySet()){
+			
+			if((texturePath.endsWith(t.getKey()))){
+				tex = t.getValue();
 				break;
 			}
 		}

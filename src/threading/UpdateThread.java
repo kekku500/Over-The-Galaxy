@@ -1,6 +1,8 @@
 package threading;
 
 
+import input.InputConfig;
+
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
@@ -41,12 +43,15 @@ public class UpdateThread implements Runnable{
 		
 		Game.println("Starting updateThread loop");
 		
-		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
+		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(InputConfig.instantQuit)){
 			//Check if state has changed
 			if(threadManager.getActiveStateId() != activeGameState.getId()){
 				activeGameState = threadManager.getActiveState();
 			}
 			float dt = getDelta();
+			
+			//Update inputs
+			InputConfig.refresh();
 
 			RenderState oldestState = activeGameState.getOldestState();
 			RenderState latestState = activeGameState.getLatestState();

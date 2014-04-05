@@ -26,20 +26,17 @@ public class OBJLoader {
 		Material material = null;
 		String line = null;
 		SubModel subM = new SubModel(m);
-		boolean finalStep = false;
-		boolean skipVertices = false;
-		boolean useMtl = false;
-		if(!m.vertices.isEmpty())
-			skipVertices = true;
+		boolean nextObjComing = false;
+		boolean useMtlForCurrentObj = false;
 		while((line = reader.readLine()) != null){
 			if(line.startsWith("mtllib ")){
 				MTLLoader.loadMaterial(m, path + line.split(" ")[1]);
-			}else if(!skipVertices && line.startsWith("v ")){
-				if(finalStep){ //new object
+			}else if(line.startsWith("v ")){
+				if(nextObjComing){ //new object
 					m.submodels.add(subM);
 					subM = new SubModel(m);
-					useMtl = false;
-					finalStep = false;
+					useMtlForCurrentObj = false;
+					nextObjComing = false;
 				}
                 String[] values = line.split("\\s+");
                 float x = Float.parseFloat(values[1]);
@@ -57,11 +54,15 @@ public class OBJLoader {
 				float x = Float.parseFloat(values[1]);
 				float y = Float.parseFloat(values[2]);
 				Vector2f texCoord = new Vector2f(x, y);
+				//m.isTextured = true;
 				subM.isTextured = true;
-				m.texCoords.add(texCoord);
+				//m.texCoords.add(texCoord);
+				subM.texCoords.add(texCoord);
 			}else if(line.startsWith("usemtl ")){
-				useMtl = true;
+				useMtlForCurrentObj = true;
                 material = m.materials.get(line.replaceAll("usemtl ", "").trim());
+                if(material.textureFile == null)
+                	subM.isTextured = false;
                 subM.setMaterial(material);
 			}else if(line.startsWith("f ")){
 				String[] indicesData = line.replace("f ", "").trim().split("\\s+");
@@ -82,7 +83,7 @@ public class OBJLoader {
 														Integer.parseInt(indiceData2[2]) -1 ,
 														Integer.parseInt(indiceData3[2]) - 1);
 	                if (subM.isTextured){
-	                	if(!useMtl){ //model is textured, but no usemtl was specified, use previous material
+	                	if(!useMtlForCurrentObj){ //model is textured, but no usemtl was specified, use previous material
 	                		subM.setMaterial(material);
 	                	}
 						Vector3f texIndices = new Vector3f(Integer.parseInt(indiceData1[1]) - 1,
@@ -94,7 +95,7 @@ public class OBJLoader {
 	                }
 	                
 				}
-                finalStep = true;
+                nextObjComing = true;
 			}
 		}
 		m.submodels.add(subM); 

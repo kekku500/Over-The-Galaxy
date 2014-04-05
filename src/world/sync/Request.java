@@ -6,7 +6,7 @@ import java.util.List;
 import state.RenderState;
 import world.World;
 import world.entity.gui.Component;
-import controller.Camera;
+import controller.Controller;
 
 /**
  * A class for updating all worlds.

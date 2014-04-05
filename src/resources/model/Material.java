@@ -81,9 +81,11 @@ public class Material {
     // hold name and texture values for this material
     public String mtlname = "noname";  // name of this material in the .mtl and .obj files
     public String textureFile = null;  // texture filename (null if no texture)
-    public int textureHandle;          // opengl handle to the texture (0 if no texture)
+    //public int textureHandle;          // opengl handle to the texture (0 if no texture)
     public String normalFile = null;
-    public int normalHandle;  
+    //public int normalHandle;  
+    public Texture texture;
+    public Texture normalMap;
 
     public Material() {
         setDefaults();
@@ -129,14 +131,15 @@ public class Material {
     }
     
     public void loadTexture(){
-    	if(textureHandle == 0){
+    	if(texture == null){
         	Texture tex = null;
 			try {
 				tex = Resources.getModelTexture(textureFile);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}//Texture.loadTexture2D(textureFile);
-        	textureHandle = tex.getID();
+			texture = tex;
+        	//textureHandle = tex.getID();
         	if(normalFile != null){ //got normal
         		Texture tex2 = null;
 				try {
@@ -144,7 +147,8 @@ public class Material {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}//Texture.loadTexture2D(normalFile);
-        		normalHandle = tex2.getID();
+				normalMap = tex2;
+        		//normalHandle = tex2.getID();
         	}
     	}
     }
@@ -189,12 +193,12 @@ public class Material {
      *  These properties will stay in effect until you change them or disable lighting.
      */
     public void apply() {
-    	// GL_FRONT: affect only front facing triangles
-        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, diffuse);
-        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, ambient);
-        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, specular);
-        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_EMISSION, emission);
-        GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SHININESS, shininess);
+    	//GL_FRONT: affect only front facing triangles
+        //GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, diffuse);
+        //GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, ambient);
+        //GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, specular);
+    	//GL11.glMaterial(GL11.GL_FRONT, GL11.GL_EMISSION, emission);
+        //GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SHININESS, shininess);
     }
 
     /**
@@ -287,17 +291,17 @@ public class Material {
      * Assign a texture handle to this material.
      * @param txtrHandle
      */
-    public void setTexture(int txtrHandle) {
+    /*public void setTexture(int txtrHandle) {
         textureHandle = txtrHandle;
-    }
+    }*/
 
     public String getTextureFile() {
         return textureFile;
     }
 
-    public int getTexture() {
+    /*public int getTexture() {
         return textureHandle;
-    }
+    }*/
 
     /**
      * set the material name.  This is the name assigned to this texture in the .mtl file.

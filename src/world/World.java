@@ -36,15 +36,15 @@ import world.culling.BoundingCube;
 import world.culling.Octree;
 import world.culling.ViewFrustum;
 import world.culling.ViewFrustum.Frustum;
-import world.entity.DynamicEntity;
 import world.entity.Entity;
 import world.entity.PhysicalEntity;
-import world.entity.Player;
 import world.entity.VisualEntity;
 import world.entity.WorldEntity;
+import world.entity.dumb.DynamicEntity;
 import world.entity.gui.Component;
 import world.entity.lighting.Lighting;
 import world.entity.lighting.SunLight;
+import world.entity.smart.Player;
 import world.graphics.Graphics2D;
 import world.graphics.Graphics3D;
 import world.graphics.ShadowMapper;
@@ -64,7 +64,7 @@ import com.bulletphysics.dynamics.DynamicsWorld;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 
-import controller.Camera;
+import controller.Controller;
 
 public class World implements Linkable<World>{
 	
@@ -74,13 +74,13 @@ public class World implements Linkable<World>{
 	
 	DynamicsWorld dynamicsWorld; //Physics World
 	
-	//General entities \wo camera
-	private Set<Entity> updatableEntities = new HashSet<Entity>();
+	//General entities 
+	private Set<Entity> entities = new HashSet<Entity>();
 	
 	//3D Entities
 	private Set<WorldEntity> worldEntities = new HashSet<WorldEntity>();
 	private Set<VisualEntity> visualEntites = new HashSet<VisualEntity>();
-	private Set<Lighting> lightingEntities = new HashSet<Lighting>();
+	private List<Lighting> lightingEntities = new ArrayList<Lighting>();
 	
 	//2D Entities (GUI)
 	private Set<Component> components = new HashSet<Component>();
@@ -88,8 +88,9 @@ public class World implements Linkable<World>{
 	//Input
 	private InputListener inputListener = new InputListener();
 	
-	//Reference to camera entity
-	private Camera camera;
+	//Reference to specific entities
+	private Controller camera;
+	private Player player;
 	
 	private int entityIdCounter = 0;
 	
@@ -110,7 +111,7 @@ public class World implements Linkable<World>{
 		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
 		ConstraintSolver solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
+		dynamicsWorld.setGravity(new Vector3f(0, 0, 0));
 		
 		//Octree
 		staticOctree = new Octree<VisualEntity>(worldSize);
@@ -157,17 +158,20 @@ public class World implements Linkable<World>{
 			
 			Entity copied = e.getLinked(); //get copy of the object
 			
-			if(!(e instanceof Camera)) //Camera needs to be updated separately
-				updatableEntities.add(copied); //all objects
+			if(!(e instanceof Controller)) //Camera needs to be updated separately
+				entities.add(copied); //all objects
 			
-			if(e instanceof Camera){
-				camera = (Camera)copied;
+			if(e instanceof Controller){
+				camera = (Controller)copied;
 				if(camera.isFollowing()){ //Get correct entity in this world for camera to follow
-					WorldEntity following = camera.getFollowingWrapper();
+					WorldEntity following = camera.getFollowing();
 					WorldEntity correctEntity = (WorldEntity)getEntityByID(following.getID(), getUpdatableEntities());
 					camera.setFollowing(correctEntity);
 				}
 			}
+			
+			if(e instanceof Player)
+				player = (Player)copied;
 			
 			if(e instanceof Input){ //input objects
 				inputListener.addInput((Input)copied);
@@ -246,9 +250,9 @@ public class World implements Linkable<World>{
 		}
 	    g.drawTexture(tex, 10, 200, 1/4f, 1/4f);
 	    
-	    /*g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
+	    g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
-	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);*/  
+	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
 	}
 	
 	public void addEntity(Entity e){
@@ -303,7 +307,7 @@ public class World implements Linkable<World>{
 	}
 
 	public Set<Entity> getUpdatableEntities(){
-		return updatableEntities;
+		return entities;
 	}
 	
 	public Set<VisualEntity> getVisualEntities(){
@@ -314,7 +318,7 @@ public class World implements Linkable<World>{
 		return worldEntities;
 	}
 	
-	public Set<Lighting> getLightingEntities(){
+	public List<Lighting> getLightingEntities(){
 		return lightingEntities;
 	}
 	
@@ -328,7 +332,7 @@ public class World implements Linkable<World>{
 		}
 	}*/
 	
-	public Camera getCamera(){
+	public Controller getController(){
 		return camera;
 	}
 		
@@ -345,4 +349,7 @@ public class World implements Linkable<World>{
 		camera.cameraFrustum.setProjection(Game.fov, width, height, Game.zNear, Game.zFar);
 	}
 
+	public Player getPlayer(){
+		return player;
+	}
 }

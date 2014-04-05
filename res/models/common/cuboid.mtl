@@ -3,9 +3,9 @@
 
 newmtl Material
 Ns 128.078431  //Shininess
-Ka 0.300000 0.085000 0.300000 //Ambient reflectivity
-Kd 0.840000 0.240000 0.840000 //Diffuse reflectivity
-Ks 0.500000 0.500000 0.500000 //Specular reflectivity
+Ka 0.7400000 0.740000 0.840000 //Ambient reflectivity
+Kd 0.240000 0.240000 0.440000 //Diffuse reflectivity
+Ks 0.400000 0.400000 0.600000 //Specular reflectivity
 Ni 1.000000 //Refraction
 d 0.100000 //Alpha
 illum 2

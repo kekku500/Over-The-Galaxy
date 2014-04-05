@@ -25,7 +25,9 @@ import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
 import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.util.ObjectArrayList;
 
+import resources.Resources;
 import resources.model.custom.Sphere;
+import resources.texture.Texture;
 import shader.Shader;
 import utils.Utils;
 import utils.math.Matrix3f;
@@ -41,14 +43,17 @@ public class Model{
 	
 	public List<Vector3f> vertices = new ArrayList<Vector3f>();
 	public List<Vector3f> normals = new ArrayList<Vector3f>();
-	public List<Vector2f> texCoords = new ArrayList<Vector2f>();
+	//public List<Vector2f> texCoords = new ArrayList<Vector2f>();
     public HashMap<String, Material> materials = new HashMap<String, Material>();
     
     public String modelPath; //model .obj directory
 	
 	public boolean VBOCreated = false;
-	public boolean isTextured = false; //All submodels textured?
+	//public boolean isTextured = false; //All submodels textured?
     public boolean isGodRays = false; //create light scattering
+    
+    public boolean useTextureAtlas = false;
+    public String atlasFile;
     
 	
     public Model(){}
@@ -95,14 +100,81 @@ public class Model{
 	}
 
 	public void prepareVBO(){
-		boolean allTex = true;
+		//System.out.println("Model " + modelPath);
+		SubModel materialSubModel = null;
+		SubModel combinedAltasTexturedSubModel = null;
+		//Combine all submodels that dont have textures (probably have different materials)
+		List<SubModel> noTexSubModels = new ArrayList<SubModel>();
+		for(SubModel m: submodels){
+			if(!m.isTextured){
+				noTexSubModels.add(m);
+			}
+		}
+		//System.out.println("material combined " + noTexSubModels.size());
+		if(!noTexSubModels.isEmpty()){
+			materialSubModel = new SubModel(this);
+			materialSubModel.prepareCombinedVBOSubModels(noTexSubModels, false);
+			submodels.removeAll(noTexSubModels);
+			//submodels.add(materialSubModel);
+		}
+		
+		if(useTextureAtlas){
+			String[] atlasData = Utils.readFileAsString(atlasFile).split("\n");
+			String atlasTextureFileName = atlasFile.substring(0, atlasFile.lastIndexOf("\\")+1)
+											+ atlasData[0];
+			
+			List<String[]> textureAtlasInfo = new ArrayList<String[]>();
+			for(int i = 1;i<atlasData.length;i++){
+				textureAtlasInfo.add(atlasData[i].split("\\s+"));
+			}
+			
+			//Check which submodels are connected to texture atlas
+			boolean altasAlsoHasNormalMapTexture = false;
+			String altasNormalMapFile = null;
+			List<SubModel> altasTexturedSubModels = new ArrayList<SubModel>();
+			for(SubModel m: submodels){
+				if(m.isTextured){
+					for(String[] infos: textureAtlasInfo){ //texture in atlas?
+						if(Utils.removeFileExt(m.material.textureFile).contains(infos[0])){ //does altas contain submodel texture?
+							if(m.material.normalFile != null){
+								altasAlsoHasNormalMapTexture = true;
+								altasNormalMapFile = m.material.normalFile;
+							}
+							m.setAltasTextureData(infos);
+							altasTexturedSubModels.add(m);
+							break;
+						}
+					}
+				}
+			}
+			
+			combinedAltasTexturedSubModel = new SubModel(this);
+			combinedAltasTexturedSubModel.isTextured = true;
+			combinedAltasTexturedSubModel.material.textureFile = atlasTextureFileName;
+			combinedAltasTexturedSubModel.isNormalMapped = altasAlsoHasNormalMapTexture;
+			combinedAltasTexturedSubModel.material.normalFile = altasNormalMapFile;
+			
+			//One submodel done!
+			combinedAltasTexturedSubModel.prepareCombinedVBOSubModels(altasTexturedSubModels, true);
+			submodels.removeAll(altasTexturedSubModels);
+			//System.out.println("altas texture count " + altasTexturedSubModels.size());
+			
+
+			//submodels.add(combinedAltasTexturedSubModel);
+		}
+		
+		//Prepare all models that have textures on different files
+		//System.out.println("size of one textured " + submodels.size());
 		for(SubModel m: submodels){
 			m.prepareVBO();
-			if(!m.isTextured)
-				allTex = false;
 		}
-		if(allTex)
-			isTextured = true;
+		
+		//Add rest aswell now
+		if(materialSubModel != null)
+			submodels.add(materialSubModel);
+		if(combinedAltasTexturedSubModel != null)
+			submodels.add(combinedAltasTexturedSubModel);
+
 		VBOCreated = true; //vbo created
 	}
 	

@@ -35,6 +35,11 @@ public class ModelUtils {
 	}
 	
 	public static IndexedMesh getStaticMesh(Model m, Matrix4f scaleRotationMatrix){
+		boolean check = false;
+		if(m.modelPath.contains("Castle")) {
+			System.out.println("CASTLE MODE");
+			check = true;
+		}
 		IndexedMesh mesh = new IndexedMesh();
 		
 		int triangleIndexBaseSize = 0;
@@ -42,7 +47,7 @@ public class ModelUtils {
 		int numTrianglesSize = 0;
 		for(SubModel subM: m.submodels){
 			triangleIndexBaseSize += subM.faces.size() * 3 * 4;
-			vertexBaseSize += subM.faces.size() * 3 * 3;
+			vertexBaseSize += subM.faces.size() * 3 * 3 * 2; //meh taht 2
 			numTrianglesSize += subM.faces.size();
 		}
 		
@@ -55,6 +60,7 @@ public class ModelUtils {
 		//Transform and rotate points by offset matrix
 		FloatBuffer vertices = BufferUtils.createFloatBuffer(m.vertices.size()*3);
 		
+		
 		for(Vector3f a: (m.vertices)){
 			Vector3f f = a.copy();
 			if(scaleRotationMatrix != null)
@@ -65,6 +71,7 @@ public class ModelUtils {
 		
 		mesh.numVertices = vertices.capacity();
 		mesh.vertexStride = 3 * 4;
+		
 		for(int i = 0; i < vertices.capacity(); i++){
 			float tempFloat = vertices.get();
 			mesh.vertexBase.putFloat(tempFloat);
@@ -97,6 +104,20 @@ public class ModelUtils {
 	
 	public static CollisionShape getStaticCollisionShape(Model m){
 		return getStaticCollisionShape(m, null);
+	}
+	
+	/**
+	 * Repositions texture coordinate to a texture atlas.
+	 * Formula is dt=(t*s+dx)/ds, where dt is new texture coord, t old texture coord, 
+	 * s old dimension, ds new dimension, dx texture starting pos at texture atlas
+	 * @param oldcoord Old Texture Coordinate (range 0 to 1)
+	 * @param oldsize Old Texture width/height
+	 * @param newpos Texture position at texture atlas
+	 * @param newsize Texture Atlas size
+	 * @return New Texture Coordinate (range 0 to 1)
+	 */
+	public static float texCoordSwitch(float oldcoord, int oldsize, int newpos, int newsize){
+		return (oldcoord*oldsize+newpos)/newsize;
 	}
 
 }
