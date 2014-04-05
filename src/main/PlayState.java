@@ -74,8 +74,8 @@ public class PlayState extends State{
 		
 		Controller cam = new Controller(10,10,10);
 		
-		cam.setFollowing(player);
-		cam.setType(CamType.LOCK);
+		//cam.setFollowing(player);
+		//cam.setType(CamType.LOCK);
 		
 		world.addEntity(cam);
 		
