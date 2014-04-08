@@ -104,7 +104,6 @@ public class Player extends AbstractMoveableEntity implements Input{
 		if(Keyboard.isKeyDown(Keyboard.KEY_I)){
 			rotateUp(200);
 		}
-		
 		Vector3f cam = getWorld().getController().getPosition();
 		Vector3f cameraPosition = new Vector3f(cam.x , cam.y, cam.z);
 		Vector3f viewRay = getWorld().getController().getViewRay();
@@ -137,6 +136,8 @@ public class Player extends AbstractMoveableEntity implements Input{
 
 	@Override
 	public void checkKeyboardInput(int k) {
+		if(k == Keyboard.KEY_E)
+			shootBoxes = true;
 	}
 
 	@Override

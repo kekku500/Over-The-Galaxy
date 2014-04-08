@@ -115,6 +115,8 @@ public class World implements Linkable<World>{
 		
 		//Octree
 		staticOctree = new Octree<VisualEntity>(worldSize);
+		
+		
 	}
 
 	@Override
