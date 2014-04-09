@@ -1,4 +1,5 @@
-HudExample class is example how to create hud components
+world.entity.gui.HudExample class is example how to create hud components
+It draws a purple rectangle.
 
 RenderThread line 58 - init hud components
 PlayState line 184 - hud adding to the world

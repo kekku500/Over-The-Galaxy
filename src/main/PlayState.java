@@ -182,6 +182,8 @@ public class PlayState extends State{
 		
 		//HUD EXAMPLE
 		world.addEntity(new HudExample(400, 400));
+		//meh another one?
+		world.addEntity(new HudExample(500, 200));
 	}
 
 	@Override
