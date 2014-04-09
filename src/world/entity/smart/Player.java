@@ -21,6 +21,8 @@ import utils.math.Vector3f;
 import world.World;
 import world.entity.Entity;
 import world.entity.dumb.DynamicEntity;
+import Weapon.Laser;
+import Weapon.Weapon;
 
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.shapes.BoxShape;
@@ -38,10 +40,12 @@ import com.bulletphysics.linearmath.QuaternionUtil;
 
 public class Player extends AbstractMoveableEntity implements Input{
 	
-	
+	private static Weapon weapon;
+	private static int fuel = 100;
 	public Player(){}
 
 	public Player(float x, float y, float z) {
+		weapon = new Laser();
 		setPosition(x, y, z);
 		Model model2 = null;
 		try {
@@ -144,6 +148,14 @@ public class Player extends AbstractMoveableEntity implements Input{
 	public void checkMouseInput(int m) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public Weapon getWeapon(){
+		return weapon;
+	}
+
+	public int getFuel(){
+		return fuel;
 	}
 
 }

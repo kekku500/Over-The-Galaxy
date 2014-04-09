@@ -10,6 +10,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
 import resources.Resources;
+import resources.texture.Spritesheet2;
 import state.Game;
 import state.RenderState;
 import state.State;
@@ -22,6 +23,7 @@ public class RenderThread implements Runnable{
 	public static int displayWidth, displayHeight;
 	
 	private ThreadManager threadManager;
+	public static Spritesheet2 spritesheet = new Spritesheet2("HUD2.png",75);
 	
 	public static Graphics3D graphics3D = new Graphics3D();
 	public static Graphics2D graphics2D = new Graphics2D();

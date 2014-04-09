@@ -24,6 +24,7 @@ import utils.math.Vector4f;
 import world.World;
 import world.entity.dumb.DynamicEntity;
 import world.entity.dumb.StaticEntity;
+import world.entity.gui.hud.HeadsUpDisplay;
 import world.entity.lighting.DefaultPointLight;
 import world.entity.lighting.DefaultSpotLight;
 import world.entity.lighting.SunLight;
@@ -71,7 +72,7 @@ public class PlayState extends State{
 
 		Player player = new Player(15,30,35);
 		world.addEntity(player);
-		
+		HeadsUpDisplay HUD = new HeadsUpDisplay(player, world);		
 		Controller cam = new Controller(10,10,10);
 		
 		//cam.setFollowing(player);
