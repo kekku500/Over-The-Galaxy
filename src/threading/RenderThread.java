@@ -142,6 +142,9 @@ public class RenderThread implements Runnable{
 		Resources.destoryResources();
 		graphics3D.dispose();
 		graphics2D.dispose();
+		
+		//hud dispose example
+		HudExample.dispose();
 		for(State state: threadManager.getStates()){
 			state.dispose();
 		}
