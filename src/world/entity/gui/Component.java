@@ -10,20 +10,11 @@ public interface Component extends Entity{
 	
 	public void dispose();
 	
-	public void renderInit();
+	public void setPosition(float x, float y);
 	
-	//SET
-	
-	public void setMaster(Component m);
-	
-	public void setAngle(float a);
-	
-	//GET
-	
-	public Component getMaster();
+	public void setPosition(Vector2f v);
 	
 	public Vector2f getPosition();
-	
-	public float getAngle();
+
 
 }

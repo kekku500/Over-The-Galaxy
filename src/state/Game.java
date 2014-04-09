@@ -41,8 +41,6 @@ public class Game extends ThreadManager{
 	}
 	
 	public void initStates(){
-		getState(PLAYGAME).init();
-		getState(INTRO).init();
 		enterState(PLAYGAME);
 	}
 	

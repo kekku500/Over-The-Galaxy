@@ -39,21 +39,9 @@ public abstract class State{
 			//mainWorld.linkWorlds(worlds[i]);
 	}
 	
-	public void callRenderInit(){
-		if(!renderInitialized){
-			renderInitialized = true;
-			World world = getLatestState().getWorld();
-			
-			renderInit();
-		}
-	}
-	
-	public abstract void postRenderInit();
-	
 	//ABSTRACT
-	public abstract void init();
 	
-	public abstract void renderInit();
+	public abstract void init();
 	
 	public void update1(float dt){
 		InputListener.reset();

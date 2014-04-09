@@ -15,13 +15,7 @@ public class IntroState extends State{
 	public IntroState(int stateId){
 		this.stateId = stateId;
 	}
-
-	@Override
-	public void init() {
-		Game.println("Init intro");
-		
-	}
-
+	
 	@Override
 	public void update(float dt) {
 		
@@ -43,13 +37,7 @@ public class IntroState extends State{
 	}
 
 	@Override
-	public void renderInit() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void postRenderInit() {
+	public void init() {
 		// TODO Auto-generated method stub
 		
 	}

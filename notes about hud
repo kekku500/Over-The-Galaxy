@@ -1,0 +1,4 @@
+HudExample class is example how to create hud components
+
+RenderThread line 58 - init hud components
+PlayState line 184 - hud adding to the world

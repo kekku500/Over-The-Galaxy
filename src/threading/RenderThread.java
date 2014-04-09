@@ -14,6 +14,7 @@ import state.Game;
 import state.RenderState;
 import state.State;
 import world.World;
+import world.entity.gui.HudExample;
 import world.graphics.Graphics2D;
 import world.graphics.Graphics3D;
 
@@ -52,6 +53,10 @@ public class RenderThread implements Runnable{
 	    
 	    graphics3D.init();
 	    graphics2D.init();
+	    
+	    //HUD INIT EXAMPLE
+	    HudExample.init();
+	    
 	}
 	
 
@@ -59,9 +64,14 @@ public class RenderThread implements Runnable{
 	public void run(){
 		init();
 		
+		//initialize all states
+		for(State state: threadManager.getStates()){
+			state.init();
+		}
+		
 		//Get Active State
 		State activeState = threadManager.getActiveState();
-		activeState.callRenderInit();
+		//activeState.callRenderInit();
 		
 		//Rendering loop
 		Game.println("Starting renderThread loop");
@@ -75,7 +85,7 @@ public class RenderThread implements Runnable{
 			//Check if state has been changed
 			if(threadManager.getActiveStateId() != activeState.getId()){
 				activeState = threadManager.getActiveState();
-				activeState.callRenderInit();
+				//activeState.callRenderInit();
 			}
 
 			//Check if screen has been resized

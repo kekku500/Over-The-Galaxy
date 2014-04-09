@@ -24,6 +24,7 @@ import utils.math.Vector4f;
 import world.World;
 import world.entity.dumb.DynamicEntity;
 import world.entity.dumb.StaticEntity;
+import world.entity.gui.HudExample;
 import world.entity.lighting.DefaultPointLight;
 import world.entity.lighting.DefaultSpotLight;
 import world.entity.lighting.SunLight;
@@ -65,10 +66,11 @@ public class PlayState extends State{
 	Model model;
 	
 	@Override
-	public void postRenderInit() {
+	public void init() {
 		Game.println("PlayState init");
 		World world = this.getUpToDateState().getWorld();
 
+		
 		Player player = new Player(15,30,35);
 		world.addEntity(player);
 		
@@ -177,13 +179,9 @@ public class PlayState extends State{
 		DefaultSpotLight spotLight = new DefaultSpotLight();
 		spotLight.setPosition(50, 50, 50);
 		world.addEntity(spotLight);*/
-	}
-
-	@Override
-	public void init() {
-		Game.println("PlayState init");
-		World world = this.getUpToDateState().getWorld();
-
+		
+		//HUD EXAMPLE
+		world.addEntity(new HudExample(400, 400));
 	}
 
 	@Override
@@ -192,13 +190,6 @@ public class PlayState extends State{
 		World world = getUpdatingState().getWorld();
 	    world.update(dt);
 	    //container.update();
-	}
-	
-
-	@Override
-	public void renderInit() {
-
-		
 	}
 	
 	@Override

@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.vecmath.Quat4f;
 
-import resources.texture.SpriteSheet;
 import state.Game;
 import utils.R;
 import utils.math.Matrix3f;
