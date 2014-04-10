@@ -241,7 +241,7 @@ public class World implements Linkable<World>{
 	    g.setFontSize(20);
 	    
 	    g.drawString(100, 50, "DEFAULT" + 50);
-		RenderThread.graphics2D.drawTexture(RenderThread.spritesheet.getTex().getID());
+
 	    Texture tex = null;
 		try {
 			tex = Resources.getTexture("smiley.png");

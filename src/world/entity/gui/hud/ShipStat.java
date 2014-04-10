@@ -34,6 +34,7 @@ import java.nio.FloatBuffer;
 import state.Game;
 import threading.RenderThread;
 import world.entity.Entity;
+import world.entity.gui.AbstractComponent;
 import world.entity.gui.HudExample;
 import world.entity.smart.Player;
 
@@ -42,7 +43,7 @@ import org.lwjgl.util.vector.Vector2f;
 
 import resources.texture.Texture;
 
-public class ShipStat extends HudComponent {
+public class ShipStat extends AbstractComponent {
 	private static float x;
 	private static float y;
 	private static int hull;
@@ -70,29 +71,34 @@ public class ShipStat extends HudComponent {
 	@Override
 	public void render() {
 		glPushMatrix(); //save current transformations
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		
-		Vector2f pos = getPosition();
-		
+		Vector2f pos = getPosition();		
 		glTranslatef(pos.x, pos.y, 0);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+        glEnableClientState(GL_VERTEX_ARRAY);
+//		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
 		glBufferSubData(GL_ARRAY_BUFFER,32,Vertices);//1 v‰‰rtus = 4 bitti.
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+//		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
 		glVertexPointer(2, GL_FLOAT, 0, 0);
 		
+		glEnable(GL_TEXTURE_2D);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
         glTexCoordPointer(2, GL_FLOAT, 0, 0);
+    //    glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, RenderThread.spritesheet.getTex().getID());
-	    
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glDrawArrays(GL_QUADS, 0, 24);
+		
 		glDisableClientState(GL_VERTEX_ARRAY);
+	//	glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisable(GL_TEXTURE_2D);
 		glDisable(GL_BLEND);
 		
 		glPopMatrix(); //reset transformations
@@ -114,7 +120,7 @@ public class ShipStat extends HudComponent {
 	    glDeleteBuffers(vboVertexID);
 	}
 
-	public void init() {
+	public static void init() {
 		FloatBuffer vb = BufferUtils.createFloatBuffer(2 * 12);
 		vb.put(new float[]{	
 				0,0,0,height, width,height, width,0,
@@ -124,32 +130,33 @@ public class ShipStat extends HudComponent {
 		
 		FloatBuffer texVertices = BufferUtils.createFloatBuffer(2 * 12);
 		float[] texturea = {
+		RenderThread.spritesheet.getUpLeftCoordNormal(7)[0],
+		RenderThread.spritesheet.getUpLeftCoordNormal(7)[1],
 		RenderThread.spritesheet.getBottomLeftCoordNormal(27)[0],
 		RenderThread.spritesheet.getBottomLeftCoordNormal(27)[1],
 		RenderThread.spritesheet.getBottomRightCoordNormal(30)[0],
 		RenderThread.spritesheet.getBottomRightCoordNormal(30)[1],
 		RenderThread.spritesheet.getUpRightCoordNormal(10)[0],
 		RenderThread.spritesheet.getUpRightCoordNormal(10)[1],
-		RenderThread.spritesheet.getUpLeftCoordNormal(7)[0],
-		RenderThread.spritesheet.getUpLeftCoordNormal(7)[1],	
-		
-		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
-		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
-		RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
-		RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
-		RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
-		RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
+	
 		RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
 		RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
-		
 		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
 		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
 		RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
 		RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
 		RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
 		RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
+		
 		RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
-		RenderThread.spritesheet.getUpLeftCoordNormal(51)[1]
+		RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
+		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
+		RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
+		RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
+		RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
+		RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
+		RenderThread.spritesheet.getUpRightCoordNormal(51)[1]
+
 		};
 		texVertices.put(texturea);
 		texVertices.rewind();

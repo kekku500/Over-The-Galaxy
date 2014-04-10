@@ -16,6 +16,7 @@ import state.RenderState;
 import state.State;
 import world.World;
 import world.entity.gui.HudExample;
+import world.entity.gui.hud.ShipStat;
 import world.graphics.Graphics2D;
 import world.graphics.Graphics3D;
 
@@ -59,6 +60,7 @@ public class RenderThread implements Runnable{
 	    
 	    //HUD INIT EXAMPLE
 	    HudExample.init();
+	    ShipStat.init();
 	    
 	}
 	

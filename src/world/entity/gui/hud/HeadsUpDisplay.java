@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import world.World;
+import world.entity.gui.AbstractComponent;
 import world.entity.smart.Player;
 
 
 public class HeadsUpDisplay{
-	public static List<HudComponent> components = new ArrayList<HudComponent>();
+	public static List<AbstractComponent> components = new ArrayList<AbstractComponent>();
 	private Player player;
 	private World world;
 	
@@ -21,16 +22,16 @@ public class HeadsUpDisplay{
 		components.add(new ShipStat(player));
 	//	components.add(new DialogueBox());
 		
-		for(HudComponent c: components){
+		for(AbstractComponent c: components){
 			world.addEntity(c);
 		}
 		
 	}
 	
-	public void init() {
-		for(HudComponent c: components){
+/*	public void init() {
+		for(AbstractComponent c: components){
 			c.init();
 		}
-	}
+	}*/
 
 }
