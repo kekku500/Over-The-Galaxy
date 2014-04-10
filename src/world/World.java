@@ -254,7 +254,6 @@ public class World implements Linkable<World>{
 	    g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
 	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
-
 	}
 	
 	public void addEntity(Entity e){

@@ -23,9 +23,10 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
 
 import utils.Stringcutter;
+import world.entity.gui.AbstractComponent;
 import resources.texture.Texture;
 
-public class DialogueBox extends HudComponent{
+public class DialogueBox extends AbstractComponent{
 private ArrayList<String> tekst = new ArrayList<String>();
 private int algus = 0;
 private int lopp = 7;
@@ -61,8 +62,8 @@ texVertices.rewind();
 }
 
 public void addText(String tekst){
-String[] lõigutud = Stringcutter.cut(tekst, 40);
-for(String s : lõigutud){
+String[] lï¿½igutud = Stringcutter.cut(tekst, 40);
+for(String s : lï¿½igutud){
 this.tekst.add(s);
 }
 tekst_suurus = this.tekst.size();

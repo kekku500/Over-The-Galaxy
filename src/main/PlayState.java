@@ -76,7 +76,7 @@ public class PlayState extends State{
 		world.addEntity(player);
 		
 		HeadsUpDisplay HUD = new HeadsUpDisplay(player, world);
-		HUD.init();
+		//HUD.init();
 		
 		Controller cam = new Controller(10,10,10);
 		

@@ -20,6 +20,8 @@ import static org.lwjgl.opengl.GL11.glPushMatrix;
 import static org.lwjgl.opengl.GL11.glTexCoordPointer;
 import static org.lwjgl.opengl.GL11.glTranslatef;
 import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.GL_STREAM_DRAW;
@@ -34,6 +36,7 @@ import java.nio.FloatBuffer;
 import state.Game;
 import threading.RenderThread;
 import world.entity.Entity;
+import world.entity.gui.AbstractComponent;
 import world.entity.gui.HudExample;
 import world.entity.smart.Player;
 
@@ -42,7 +45,7 @@ import org.lwjgl.util.vector.Vector2f;
 
 import resources.texture.Texture;
 
-public class ShipStat extends HudComponent {
+public class ShipStat extends AbstractComponent {
 	private static float x;
 	private static float y;
 	private static int hull;
@@ -71,31 +74,38 @@ public class ShipStat extends HudComponent {
 	public void render() {
 		glPushMatrix(); //save current transformations
 		
-		Vector2f pos = getPosition();
-		
-		glTranslatef(pos.x, pos.y, 0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glBufferSubData(GL_ARRAY_BUFFER,32,Vertices);//1 väärtus = 4 bitti.
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glVertexPointer(2, GL_FLOAT, 0, 0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-        glTexCoordPointer(2, GL_FLOAT, 0, 0);
-        glBindTexture(GL_TEXTURE_2D, RenderThread.spritesheet.getTex().getID());
-	    
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
+		Vector2f pos = getPosition();
+		glTranslatef(pos.x, pos.y, 0);
+		
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glBufferSubData(GL_ARRAY_BUFFER,32,Vertices);//1 vï¿½ï¿½rtus = 4 bitti.
+		//glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
+		glVertexPointer(2, GL_FLOAT, 0, 0);
+		
+		glEnable(GL_TEXTURE_2D);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
+		glTexCoordPointer(2, GL_FLOAT, 0, 0);
+		glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, RenderThread.spritesheet.getTex().getID());
+		
+		
 		glDrawArrays(GL_QUADS, 0, 24);
+		
 		glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, 0);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
+		
+		
 		glDisable(GL_BLEND);
+
 		
 		glPopMatrix(); //reset transformations
+
 	}
 	
 	@Override
@@ -114,7 +124,7 @@ public class ShipStat extends HudComponent {
 	    glDeleteBuffers(vboVertexID);
 	}
 
-	public void init() {
+	public static void init() {
 		FloatBuffer vb = BufferUtils.createFloatBuffer(2 * 12);
 		vb.put(new float[]{	
 				0,0,0,height, width,height, width,0,
