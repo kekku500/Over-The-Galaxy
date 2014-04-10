@@ -185,9 +185,9 @@ public class PlayState extends State{
 		world.addEntity(spotLight);*/
 		
 		//HUD EXAMPLE
-		world.addEntity(new HudExample(400, 400));
+		//world.addEntity(new HudExample(400, 400));
 		//meh another one?
-		world.addEntity(new HudExample(500, 200));
+		//world.addEntity(new HudExample(500, 200));
 	}
 
 	@Override
