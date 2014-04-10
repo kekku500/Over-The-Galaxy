@@ -18,6 +18,7 @@ import utils.math.Matrix3f;
 import utils.math.Matrix4f;
 import utils.math.Transform;
 import utils.math.Vector3f;
+import weapon.Weapon;
 import world.World;
 import world.entity.Entity;
 import world.entity.dumb.DynamicEntity;
@@ -38,6 +39,8 @@ import com.bulletphysics.linearmath.QuaternionUtil;
 
 public class Player extends AbstractMoveableEntity implements Input{
 	
+	private static Weapon weapon;
+	private static int fuel = 100;
 	
 	public Player(){}
 
@@ -144,6 +147,14 @@ public class Player extends AbstractMoveableEntity implements Input{
 	public void checkMouseInput(int m) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public Weapon getWeapon(){
+		return weapon;
+	}
+
+	public int getFuel(){
+		return fuel;
 	}
 
 }

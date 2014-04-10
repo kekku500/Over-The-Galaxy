@@ -42,6 +42,7 @@ import world.entity.VisualEntity;
 import world.entity.WorldEntity;
 import world.entity.dumb.DynamicEntity;
 import world.entity.gui.Component;
+import world.entity.gui.hud.HeadsUpDisplay;
 import world.entity.lighting.Lighting;
 import world.entity.lighting.SunLight;
 import world.entity.smart.Player;
@@ -237,12 +238,10 @@ public class World implements Linkable<World>{
 	    g.setFontSize(18);
 	    
 	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
-
-	    
 	    g.setFontSize(20);
 	    
 	    g.drawString(100, 50, "DEFAULT" + 50);
-	    
+		RenderThread.graphics2D.drawTexture(RenderThread.spritesheet.getTex().getID());
 	    Texture tex = null;
 		try {
 			tex = Resources.getTexture("smiley.png");
@@ -255,6 +254,7 @@ public class World implements Linkable<World>{
 	    g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
 	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
+
 	}
 	
 	public void addEntity(Entity e){

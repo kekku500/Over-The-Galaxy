@@ -2,14 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="lib/jars/lwjgl_util.jar"/>
-	<classpathentry kind="lib" path="lib/jars/lwjgl.jar">
+	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/jbullet.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/lwjgl.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Over-The-Galaxy/lib/natives/windows"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Marko/Desktop/libs/windows"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jars/slick.jar"/>
-	<classpathentry kind="lib" path="lib/jars/jbullet.jar"/>
-	<classpathentry kind="lib" path="lib/jars/vecmath.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/slick.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/vecmath.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
