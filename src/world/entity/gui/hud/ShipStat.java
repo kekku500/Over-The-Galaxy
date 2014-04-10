@@ -8,6 +8,8 @@ import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
 import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL11.glBindTexture;
 import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glDisable;
@@ -48,12 +50,12 @@ public class ShipStat extends AbstractComponent {
 	private static float y;
 	private static int hull;
 	private static int fuel;
-	private Player player;
+	private static Player player;
 	private static int vboVertexID;
 	private static int vboTexVertexID;
 	private static int width;
 	private static int height;
-	private FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 8);
+	private static FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 8);
 	
 	public ShipStat(Player player){
 		this.player = player;
@@ -89,13 +91,13 @@ public class ShipStat extends AbstractComponent {
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
         glTexCoordPointer(2, GL_FLOAT, 0, 0);
-    //    glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, RenderThread.spritesheet.getTex().getID());
 
 		glDrawArrays(GL_QUADS, 0, 24);
 		
 		glDisableClientState(GL_VERTEX_ARRAY);
-	//	glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisable(GL_TEXTURE_2D);

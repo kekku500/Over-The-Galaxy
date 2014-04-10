@@ -18,6 +18,7 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 import java.nio.FloatBuffer;
 
 import threading.RenderThread;
+import world.entity.gui.AbstractComponent;
 import world.entity.smart.Player;
 
 import org.lwjgl.BufferUtils;
@@ -26,7 +27,7 @@ import org.lwjgl.util.vector.Vector2f;
 import Weapon.Weapon;
 import resources.texture.Texture;
 
-public class WeaponDisplay extends HudComponent{
+public class WeaponDisplay extends AbstractComponent{
 private Weapon weapon;
 private Player player;
 private float x;
