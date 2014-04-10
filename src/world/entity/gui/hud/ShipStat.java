@@ -124,7 +124,7 @@ glDisable(GL_BLEND);
 }
 
 @Override
-public void update() {
+public void update(float dt) {
 float[] vertex = {
 width*x,height*y+6,width*x+hull*(player.getFuel()/100F),height*y+6,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
 width*x,height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+21,width*x,height*y+21

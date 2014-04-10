@@ -23,7 +23,7 @@ public class RenderThread implements Runnable{
 	public static int displayWidth, displayHeight;
 	
 	private ThreadManager threadManager;
-	public static Spritesheet2 spritesheet = new Spritesheet2("HUD2.png",75);
+	public static Spritesheet2 spritesheet;
 	
 	public static Graphics3D graphics3D = new Graphics3D();
 	public static Graphics2D graphics2D = new Graphics2D();
@@ -51,6 +51,7 @@ public class RenderThread implements Runnable{
 	    
 	    //Load models
 	    Resources.loadResources(Resources.RESOURCESPATH);
+	    spritesheet = new Spritesheet2("HUD2.png",75);
 	    
 	    graphics3D.init();
 	    graphics2D.init();

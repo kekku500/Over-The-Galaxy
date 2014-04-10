@@ -145,9 +145,9 @@ public class World implements Linkable<World>{
 		}
 		
 		camera.update(dt);
-		
 		for(Entity e: getUpdatableEntities()){
 			e.update(dt);
+
 		}
 		
 		dynamicsWorld.stepSimulation(dt);
@@ -231,6 +231,7 @@ public class World implements Linkable<World>{
 	    Graphics2D.perspective2D();
 	    //just TESting some stuff
 	    for(Component c: components){
+	    	System.out.println(c);
 	    	c.render();
 	    }
 	    

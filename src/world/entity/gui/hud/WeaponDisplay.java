@@ -150,7 +150,7 @@ public class WeaponDisplay extends HudComponent{
 	}
 	
 	@Override
-	public void update() {
+	public void update(float dt) {
 	float[] vertex = {
 	width*y, height*z+4, width*y+durability,height*z+4, width*y+durability,height*z, width*y,height*z
 	};

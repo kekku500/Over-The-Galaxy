@@ -21,7 +21,6 @@ import threading.RenderThread;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector2f;
-import org.newdawn.slick.Color;
 
 import utils.Stringcutter;
 import resources.texture.Texture;
@@ -94,7 +93,8 @@ public class DialogueBox extends HudComponent{
 	}
 
 	@Override
-	public void update() {
+	public void update(float dt) {
+		System.out.print(23);
 		if(tekst.size() != tekst_suurus){
 		algus +=1;
 		lopp += 1;
