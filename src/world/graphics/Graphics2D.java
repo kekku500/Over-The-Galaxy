@@ -1,13 +1,20 @@
 package world.graphics;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferSubData;
 
 import java.awt.Font;
+import java.nio.FloatBuffer;
 import java.util.HashSet;
 
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.util.glu.GLU;
+import org.lwjgl.util.vector.Vector2f;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
@@ -197,7 +204,10 @@ public class Graphics2D {
 		return font;
 	}
 	
+
+	
 	public static void perspective2D(){   
+		glViewport(0, 0, RenderThread.displayWidth, RenderThread.displayHeight);
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
 	    GLU.gluOrtho2D(0.0f, (float)RenderThread.displayWidth, (float)RenderThread.displayHeight, 0.0f);

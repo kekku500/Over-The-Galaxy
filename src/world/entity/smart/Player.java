@@ -139,8 +139,12 @@ public class Player extends AbstractMoveableEntity implements Input{
 
 	@Override
 	public void checkKeyboardInput(int k) {
-		if(k == Keyboard.KEY_E)
-			shootBoxes = true;
+		switch(k){
+		case Keyboard.KEY_E:
+			shootBoxes = true; break;
+		case Keyboard.KEY_P:
+			fuel -= 5; break;
+		}
 	}
 
 	@Override

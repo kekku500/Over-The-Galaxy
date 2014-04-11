@@ -1,44 +1,11 @@
 package world.entity.gui.hud;
 
-import static org.lwjgl.opengl.GL11.GL_BACK;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
-import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glColor4f;
-import static org.lwjgl.opengl.GL11.glCullFace;
-import static org.lwjgl.opengl.GL11.glDeleteTextures;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glDisableClientState;
-import static org.lwjgl.opengl.GL11.glDrawArrays;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnableClientState;
-import static org.lwjgl.opengl.GL11.glMultMatrix;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glRotatef;
-import static org.lwjgl.opengl.GL11.glTexCoordPointer;
-import static org.lwjgl.opengl.GL11.glTranslatef;
-import static org.lwjgl.opengl.GL11.glVertexPointer;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
-import static org.lwjgl.opengl.GL15.GL_STREAM_DRAW;
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL15.glBufferData;
-import static org.lwjgl.opengl.GL15.glBufferSubData;
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL15.*;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -54,31 +21,27 @@ import world.World;
 import world.entity.Entity;
 import world.entity.gui.AbstractComponent;
 import world.entity.smart.Player;
+import world.graphics.BufferSubData;
 import world.graphics.Rectangle;
+import world.graphics.VBORender2D;
 
 public class ShipStat extends AbstractComponent{
 
 		private static int vboVertexID;
 		
-		private static float x;
-		private static float y;
-		private static int hull;
-		private static int fuel;
+		private static float x = 0.304F;
+		private static float y = 0.195F;
+		private static int hull = 148;
+		private static int fuel = 148;
 		private Player player;
 		private static int vboTexVertexID;
-		private static int width;
-		private static int height;
-		private FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 8);
+		private static int width = 250;
+		private static int height = 138;
+		private FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 6);
 		
 		public ShipStat(Player player){
 			this.player = player;
 			
-			width = 250;
-			height = 138;
-			x = 0.304F;
-			y = 0.195F;
-			hull = 148;
-			fuel = 148;
 			setPosition(0,Game.height-height);
 		}
 		
@@ -100,96 +63,103 @@ public class ShipStat extends AbstractComponent{
 		
 		@Override
 		public void update(float dt) {
-			float[] vertex = {
+			/*float[] vertex = {
 					width*x,height*y+6,width*x+hull*(player.getFuel()/100F),height*y+6,width*x+hull*(player.getFuel()/100F),height*y,width*x,height*y,
 					width*x,height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+27,width*x+fuel*(player.getFuel()/100F),height*y+21,width*x,height*y+21
 			
-			};
+			};*/
+			float[] vertex = {	
+					/*0,0,
+					0,height, 
+					width,height, 
+					width,0,
+					
+					width*x,height*y,
+					width*x,height*y+6,*/
+					width*x+hull*(player.getFuel()/100F),height*y+6,
+					width*x+hull*(player.getFuel()/100F),height*y,
+					
+					width*x,height*y+21,
+					width*x,height*y+27,
+					width*x+fuel*(player.getFuel()/100F),height*y+27,
+					width*x+fuel*(player.getFuel()/100F),height*y+21
+					};
 			Vertices.put(vertex);
 			Vertices.rewind();
+			
+			
+
 		}
 		
 		@Override
 		public void render(){
 			int textureid = RenderThread.spritesheet.getTex().getID();
-			boolean cullFace = true;
-			boolean blend = true;
+			boolean cullFace = false;
+			boolean blend = false;
 			float alpha = .999f;
-			float rotationCenterDegree = 90.0f;
+			float rotationCenterDegree = 0.0f;
 			Vector2f pos = getPosition();
 			
-			glPushMatrix();{
-				if(cullFace)
-					glEnable(GL_CULL_FACE);
-				glCullFace(GL_BACK);
-				
-				
-				if(blend){
-					glEnable(GL_BLEND);
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //corner color (i think)
-				}
-				if(alpha < 1.0f)
-					glColor4f(1.0f, 1.0f, 1.0f, alpha);
-
-				//Matrix for transformations
-				Matrix4f m = new Matrix4f();
-				m.setIdentity();
-				
-				//Rotation around center
-				m.translate(-0.5f, -0.5f, 0);
-				m.rotate(Utils.rads(rotationCenterDegree), new Vector3f(0,0,1));
-				m.translate(0.5f, 0.5f, 0);
-				
-				//Scaling
-				m.scale(width, height, 0);
-
-				//Translation
-				m.translate(pos.x, pos.y, 0);
-
-				glMultMatrix(m.asFlippedFloatBuffer());
-
-			    glEnableClientState(GL_VERTEX_ARRAY);
-				//glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-				glBufferSubData(GL_ARRAY_BUFFER,32,Vertices);  ////SEE ON OLULINE!!!!!!!!!!!!!!!!!!!!!
-				glVertexPointer(2, GL_FLOAT, 0, 0);
-				
-				if(textureid != 0){
-				    glEnable(GL_TEXTURE_2D);
-					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-		            glTexCoordPointer(2, GL_FLOAT, 0, 0);
-		        	glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, textureid);
-				}
-			    
-				glDrawArrays(GL_QUADS, 0, 24); //see ka, i guess
-				
-			    glDisableClientState(GL_VERTEX_ARRAY);
-			    
-		        if(textureid != 0){
-		        	glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, 0);
-		            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		    	    glDisable(GL_TEXTURE_2D);
-		        }
-				
-				if(blend)
-					glDisable(GL_BLEND);
-				if(cullFace)
-					glDisable(GL_CULL_FACE);
-			}glPopMatrix();
-
+			
+			
+			
+			glPushMatrix();
+			
+			glTranslatef(pos.x, pos.y, 0);
+			
+			VBORender2D.drawVBO(12, vboVertexID, new BufferSubData(Vertices, 12 * 4), vboTexVertexID, null, textureid);
+			
+			glPopMatrix();
+			
 		}
 		
 		
 		public static void dispose(){
 		    glDeleteBuffers(vboVertexID);
+			glDeleteBuffers(vboTexVertexID);
 		}
 
 		public static void init() {
+	       	 /*
+	       		0,				0,				0.6, 0.0,
+	       		0,				height, 		0.6, 0.3, 
+	       		width,			height,  		1.0, 0.3, 
+	       		width,			0, 				1.0, 0.0, 
+
+	       		width*x, 		height*y,		0.0, 0.5,
+				width*x,		height*y+6,		0.0, 0.6, 
+				width*x+hull,	height*y+6,		0.1, 0.6, 
+				width*x+hull,	height*y, 		0.1, 0.5,
+
+				width*x,		height*y+21		0.0, 0.5
+				width*x,		height*y+27,	0.0, 0.6, 
+				width*x+fuel,	height*y+27,	0.1, 0.6, 
+				width*x+fuel,	height*y+21,	0.1, 0.5, 
+	       	  */
 			FloatBuffer vb = BufferUtils.createFloatBuffer(2 * 12);
-			vb.put(new float[]{	
+			/*vb.put(new float[]{	
 					0,0,0,height, width,height, width,0,
 					width*x,height*y,width*x,height*y+6,width*x+hull,height*y+6,width*x+hull,height*y,
 					width*x,height*y+21,width*x,height*y+27,width*x+fuel,height*y+27,width*x+fuel,height*y+21}); //clockwise, front face
+			*/
+			vb.put(new float[]{	
+					0,0,
+					0,height, 
+					width,height, 
+					width,0,
+					
+					width*x,height*y,
+					width*x,height*y+6,
+					width*x+hull,height*y+6,
+					width*x+hull,height*y,
+					
+					width*x,height*y+21,
+					width*x,height*y+27,
+					width*x+fuel,height*y+27,
+					width*x+fuel,height*y+21
+					
+					}); //clockwise, front face
+			
 			vb.rewind();
 			
 			FloatBuffer texVertices = BufferUtils.createFloatBuffer(2 * 12);
@@ -221,6 +191,23 @@ public class ShipStat extends AbstractComponent{
 			RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
 			RenderThread.spritesheet.getUpLeftCoordNormal(51)[1]
 			};
+			/*float[] texturea = {
+		       		0.6f, 0.0f,
+		       		0.6f, 0.3f, 
+		       		1.0f, 0.3f, 
+		       		1.0f, 0.0f, 
+
+		       		0.0f, 0.5f,
+					0.0f, 0.6f, 
+					0.1f, 0.6f, 
+					0.1f, 0.5f,
+
+					0.0f, 0.5f,
+					0.0f, 0.6f, 
+					0.1f, 0.6f, 
+					0.1f, 0.5f
+			};*/
+
 			texVertices.put(texturea);
 			texVertices.rewind();
 			
@@ -233,6 +220,7 @@ public class ShipStat extends AbstractComponent{
 			glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
 			glBufferData(GL_ARRAY_BUFFER, texVertices, GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			
 			
 		}
 

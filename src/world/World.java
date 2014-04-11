@@ -221,21 +221,22 @@ public class World implements Linkable<World>{
 	}
 	
 	public void render(){
-		RenderThread.graphics3D.render(this);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//RenderThread.graphics3D.render(this);
+
 		
-		RenderThread.graphics3D.perspective3D();
-		RenderThread.graphics3D.renderAxes();
+		//RenderThread.graphics3D.perspective3D();
+		//RenderThread.graphics3D.renderAxes();
 
 		Graphics2D g = RenderThread.graphics2D;
 	    //Render 2D stuff
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    Graphics2D.perspective2D();
 	    //just TESting some stuff
 	    for(Component c: components){
 	    	c.render();
 	    }
 	    
-	    g.setFontSize(18);
+	    /*g.setFontSize(18);
 	    
 	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
 	    g.setFontSize(20);
@@ -253,7 +254,7 @@ public class World implements Linkable<World>{
 	    
 	    g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
-	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
+	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);*/
 	}
 	
 	public void addEntity(Entity e){
