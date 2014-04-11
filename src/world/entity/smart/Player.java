@@ -38,6 +38,9 @@ import com.bulletphysics.linearmath.QuaternionUtil;
 
 public class Player extends AbstractMoveableEntity implements Input{
 	
+
+	private R<Float> referencedFuel = new R<Float>(100f);
+	
 	
 	public Player(){}
 
@@ -78,7 +81,7 @@ public class Player extends AbstractMoveableEntity implements Input{
 		super.setLink(t);
 		if(t instanceof Player){
 			Player ve = (Player)t;
-			
+			referencedFuel = ve.referencedFuel;
 			//shootBoxes = ve.shootBoxes;
 		}
 
@@ -136,14 +139,23 @@ public class Player extends AbstractMoveableEntity implements Input{
 
 	@Override
 	public void checkKeyboardInput(int k) {
-		if(k == Keyboard.KEY_E)
-			shootBoxes = true;
+		switch(k){
+		case Keyboard.KEY_E:
+			shootBoxes = true; break;
+		case Keyboard.KEY_P:
+			referencedFuel.set(referencedFuel.get()-5); 
+			break;
+		}
 	}
 
 	@Override
 	public void checkMouseInput(int m) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public float getFuel(){
+		return referencedFuel.get();
 	}
 
 }

@@ -44,66 +44,7 @@ public class Rectangle{
 	}
 	
 	public static void render(int...texturesID){
-	    glEnableClientState(GL_VERTEX_ARRAY);
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glVertexPointer(2, GL_FLOAT, 0, 0);
-		
-		int totalTextures = 0;
-		boolean hasValidTexture = false;
-		for(int i=0;i<texturesID.length;i++){
-			int textureid = texturesID[i];
-			if(textureid != 0 && !hasValidTexture)
-				hasValidTexture = true;
-			if(textureid != 0){
-		        glActiveTexture(GL_TEXTURE0+totalTextures); glBindTexture(GL_TEXTURE_2D, textureid);
-				totalTextures++;
-			}
-		}
-		
-		if(hasValidTexture){
-		    glEnable(GL_TEXTURE_2D);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-            glTexCoordPointer(2, GL_FLOAT, 0, 0);
-		}
-	    
-		glDrawArrays(GL_QUADS, 0, 4);
-		
-	    glDisableClientState(GL_VERTEX_ARRAY);
-	    
-        if(hasValidTexture){
-        	totalTextures--;
-    		while(totalTextures >= 0){
-    			glActiveTexture(GL_TEXTURE0+totalTextures); glBindTexture(GL_TEXTURE_2D, 0);
-    			totalTextures--;
-    		}
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    	    glDisable(GL_TEXTURE_2D);
-        }
-	}
-	
-	public static void render(int textureid){
-	    glEnableClientState(GL_VERTEX_ARRAY);
-		glBindBuffer(GL_ARRAY_BUFFER, vboVertexID);
-		glVertexPointer(2, GL_FLOAT, 0, 0);
-		
-		if(textureid != 0){
-		    glEnable(GL_TEXTURE_2D);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
-            glTexCoordPointer(2, GL_FLOAT, 0, 0);
-        	glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, textureid);
-		}
-	    
-		glDrawArrays(GL_QUADS, 0, 4);
-		
-	    glDisableClientState(GL_VERTEX_ARRAY);
-	    
-        if(textureid != 0){
-        	glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D, 0);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    	    glDisable(GL_TEXTURE_2D);
-        }
+		Graphics2D.drawVBO(4, vboVertexID, vboTexVertexID, texturesID);
 	}
 	
 	public static void dispose(){

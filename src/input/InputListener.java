@@ -6,6 +6,8 @@ import java.util.Set;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import world.graphics.Graphics3D;
+
 /**
  * Can be used to store input classes and check for input.
  * Can check input events only once per loop (Not recommended to use this class for input checking
@@ -81,6 +83,8 @@ public class InputListener {
 				for(Input e: inputs){
 					e.checkKeyboardInput(k);
 				}		
+				Graphics3D.checkKeyboardInput(k);
+				Graphics3D.checkMouseInput(k);
 			}
 		}
 	}

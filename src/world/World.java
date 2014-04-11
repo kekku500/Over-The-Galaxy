@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import input.Input;
 import input.InputListener;
 
+import java.awt.Rectangle;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -220,13 +221,12 @@ public class World implements Linkable<World>{
 	}
 	
 	public void render(){
-		RenderThread.graphics3D.render(this);
+		Graphics3D.render(this);
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		RenderThread.graphics3D.perspective3D();
-		RenderThread.graphics3D.renderAxes();
+		Graphics3D.perspective3D();
+		Graphics3D.renderAxes();
 
-		Graphics2D g = RenderThread.graphics2D;
 	    //Render 2D stuff
 	    Graphics2D.perspective2D();
 	    //just TESting some stuff
@@ -234,14 +234,16 @@ public class World implements Linkable<World>{
 	    	c.render();
 	    }
 	    
-	    g.setFontSize(18);
+	    Graphics2D.setFontSize(18);
 	    
-	    g.drawString(500, 50, "EPIC MAN" + 50, Color.red);
+	    Graphics2D.drawString(500, 50, "EPIC MAN" + 50, Color.red);
 
 	    
-	    g.setFontSize(20);
+	    Graphics2D.setFontSize(20);
 	    
-	    g.drawString(100, 50, "DEFAULT" + 50);
+	    Graphics2D.drawString(100, 50, "DEFAULT" + 50);
+	    
+	    //RenderThread.graphics2D.drawTexture(id);
 	    
 	    Texture tex = null;
 		try {
@@ -250,11 +252,11 @@ public class World implements Linkable<World>{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	    g.drawTexture(tex, 10, 200, 1/4f, 1/4f);
+		Graphics2D.drawTexture(tex, 10, 200, 1/4f, 1/4f);
 	    
-	    g.drawTexture(tex, 20, 210, 1/4f, 1/4f);
+		Graphics2D.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
-	    g.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
+		Graphics2D.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
 	}
 	
 	public void addEntity(Entity e){

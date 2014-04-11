@@ -3,6 +3,7 @@ package resources.model.custom;
 import resources.model.Model;
 import threading.RenderThread;
 import world.World;
+import world.graphics.Graphics3D;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform1i;
 
@@ -20,17 +21,17 @@ public class Sphere extends Model{
 	}
 
 	public void renderSubModels() {
-		glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[0], 0); //tex
-		glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[1], 0); //bump
+		glUniform1i(Graphics3D.preprocess.uniformLocations[0], 0); //tex
+		glUniform1i(Graphics3D.preprocess.uniformLocations[1], 0); //bump
 		int currentCull = glGetInteger(GL_CULL_FACE_MODE);
 		if(isGodRays){
 	        glCullFace(GL_BACK);
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[2], 1); //Inform shader of god rays
+			glUniform1i(Graphics3D.preprocess.uniformLocations[2], 1); //Inform shader of god rays
 		}
 		sphere.draw(radius, detail1, detail2);
 		if(isGodRays){
 			glCullFace(currentCull);
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[2], 0); //Inform shader of god rays
+			glUniform1i(Graphics3D.preprocess.uniformLocations[2], 0); //Inform shader of god rays
 		}
 	}
 	

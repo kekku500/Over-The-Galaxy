@@ -10,11 +10,13 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
 import resources.Resources;
+import resources.texture.Spritesheet;
 import state.Game;
 import state.RenderState;
 import state.State;
 import world.World;
 import world.entity.gui.HudExample;
+import world.entity.gui.hud.ShipStat;
 import world.graphics.Graphics2D;
 import world.graphics.Graphics3D;
 
@@ -23,9 +25,7 @@ public class RenderThread implements Runnable{
 	public static int displayWidth, displayHeight;
 	
 	private ThreadManager threadManager;
-	
-	public static Graphics3D graphics3D = new Graphics3D();
-	public static Graphics2D graphics2D = new Graphics2D();
+	public static Spritesheet spritesheet;
 	
 	public RenderThread(ThreadManager threadManager){
 		this.threadManager = threadManager;
@@ -50,12 +50,14 @@ public class RenderThread implements Runnable{
 	    
 	    //Load models
 	    Resources.loadResources(Resources.RESOURCESPATH);
+	    spritesheet = new Spritesheet("HUD2.png",75);
 	    
-	    graphics3D.init();
-	    graphics2D.init();
+	    Graphics3D.init();
+	    Graphics2D.init();
 	    
 	    //HUD INIT EXAMPLE
 	    HudExample.init();
+	    ShipStat.init();
 	    
 	}
 	
@@ -140,8 +142,9 @@ public class RenderThread implements Runnable{
 	 */
 	private void dispose(){
 		Resources.destoryResources();
-		graphics3D.dispose();
-		graphics2D.dispose();
+		Graphics3D.dispose();
+		Graphics2D.dispose();
+		ShipStat.dispose();
 		
 		//hud dispose example
 		HudExample.dispose();
@@ -154,7 +157,7 @@ public class RenderThread implements Runnable{
 		displayWidth = Display.getWidth();
 		displayHeight = Display.getHeight();
 		//glViewport(0, 0, displayWidth, displayHeight);
-		graphics3D.resized(displayWidth, displayHeight);
+		Graphics3D.resized(displayWidth, displayHeight);
 	}
 	
 	//Display fps counter

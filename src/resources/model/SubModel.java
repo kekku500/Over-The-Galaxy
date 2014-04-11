@@ -77,16 +77,16 @@ public class SubModel {
 			return;
 		if(Model.drawMaterial()){
 			glBindBuffer(GL_ARRAY_BUFFER, vboAmbientID);
-			ARBVertexShader.glVertexAttribPointerARB(RenderThread.graphics3D.preprocess.attribLocations[1], 3, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[1]);
+			ARBVertexShader.glVertexAttribPointerARB(Graphics3D.preprocess.attribLocations[1], 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(Graphics3D.preprocess.attribLocations[1]);
 			
 			glBindBuffer(GL_ARRAY_BUFFER, vboSpecularID);
-			ARBVertexShader.glVertexAttribPointerARB(RenderThread.graphics3D.preprocess.attribLocations[2], 3, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[2]);
+			ARBVertexShader.glVertexAttribPointerARB(Graphics3D.preprocess.attribLocations[2], 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(Graphics3D.preprocess.attribLocations[2]);
 			
 			glBindBuffer(GL_ARRAY_BUFFER, vboEmissionShininessID);
-			ARBVertexShader.glVertexAttribPointerARB(RenderThread.graphics3D.preprocess.attribLocations[3], 4, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[3]);
+			ARBVertexShader.glVertexAttribPointerARB(Graphics3D.preprocess.attribLocations[3], 4, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(Graphics3D.preprocess.attribLocations[3]);
 			
 	    	glEnableClientState(GL_COLOR_ARRAY);
 	        glBindBuffer(GL_ARRAY_BUFFER, vboDiffuseID);
@@ -107,23 +107,23 @@ public class SubModel {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glBindBuffer(GL_ARRAY_BUFFER, vboTexVertexID);
             glTexCoordPointer(2, GL_FLOAT, 0, 0);
-        	glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[0], 1); //Tell shader that textures are coming
+        	glUniform1i(Graphics3D.preprocess.uniformLocations[0], 1); //Tell shader that textures are coming
         	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, material.texture.getID());
         }else{
-        	glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[0], 0); //Not using textures
+        	glUniform1i(Graphics3D.preprocess.uniformLocations[0], 0); //Not using textures
         }
         //if model is normalmapped and normalmapping is enabled
 		if(isNormalMapped && Model.drawNormalMapping()){
-			glEnableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[0]);
-			ARBVertexShader.glVertexAttribPointerARB(RenderThread.graphics3D.preprocess.attribLocations[0], 3, GL_FLOAT, false, 0, 0);
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[1], 1); //Inform shader of normalmapping
+			glEnableVertexAttribArray(Graphics3D.preprocess.attribLocations[0]);
+			ARBVertexShader.glVertexAttribPointerARB(Graphics3D.preprocess.attribLocations[0], 3, GL_FLOAT, false, 0, 0);
+			glUniform1i(Graphics3D.preprocess.uniformLocations[1], 1); //Inform shader of normalmapping
 			glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, material.normalMap.getID()); //normalmap texture
 		}else{
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[1], 0); //not normalmapping
+			glUniform1i(Graphics3D.preprocess.uniformLocations[1], 0); //not normalmapping
 		}
 		
 		if(masterModel.isGodRays){
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[2], 1); //Inform shader of god rays
+			glUniform1i(Graphics3D.preprocess.uniformLocations[2], 1); //Inform shader of god rays
 		}
 		
 		/*int f = faces.size();
@@ -132,7 +132,7 @@ public class SubModel {
 		glDrawArrays(GL_TRIANGLES, 0, 9 * faces.size());  
 		
 		if(masterModel.isGodRays){
-			glUniform1i(RenderThread.graphics3D.preprocess.uniformLocations[2], 0); //Inform shader of god rays
+			glUniform1i(Graphics3D.preprocess.uniformLocations[2], 0); //Inform shader of god rays
 		}
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -144,7 +144,7 @@ public class SubModel {
        
         if(isNormalMapped && Model.drawNormalMapping()){
         	glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
-        	glDisableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[0]);
+        	glDisableVertexAttribArray(Graphics3D.preprocess.attribLocations[0]);
         }
         if(isTextured && Model.drawTextures()){
         	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
@@ -152,9 +152,9 @@ public class SubModel {
         }
         if(Model.drawMaterial()){
             glDisableClientState(GL_COLOR_ARRAY);
-			glDisableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[1]);
-			glDisableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[2]);
-			glDisableVertexAttribArray(RenderThread.graphics3D.preprocess.attribLocations[3]);
+			glDisableVertexAttribArray(Graphics3D.preprocess.attribLocations[1]);
+			glDisableVertexAttribArray(Graphics3D.preprocess.attribLocations[2]);
+			glDisableVertexAttribArray(Graphics3D.preprocess.attribLocations[3]);
         }
 	}
 	

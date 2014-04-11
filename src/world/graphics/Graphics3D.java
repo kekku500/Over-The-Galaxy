@@ -70,66 +70,62 @@ import world.entity.lighting.PointLighting;
 import world.entity.lighting.SpotLighting;
 import world.entity.lighting.SunLight;
 
-public class Graphics3D implements Input{
+public class Graphics3D{
 
 	//Store materials, bind textures, normal mapping
-    public Shader preprocess = new Shader();
+    public static Shader preprocess = new Shader();
     
     //Lighting and shadows
-    private Shader lightingAndShadow = new Shader(); 
-    private ShadowMapper shadowMapper = new ShadowMapper();
+    private static Shader lightingAndShadow = new Shader(); 
+    private static ShadowMapper shadowMapper = new ShadowMapper();
     
     //Screen space ambient occlusion
-    private Shader SSAO = new Shader(); 
-    private Shader SSAOFilterH = new Shader(); //SSAO Horizontal filtering
-    private Shader SSAOFilterV = new Shader(); //SSAO Vertical filtering
-    private IntBuffer SSAOTexturesBlurred;
-    private int SSAOTexture; //without blur
-    private int rotationTexture; //SSAO randomly rotated texture
-    private int SSAOWidth, SSAOHeight;
+    private static Shader SSAO = new Shader(); 
+    private static Shader SSAOFilterH = new Shader(); //SSAO Horizontal filtering
+    private static Shader SSAOFilterV = new Shader(); //SSAO Vertical filtering
+    private static IntBuffer SSAOTexturesBlurred;
+    private static int SSAOTexture; //without blur
+    private static int rotationTexture; //SSAO randomly rotated texture
+    private static int SSAOWidth, SSAOHeight;
     
     //Light scattering, Lens, Flare and Halo
-    private Shader sunRaysLensFlareHalo = new Shader(); //Light scattering, Lens, Flare and Halo
-    private Shader blurH = new Shader(); //Sun blurring
-    private Shader blurV = new Shader(); //Vertical
-    private IntBuffer sunTextures; //textures required for blurring and light scattering
-    private int sunTextureWidth, sunTextureHeight;
-    private int dirtTexture;
+    private static Shader sunRaysLensFlareHalo = new Shader(); //Light scattering, Lens, Flare and Halo
+    private static Shader blurH = new Shader(); //Sun blurring
+    private static Shader blurV = new Shader(); //Vertical
+    private static IntBuffer sunTextures; //textures required for blurring and light scattering
+    private static int sunTextureWidth, sunTextureHeight;
+    private static int dirtTexture;
     
     //SkyBox
-    Shader skyBoxShader = new Shader();
-    SubModel skyBoxModel = new SubModel();
-    int skyVAO;
-    private float skyBoxIntensity = .4f;
+    static Shader skyBoxShader = new Shader();
+    static SubModel skyBoxModel = new SubModel();
+    static int skyVAO;
+    private static float skyBoxIntensity = .4f;
     
     //Framebuffer object
-    private int FBO;
+    private static int FBO;
     
     //Texture indicies
-    private int colorBuffer, normalBuffer, depthBuffer, combinedLighting, combinedSpecular; //for deferred shading
-    private int materialAmbient, materialDiffuse, materialSpecular, materialEmission, materialShininess;
+    private static int colorBuffer, normalBuffer, depthBuffer, combinedLighting, combinedSpecular; //for deferred shading
+    private static int materialAmbient, materialDiffuse, materialSpecular, materialEmission, materialShininess;
 
     //Rendering settings
-    private int width, height;
-    private boolean  texturing = true;
-    private boolean normalMapping = true;
-    private boolean shadows = false; 
-    private boolean filtering = true;
-    private boolean occlusion = false;
-    private boolean lightScattering = false;
-    private int showTexture;
+    private static int width, height;
+    private static boolean  texturing = true;
+    private static boolean normalMapping = true;
+    private static boolean shadows = false; 
+    private static boolean filtering = true;
+    private static boolean occlusion = false;
+    private static boolean lightScattering = false;
+    private static int showTexture;
     
     //Other
-    private FloatBuffer projectionBiasInverse = BufferUtils.createFloatBuffer(16);
-    private Matrix4f viewInverse = new Matrix4f();
-    public FloatBuffer cameraProjectionMatrix = BufferUtils.createFloatBuffer(16);
-    public FloatBuffer cameraViewMatrix = BufferUtils.createFloatBuffer(16);
+    private static FloatBuffer projectionBiasInverse = BufferUtils.createFloatBuffer(16);
+    private static Matrix4f viewInverse = new Matrix4f();
+    public static FloatBuffer cameraProjectionMatrix = BufferUtils.createFloatBuffer(16);
+    public static FloatBuffer cameraViewMatrix = BufferUtils.createFloatBuffer(16);
     
-    private World world; //world currently being rendered
-    
-	public void init(){
-		//new InputListener(this);
-		InputListener.addGlobalInput(this);
+	public static void init(){
 		// check OpenGL version ---------------------------------------------------------------------------------------------------
         if(!GLContext.getCapabilities().OpenGL30){
             System.err.println("OpenGL 3.0 not supported!");
@@ -239,7 +235,7 @@ public class Graphics3D implements Input{
 	    shadowMapper.init();
 	}
 	
-	private void prepareFiltering(){
+	private static void prepareFiltering(){
         FloatBuffer samples = BufferUtils.createFloatBuffer(16*2);
         float randomAngle = (float)Math.PI/4, radius = 0.415f;
 
@@ -298,7 +294,7 @@ public class Graphics3D implements Input{
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	
-    private void prepareShaders(){
+    private static void prepareShaders(){
 		// Uniform stuff --------------------------------------------------------------------------------------------------
 	    //Skybox
         skyBoxShader.uniformLocations = new int[2];
@@ -426,8 +422,7 @@ public class Graphics3D implements Input{
         Shader.unbind();   
     }
 
-    public void render(World world){
-    	this.world = world;
+    public static void render(World world){
     	if(world.getController() == null) //wait for controller to be ready
     		return;
     	
@@ -560,7 +555,7 @@ public class Graphics3D implements Input{
 	    // apply shadows and lightin, 2nd pass ---------------------------------------------------------------
 	    //oldDeferredLightingStuff(lightSources);
 	    
-	    deferredLightingStuff();
+	    deferredLightingStuff(world);
 
 	    
 		// applying light scattering to lighting stuff
@@ -579,7 +574,7 @@ public class Graphics3D implements Input{
 					sun = (SunLight)e;
 				}
 			}
-			sunRaysLensFlareHaloStuff(sun/*, cam*/);
+			sunRaysLensFlareHaloStuff(sun/*, cam*/, world);
 		}
 		
 
@@ -589,7 +584,7 @@ public class Graphics3D implements Input{
     }
 
 	
-	private void showTextures(){
+	private static void showTextures(){
 		if(showTexture != 0){
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
@@ -601,7 +596,7 @@ public class Graphics3D implements Input{
 		}
 	}
 	
-    public boolean sunRaysLensFlareHaloStuff(SunLight sun){
+    public static boolean sunRaysLensFlareHaloStuff(SunLight sun, World world){
     	if(sun == null)
     		return false;
 	    boolean CalculateSunRaysLensFlareHalo = false;
@@ -712,7 +707,7 @@ public class Graphics3D implements Input{
 		return true;
     }
      
-    public void SSAOStuff(){
+    private static void SSAOStuff(){
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBO);
 		glDrawBuffers(GL_COLOR_ATTACHMENT0_EXT); glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, SSAOTexture, 0);
@@ -728,7 +723,7 @@ public class Graphics3D implements Input{
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
-    public void deferredLightingStuff(/*List<Lighting> lightSources*/){
+    private static void deferredLightingStuff(/*List<Lighting> lightSources*/World world){
     	//calculate matrices required for lighting
     	Matrix4f modelMatrix = new Matrix4f();
     	modelMatrix.setIdentity();
@@ -911,7 +906,7 @@ public class Graphics3D implements Input{
 
     }
     
-    public void SSAOFilterStuff(){
+    private static void SSAOFilterStuff(){
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBO);
 		glDrawBuffers(GL_COLOR_ATTACHMENT0_EXT); glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, SSAOTexturesBlurred.get(0), 0);
@@ -943,7 +938,7 @@ public class Graphics3D implements Input{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
     
-	public void resized(int displayWidth, int displayHeight){
+	public static void resized(int displayWidth, int displayHeight){
 		width = displayWidth;
 		height = displayHeight;
 		
@@ -1102,7 +1097,7 @@ public class Graphics3D implements Input{
 	    Shader.unbind();
 	}
     
-    public void dispose() {
+    public static void dispose() {
         glDeleteTextures(rotationTexture);
         glDeleteTextures(colorBuffer);
         glDeleteTextures(normalBuffer);
@@ -1126,7 +1121,7 @@ public class Graphics3D implements Input{
         glDeleteFramebuffers(FBO);
     }
     
-    public void renderObjects(Set<VisualEntity> entities, boolean depthOnly){
+    public static void renderObjects(Set<VisualEntity> entities, boolean depthOnly){
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
     	if(depthOnly){ //shadows
@@ -1148,7 +1143,7 @@ public class Graphics3D implements Input{
         glDisable(GL_CULL_FACE);
     }
 
-    public Vector2f glToScreen(Vector3f v){
+    public static Vector2f glToScreen(Vector3f v){
     	IntBuffer viewport = BufferUtils.createIntBuffer(4);
     	viewport.put(0).put(0).put(Game.width).put(Game.height);
     	viewport.flip();
@@ -1160,7 +1155,7 @@ public class Graphics3D implements Input{
     	return new Vector2f(getResult[0], getResult[1]);
     }
     
-    public Vector3f glToWorld(Vector2f v, float depth){
+    public static Vector3f glToWorld(Vector2f v, float depth){
     	IntBuffer viewport = BufferUtils.createIntBuffer(4);
     	viewport.put(0).put(0).put(Game.width).put(Game.height);
     	viewport.flip();
@@ -1173,8 +1168,7 @@ public class Graphics3D implements Input{
     	return new Vector3f(getResult[0], getResult[1], getResult[2]);
     }
 
-	@Override
-	public void checkKeyboardInput(int k) {
+	public static void checkKeyboardInput(int k) {
 
 		switch(k){
 		case InputConfig.enableTexturing:
@@ -1249,7 +1243,7 @@ public class Graphics3D implements Input{
 		
 	}
 
-	public void perspective3D(){
+	public static  void perspective3D(){
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadMatrix(cameraProjectionMatrix);
 
@@ -1259,14 +1253,13 @@ public class Graphics3D implements Input{
         glViewport(0, 0, width, height);
 	}
 	
-	@Override
-	public void checkMouseInput(int m) {
+	public static void checkMouseInput(int m) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private int axesLength = 2000;
-	public void renderAxes(){
+	private static int axesLength = 2000;
+	public static void renderAxes(){
 
 		
 		glColor3f(1f, 0f, 0f);
