@@ -183,10 +183,6 @@ public class PlayState extends State{
 		spotLight.setPosition(50, 50, 50);
 		world.addEntity(spotLight);*/
 		
-		//HUD EXAMPLE
-		world.addEntity(new HudExample(400, 400));
-		//meh another one?
-		world.addEntity(new HudExample(500, 200));
 	}
 
 	@Override

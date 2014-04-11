@@ -72,4 +72,6 @@ public abstract class AbstractComponent implements Component{
 		return position;
 	}
 
+	public abstract void init();
+
 }

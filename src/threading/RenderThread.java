@@ -16,7 +16,10 @@ import state.RenderState;
 import state.State;
 import world.World;
 import world.entity.gui.HudExample;
+import world.entity.gui.hud.DialogueBox;
+import world.entity.gui.hud.HeadsUpDisplay;
 import world.entity.gui.hud.ShipStat;
+import world.entity.gui.hud.WeaponDisplay;
 import world.graphics.Graphics2D;
 import world.graphics.Graphics3D;
 
@@ -55,9 +58,7 @@ public class RenderThread implements Runnable{
 	    Graphics3D.init();
 	    Graphics2D.init();
 	    
-	    //HUD INIT EXAMPLE
-	    HudExample.init();
-	    ShipStat.init();
+	    HeadsUpDisplay.init();
 	    
 	}
 	
@@ -145,9 +146,9 @@ public class RenderThread implements Runnable{
 		Graphics3D.dispose();
 		Graphics2D.dispose();
 		ShipStat.dispose();
+		DialogueBox.dispose();
+		WeaponDisplay.dispose();
 		
-		//hud dispose example
-		HudExample.dispose();
 		for(State state: threadManager.getStates()){
 			state.dispose();
 		}

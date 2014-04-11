@@ -92,7 +92,7 @@ public class HudExample extends AbstractComponent{
 		    glDeleteBuffers(vboVertexID);
 		}
 
-		public static void init() {
+		public void init() {
 			FloatBuffer vb = BufferUtils.createFloatBuffer(2 * 4);
 			vb.put(new float[]{0,0, 0,100, 100,100, 100,0}); //clockwise, front face
 			vb.rewind();

@@ -28,13 +28,13 @@ import world.graphics.Rectangle;
 public class ShipStat extends AbstractComponent{
 
 		private static int vboVertexID;
+		private static int vboTexVertexID;
 		
 		private static float x = 0.304F;
 		private static float y = 0.195F;
 		private static int hull = 148;
 		private static int fuel = 148;
 		private Player player;
-		private static int vboTexVertexID;
 		private static int width = 250;
 		private static int height = 138;
 		//private FloatBuffer Vertices = BufferUtils.createFloatBuffer(2 * 6);
@@ -115,7 +115,7 @@ public class ShipStat extends AbstractComponent{
 			glDeleteBuffers(vboTexVertexID);
 		}
 
-		public static void init() {
+		public void init() {
 			FloatBuffer vb = BufferUtils.createFloatBuffer(2 * 12);
 			/*vb.put(new float[]{	
 					0,0,0,height, width,height, width,0,

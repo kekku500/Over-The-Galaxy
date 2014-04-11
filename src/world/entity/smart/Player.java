@@ -18,6 +18,8 @@ import utils.math.Matrix3f;
 import utils.math.Matrix4f;
 import utils.math.Transform;
 import utils.math.Vector3f;
+import weapon.Laser;
+import weapon.Weapon;
 import world.World;
 import world.entity.Entity;
 import world.entity.dumb.DynamicEntity;
@@ -40,6 +42,7 @@ public class Player extends AbstractMoveableEntity implements Input{
 	
 
 	private R<Float> referencedFuel = new R<Float>(100f);
+	private R<Weapon> weapon = new R<Weapon>();
 	
 	
 	public Player(){}
@@ -47,6 +50,7 @@ public class Player extends AbstractMoveableEntity implements Input{
 	public Player(float x, float y, float z) {
 		setPosition(x, y, z);
 		Model model2 = null;
+		weapon.set(new Laser());
 		try {
 			model2 = Resources.getModel("F-35_Lightning_II\\F-35_Lightning_II.obj");
 		} catch (Exception e) {
@@ -157,5 +161,8 @@ public class Player extends AbstractMoveableEntity implements Input{
 	public float getFuel(){
 		return referencedFuel.get();
 	}
-
+	
+	public Weapon getWeapon(){
+		return weapon.get();
+	}
 }

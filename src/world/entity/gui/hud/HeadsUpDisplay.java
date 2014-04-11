@@ -18,9 +18,9 @@ public class HeadsUpDisplay{
 		this.player = player;
 		this.world = world;
 		
-		//components.add(new WeaponDisplay(player));
+		components.add(new WeaponDisplay(player));
 		components.add(new ShipStat(player));
-	//	components.add(new DialogueBox());
+		components.add(new DialogueBox());
 		
 		for(AbstractComponent c: components){
 			world.addEntity(c);
@@ -28,10 +28,10 @@ public class HeadsUpDisplay{
 		
 	}
 	
-	/*public void init() {
+	public static void init() {
 		for(AbstractComponent c: components){
 			c.init();
 		}
-	}*/
+	}
 
 }
