@@ -58,8 +58,6 @@ public class RenderThread implements Runnable{
 	    Graphics3D.init();
 	    Graphics2D.init();
 	    
-	    HeadsUpDisplay.init();
-	    
 	}
 	
 
@@ -71,6 +69,8 @@ public class RenderThread implements Runnable{
 		for(State state: threadManager.getStates()){
 			state.init();
 		}
+		
+		//Loading Screen algus
 		
 		//Get Active State
 		State activeState = threadManager.getActiveState();
@@ -145,9 +145,6 @@ public class RenderThread implements Runnable{
 		Resources.destoryResources();
 		Graphics3D.dispose();
 		Graphics2D.dispose();
-		ShipStat.dispose();
-		DialogueBox.dispose();
-		WeaponDisplay.dispose();
 		
 		for(State state: threadManager.getStates()){
 			state.dispose();

@@ -1,6 +1,12 @@
 package world.entity.gui.hud;
 
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 import static org.lwjgl.opengl.GL11.glTranslatef;
@@ -64,10 +70,15 @@ public class DialogueBox extends AbstractComponent{
 		
 		glTranslatef(pos.x, pos.y, 0);
 		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
 		Graphics2D.drawVBO(12, vboVertexID, vboTexVertexID, textureid);
 		for(int i = algus; i < lopp; i++){
 			Graphics2D.drawString(10, 10+(i*15), (i < tekst.size())?tekst.get(i):" ");
 			}
+		
+		glDisable(GL_BLEND);
 		
 		glPopMatrix();
 	}
@@ -123,7 +134,7 @@ public class DialogueBox extends AbstractComponent{
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	
-	public static void dispose(){
+	public void dispose(){
 	    glDeleteBuffers(vboVertexID);
 		glDeleteBuffers(vboTexVertexID);
 	}

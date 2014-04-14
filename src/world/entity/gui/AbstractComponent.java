@@ -73,5 +73,6 @@ public abstract class AbstractComponent implements Component{
 	}
 
 	public abstract void init();
+	public abstract void dispose();
 
 }

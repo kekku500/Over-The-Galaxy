@@ -72,7 +72,14 @@ public class WeaponDisplay extends AbstractComponent{
 		
 		glTranslatef(pos.x, pos.y, 0);
 		
-		Graphics2D.drawVBO(12, vboVertexID, verticesChange, vboTexVertexID, textureChange, textureid);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
+		Graphics2D.drawVBO(20, vboVertexID, verticesChange, vboTexVertexID, textureChange, textureid);
+		Graphics2D.drawString(88, 40, weapon.getClipAmount() + "/" + weapon.getMaxClips());
+		Graphics2D.drawString(70, 55, weapon.getAmmo() + "/" + weapon.getMaxAmmo());
+		
+		glDisable(GL_BLEND);
 		
 		glPopMatrix();
 	}
@@ -124,7 +131,6 @@ public class WeaponDisplay extends AbstractComponent{
 		vertices.put(vertex);
 		vertices.rewind();
 		
-		System.out.println(weapon);
 		FloatBuffer texVertices = BufferUtils.createFloatBuffer(2 * 32);
 		float[] texturea = {
 		RenderThread.spritesheet.getBottomLeftCoordNormal(21)[0],
@@ -186,7 +192,7 @@ public class WeaponDisplay extends AbstractComponent{
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	
-	public static void dispose(){
+	public void dispose(){
 	    glDeleteBuffers(vboVertexID);
 		glDeleteBuffers(vboTexVertexID);
 	}

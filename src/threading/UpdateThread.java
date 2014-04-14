@@ -37,6 +37,7 @@ public class UpdateThread implements Runnable{
 		}
 		
 		Game.println("Starting updateThread loop");
+		//Loading Screen lõpp
 		
 		while(!Display.isCloseRequested() && !Keyboard.isKeyDown(InputConfig.instantQuit)){
 			//Check if state has changed

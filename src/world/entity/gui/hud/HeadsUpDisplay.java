@@ -21,6 +21,8 @@ public class HeadsUpDisplay{
 		components.add(new WeaponDisplay(player));
 		components.add(new ShipStat(player));
 		components.add(new DialogueBox());
+		components.add(new MiniMap(world, player));
+		components.add(new Map(world, player));
 		
 		for(AbstractComponent c: components){
 			world.addEntity(c);
@@ -28,9 +30,15 @@ public class HeadsUpDisplay{
 		
 	}
 	
-	public static void init() {
+	public void init() {
 		for(AbstractComponent c: components){
 			c.init();
+		}
+	}
+	
+	public void dispose(){
+		for(AbstractComponent c: components){
+			c.dispose();
 		}
 	}
 

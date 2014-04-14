@@ -234,7 +234,7 @@ public class World implements Linkable<World>{
 	    	c.render();
 	    }
 	    
-	    Graphics2D.setFontSize(18);
+	   /* Graphics2D.setFontSize(18);
 	    
 	    Graphics2D.drawString(500, 50, "EPIC MAN" + 50, Color.red);
 
@@ -256,7 +256,7 @@ public class World implements Linkable<World>{
 	    
 		Graphics2D.drawTexture(tex, 20, 210, 1/4f, 1/4f);
 	    
-		Graphics2D.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);
+		Graphics2D.drawTexture(tex, 80, 200, 1/4f, 1/4f, .5f);*/
 	}
 	
 	public void addEntity(Entity e){
@@ -356,4 +356,5 @@ public class World implements Linkable<World>{
 	public Player getPlayer(){
 		return player;
 	}
+	
 }

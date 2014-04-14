@@ -88,7 +88,7 @@ public class HudExample extends AbstractComponent{
 		}
 		
 		
-		public static void dispose(){
+		public void dispose(){
 		    glDeleteBuffers(vboVertexID);
 		}
 

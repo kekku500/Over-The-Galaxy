@@ -104,13 +104,18 @@ public class ShipStat extends AbstractComponent{
 			
 			glTranslatef(pos.x, pos.y, 0);
 			
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			
 			Graphics2D.drawVBO(12, vboVertexID, verticesChange, vboTexVertexID, null, textureid);
+			
+			glDisable(GL_BLEND);
 			
 			glPopMatrix();
 		}
 		
 		
-		public static void dispose(){
+		public void dispose(){
 		    glDeleteBuffers(vboVertexID);
 			glDeleteBuffers(vboTexVertexID);
 		}

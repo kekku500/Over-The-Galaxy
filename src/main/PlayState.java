@@ -57,7 +57,7 @@ import controller.Controller.CamType;
 public class PlayState extends State{
 	
 	private int stateId;
-	
+	private HeadsUpDisplay HUD;
 
 	
 	public PlayState(int stateId){
@@ -75,8 +75,8 @@ public class PlayState extends State{
 		Player player = new Player(15,30,35);
 		world.addEntity(player);
 		
-		HeadsUpDisplay HUD = new HeadsUpDisplay(player, world);
-		
+		HUD = new HeadsUpDisplay(player, world);
+	    HUD.init();
 		Controller cam = new Controller(10,10,10);
 		
 		//cam.setFollowing(player);
@@ -203,6 +203,7 @@ public class PlayState extends State{
 	@Override
 	public void dispose(){
 		World world = getUpToDateState().getWorld();
+		HUD.dispose();
 		//world.dispose();
 		//container.dispose();
 		//model.dispose();
