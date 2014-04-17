@@ -38,6 +38,7 @@ public class Map extends AbstractComponent {
 	
 	private static int vboVertexID;
 	private static int vboTexVertexID;
+	private static int elemente;
 	
 	private World world;
 	private Player player;
@@ -46,8 +47,8 @@ public class Map extends AbstractComponent {
 	private boolean brender = false;
 	private int heigth = 400;
 	private int width = 400;
-	private BufferSubData verticesChange = new BufferSubData(BufferUtils.createFloatBuffer(2 * 50), 0).setOffsetByFloat(8);
-	private BufferSubData texVerticesChange = new BufferSubData(BufferUtils.createFloatBuffer(2 * 50), 0).setOffsetByFloat(8);
+	private BufferSubData verticesChange = new BufferSubData(BufferUtils.createFloatBuffer(8 * 100), 0, false).setOffsetByFloat(16);
+	private BufferSubData texVerticesChange = new BufferSubData(BufferUtils.createFloatBuffer(8 * 100), 0, false).setOffsetByFloat(16);
 	private Set<VisualEntity> Entitys;
 	private Vector3f PLoc;
 	
@@ -79,7 +80,7 @@ public class Map extends AbstractComponent {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			
-			Graphics2D.drawVBO(60, vboVertexID,verticesChange, vboTexVertexID, texVerticesChange, textureid);
+			Graphics2D.drawVBO(8 + (8*elemente), vboVertexID,verticesChange, vboTexVertexID, texVerticesChange, textureid);
 			
 			glDisable(GL_BLEND);
 			
@@ -102,16 +103,22 @@ public class Map extends AbstractComponent {
 
 	@Override
 	public void init() {
-		FloatBuffer vertices = BufferUtils.createFloatBuffer(2 * 50);
-		FloatBuffer texVertices = BufferUtils.createFloatBuffer(2 * 50);
+		FloatBuffer vertices = BufferUtils.createFloatBuffer(8 * 102);
+		FloatBuffer texVertices = BufferUtils.createFloatBuffer(8 * 102);
 		
 		vertices.put(new float[]{
 				0,0,
 				0,heigth,
 				width,heigth,
 				width,0,
+				
+				width/2 - 2.5F, heigth/2 - 2.5F,
+				width/2 - 2.5F, heigth/2 + 2.5F,
+				width/2 + 2.5F, heigth/2 + 2.5F,
+				width/2 + 2.5F, heigth/2 - 2.5F		
+
 	
-		});
+		});	
 		vertices.rewind();
 		
 		texVertices.put(new float[]{
@@ -122,9 +129,17 @@ public class Map extends AbstractComponent {
 				RenderThread.spritesheet.getBottomRightCoordNormal(52)[0],
 				RenderThread.spritesheet.getBottomRightCoordNormal(52)[1],
 				RenderThread.spritesheet.getUpRightCoordNormal(52)[0],
-				RenderThread.spritesheet.getUpRightCoordNormal(52)[1]
-
-		});
+				RenderThread.spritesheet.getUpRightCoordNormal(52)[1],
+				
+				RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
+				RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
+				RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
+				RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
+				RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
+				RenderThread.spritesheet.getUpRightCoordNormal(51)[1]
+		});	
 		texVertices.rewind();
 		
 		vboVertexID = glGenBuffers();
@@ -148,32 +163,14 @@ public class Map extends AbstractComponent {
 	public void update(float dt) {
 		if(render){
 			Entitys = world.getVisualEntities();
-				
-			PLoc = player.getPosition();
-			verticesChange.put(new float []{
-				width/2 - 2.5F, heigth/2 - 2.5F,
-				width/2 - 2.5F, heigth/2 + 2.5F,
-				width/2 + 2.5F, heigth/2 - 2.5F,		
-				width/2 + 2.5F, heigth/2 + 2.5F
-			});
-				
-			texVerticesChange.put(new float[]{
-					RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
-					RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
-					RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
-					RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
-					RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
-					RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
-					RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
-					RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
-
-
-			});
+			PLoc = player.getWorld().getController().getPosition();
+			elemente=0;
 			for(VisualEntity e: Entitys){
 				if(e instanceof StaticEntity){
 					Vector3f pos = e.getPosition();
-					if(Entitydistance(PLoc, pos) < 800){
-						pos.set(width/2 + (PLoc.x - pos.x)/5, heigth/2 + (PLoc.y - pos.y)/5, 0);
+					int kaugus = 1800;
+					if(Entitydistance(PLoc, pos) < kaugus){
+						pos.set(width/2 + (PLoc.x - pos.x)/(kaugus/(width/2)), heigth/2 + (PLoc.z - pos.z)/(kaugus/(heigth/2)), 0);
 						verticesChange.put(new float[]{
 							pos.x, pos.y - 2.5F,
 							pos.x - 2.5F, pos.y + 2.5F,
@@ -191,9 +188,12 @@ public class Map extends AbstractComponent {
 								RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
 								RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
 						});
+						elemente ++;
 					}
 				}
 			}
+			verticesChange.rewind();
+			texVerticesChange.rewind();
 		}		
 	}
 	
