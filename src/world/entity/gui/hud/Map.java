@@ -80,7 +80,7 @@ public class Map extends AbstractComponent {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			
-			Graphics2D.drawVBO(8 + (8*elemente), vboVertexID,verticesChange, vboTexVertexID, texVerticesChange, textureid);
+			Graphics2D.drawVBO(8 + (4*elemente), vboVertexID,verticesChange, vboTexVertexID, texVerticesChange, textureid);
 			
 			glDisable(GL_BLEND);
 			
@@ -170,13 +170,29 @@ public class Map extends AbstractComponent {
 					Vector3f pos = e.getPosition();
 					int kaugus = 1800;
 					if(Entitydistance(PLoc, pos) < kaugus){
-						pos.set(width/2 + (PLoc.x - pos.x)/(kaugus/(width/2)), heigth/2 + (PLoc.z - pos.z)/(kaugus/(heigth/2)), 0);
-						verticesChange.put(new float[]{
-							pos.x, pos.y - 2.5F,
-							pos.x - 2.5F, pos.y + 2.5F,
-							pos.x + 2.5F, pos.y + 2.5F,
-							pos.x, pos.y - 2.5F
-						});
+						pos.set(width/2 + (PLoc.x - pos.x)*width/(2*kaugus),pos.y, heigth/2 + (PLoc.z - pos.z)*heigth/(2*kaugus));
+						if(PLoc.y < pos.y - 50){
+							verticesChange.put(new float[]{
+								pos.x, pos.z - 2.5F,
+								pos.x - 2.5F, pos.z + 2.5F,
+								pos.x + 2.5F, pos.z + 2.5F,
+								pos.x, pos.z - 2.5F
+							});
+						}else if(PLoc.y > pos.y + 50){
+							verticesChange.put(new float[]{
+								pos.x, pos.z + 2.5F,
+								pos.x - 2.5F, pos.z - 2.5F,
+								pos.x + 2.5F, pos.z - 2.5F,
+								pos.x, pos.z + 2.5F
+							});
+						}else{
+							verticesChange.put(new float[]{
+								pos.x - 2.5F, pos.z - 2.5F,
+								pos.x - 2.5F, pos.z + 2.5F,
+								pos.x + 2.5F, pos.z + 2.5F,
+								pos.x + 2.5F, pos.z - 2.5F
+							});
+						}
 						
 						texVerticesChange.put(new float[]{
 								RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
@@ -208,7 +224,7 @@ public class Map extends AbstractComponent {
 	}
 	
 	public float Entitydistance(Vector3f Player, Vector3f Entity){
-		return (float)(Math.sqrt(Math.pow((Player.x - Entity.x), 2)+ Math.pow((Player.y - Entity.y), 2)));
+		return (float)(Math.sqrt(Math.pow((Player.x - Entity.x), 2)+ Math.pow((Player.z - Entity.z), 2)));
 	}
 
 }
