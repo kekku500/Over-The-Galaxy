@@ -38,6 +38,7 @@ import world.graphics.Graphics2D;
 public class MiniMap extends AbstractComponent{
 	private static int vboVertexID;
 	private static int vboTexVertexID;
+	private static int elemente;
 	
 	private static int width = 250;
 	private static int heigth = 138;
@@ -46,14 +47,15 @@ public class MiniMap extends AbstractComponent{
 	private Player player;
 	
 	private Set<VisualEntity> Entitys;
-	private BufferSubData verticesChange = new BufferSubData(BufferUtils.createFloatBuffer(2 * 6), 0).setOffsetByFloat(12);
-	private Vector3f PlayerLocation;
+	private BufferSubData verticesChange = new BufferSubData(BufferUtils.createFloatBuffer(8 * 100), 0, false).setOffsetByFloat(16);
+	private BufferSubData texVerticesChange = new BufferSubData(BufferUtils.createFloatBuffer(8 * 100), 0, false).setOffsetByFloat(16);
+	private Vector3f PLoc;
 	
 	public MiniMap(World world, Player player){
 		this.world = world;
 		this.player = player;
 		
-		PlayerLocation = player.getPosition();
+		PLoc = player.getPosition();
 		Entitys = world.getVisualEntities();
 		setPosition(250, Game.height-heigth);
 	}
@@ -72,7 +74,7 @@ public class MiniMap extends AbstractComponent{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		
-		Graphics2D.drawVBO(8, vboVertexID, vboTexVertexID, textureid);
+		Graphics2D.drawVBO(8 + (4*elemente), vboVertexID,verticesChange, vboTexVertexID, texVerticesChange, textureid);
 		
 		glDisable(GL_BLEND);
 		
@@ -83,29 +85,54 @@ public class MiniMap extends AbstractComponent{
 	//Lisada tekstuuri kordinaatide muutuste buffer.
 	public void update(float dt) {
 		Entitys = world.getVisualEntities();
-		PlayerLocation = player.getPosition();
-		
-		verticesChange.put(new float []{
-			width/2 - 2.5F, heigth/2 - 2.5F,
-			width/2 - 2.5F, heigth/2 + 2.5F,
-			width/2 + 2.5F, heigth/2 - 2.5F,
-			width/2 + 2.5F, heigth/2 + 2.5F
-		});
-		
+		PLoc = player.getWorld().getController().getPosition();
+		elemente=0;
 		for(VisualEntity e: Entitys){
 			if(e instanceof StaticEntity){
 				Vector3f pos = e.getPosition();
-				if(Entitydistance(PlayerLocation, pos) < 300){
-					//Kordinaatide teisendus luua
-					verticesChange.put(new float[]{
-						pos.x, pos.y - 2.5F,
-						pos.x - 2.5F, pos.y + 2.5F,
-						pos.x + 2.5F, pos.y + 2.5F,
-						pos.x, pos.y - 2.5F
+				int kaugusx = 250;
+				int kaugusy = 138;
+				if(Entitydistance(PLoc, pos) < Math.sqrt(Math.pow(kaugusx, 2)+ Math.pow(kaugusy, 2))){
+					pos.set(width/2 + (PLoc.x - pos.x)*width/(2*kaugusx),0, heigth/2 + (PLoc.z - pos.z)*heigth/(2*kaugusy));
+					if(PLoc.y < pos.y - 50){
+						verticesChange.put(new float[]{
+							pos.x, pos.z - 2.5F,
+							pos.x - 2.5F, pos.z + 2.5F,
+							pos.x + 2.5F, pos.z + 2.5F,
+							pos.x, pos.z - 2.5F
+						});
+					}else if(PLoc.y > pos.y + 50){
+						verticesChange.put(new float[]{
+							pos.x, pos.z + 2.5F,
+							pos.x - 2.5F, pos.z - 2.5F,
+							pos.x + 2.5F, pos.z - 2.5F,
+							pos.x, pos.z + 2.5F
+						});
+					}else{
+						verticesChange.put(new float[]{
+							pos.x - 2.5F, pos.z - 2.5F,
+							pos.x - 2.5F, pos.z + 2.5F,
+							pos.x + 2.5F, pos.z + 2.5F,
+							pos.x + 2.5F, pos.z - 2.5F
+						});
+					}
+					
+					texVerticesChange.put(new float[]{
+							RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
+							RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
+							RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
+							RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
+							RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
+							RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
+							RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
+							RenderThread.spritesheet.getUpRightCoordNormal(51)[1],
 					});
+					elemente ++;
 				}
 			}
 		}
+		verticesChange.rewind();
+		texVerticesChange.rewind();
 	}
 
 	public Entity setLink(Entity t) {
@@ -121,13 +148,13 @@ public class MiniMap extends AbstractComponent{
 	}
 
 	public float Entitydistance(Vector3f Player, Vector3f Entity){
-		return (float)(Math.sqrt(Math.pow((Player.x - Entity.x), 2)+ Math.pow((Player.y - Entity.y), 2)));
+		return (float)(Math.sqrt(Math.pow((Player.x - Entity.x), 2)+ Math.pow((Player.z - Entity.z), 2)));
 	}
 	
 	@Override
 	public void init() {
-		FloatBuffer vertices = BufferUtils.createFloatBuffer(2 * 8);
-		FloatBuffer texVertices = BufferUtils.createFloatBuffer(2 * 8);
+		FloatBuffer vertices = BufferUtils.createFloatBuffer(8 * 102);
+		FloatBuffer texVertices = BufferUtils.createFloatBuffer(8 * 102);
 		
 		vertices.put(new float[]{
 				0,0,
@@ -135,11 +162,13 @@ public class MiniMap extends AbstractComponent{
 				width,heigth,
 				width,0,
 				
-				0,0,
-				0,heigth,
-				width,heigth,
-				width,0		
-		});
+				width/2 - 2.5F, heigth/2 - 2.5F,
+				width/2 - 2.5F, heigth/2 + 2.5F,
+				width/2 + 2.5F, heigth/2 + 2.5F,
+				width/2 + 2.5F, heigth/2 - 2.5F		
+
+	
+		});	
 		vertices.rewind();
 		
 		texVertices.put(new float[]{
@@ -151,17 +180,16 @@ public class MiniMap extends AbstractComponent{
 				RenderThread.spritesheet.getBottomRightCoordNormal(52)[1],
 				RenderThread.spritesheet.getUpRightCoordNormal(52)[0],
 				RenderThread.spritesheet.getUpRightCoordNormal(52)[1],
-
-				RenderThread.spritesheet.getUpLeftCoordNormal(53)[0],
-				RenderThread.spritesheet.getUpLeftCoordNormal(53)[1],
-				RenderThread.spritesheet.getBottomLeftCoordNormal(53)[0],
-				RenderThread.spritesheet.getBottomLeftCoordNormal(53)[1],
-				RenderThread.spritesheet.getBottomRightCoordNormal(53)[0],
-				RenderThread.spritesheet.getBottomRightCoordNormal(53)[1],
-				RenderThread.spritesheet.getUpRightCoordNormal(53)[0],
-				RenderThread.spritesheet.getUpRightCoordNormal(53)[1]
-
-		});
+				
+				RenderThread.spritesheet.getUpLeftCoordNormal(51)[0],
+				RenderThread.spritesheet.getUpLeftCoordNormal(51)[1],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(51)[0],
+				RenderThread.spritesheet.getBottomLeftCoordNormal(51)[1],
+				RenderThread.spritesheet.getBottomRightCoordNormal(51)[0],
+				RenderThread.spritesheet.getBottomRightCoordNormal(51)[1],
+				RenderThread.spritesheet.getUpRightCoordNormal(51)[0],
+				RenderThread.spritesheet.getUpRightCoordNormal(51)[1]
+		});	
 		texVertices.rewind();
 		
 		vboVertexID = glGenBuffers();
