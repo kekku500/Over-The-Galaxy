@@ -1,41 +1,16 @@
 package resources.model;
 
-import static org.lwjgl.opengl.GL11.*;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.vecmath.Quat4f;
-
 import org.lwjgl.BufferUtils;
 
-import com.bulletphysics.collision.dispatch.CollisionConfiguration;
-import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
-import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.CompoundShape;
-import com.bulletphysics.collision.shapes.ConvexHullShape;
-import com.bulletphysics.collision.shapes.IndexedMesh;
-import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
-import com.bulletphysics.linearmath.QuaternionUtil;
-import com.bulletphysics.util.ObjectArrayList;
-
-import resources.Resources;
-import resources.model.custom.Sphere;
-import resources.texture.Texture;
-import shader.Shader;
 import utils.Utils;
-import utils.math.Matrix3f;
-import utils.math.Matrix4f;
-import utils.math.Transform;
-import utils.math.Vector2f;
 import utils.math.Vector3f;
-import world.World;
 
 public class Model{
 	

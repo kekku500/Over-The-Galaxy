@@ -5,16 +5,15 @@ import javax.vecmath.Quat4f;
 import resources.model.Model;
 import utils.math.Matrix4f;
 import utils.math.Transform;
+import world.culling.Generalizable;
 
-public interface VisualEntity extends WorldEntity{
+public interface VisualEntity extends Entity, Generalizable{
 	
 	public void setModel(Model m);
 	
 	public Model getModel();
 	
 	//public void openGLInitialization();
-	
-	public void render();
 
 	//public void dispose();
 	
@@ -25,8 +24,6 @@ public interface VisualEntity extends WorldEntity{
 	public void rotate(Transform t);
 	
 	public void rotate(Quat4f q);
-	
-	public boolean hasModel();
 	
 	public Matrix4f getScaleRotationMatrix();
 }

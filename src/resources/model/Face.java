@@ -1,12 +1,6 @@
 package resources.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
-
 import utils.math.Vector3f;
-import utils.math.Vector4f;
 
 /**
  * A Face in a Model. Each face is a triangle.

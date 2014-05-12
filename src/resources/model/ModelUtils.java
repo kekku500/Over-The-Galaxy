@@ -22,7 +22,7 @@ public class ModelUtils {
 		for(Vector3f v: m.vertices){
 			Vector3f a = v.copy();
 				if(scaleRotationMatrix != null)
-					a.mul(scaleRotationMatrix);
+					a.mulTra(scaleRotationMatrix);
 			vex.add(a);
 		}
 		ConvexHullShape shape = new ConvexHullShape(vex);
@@ -35,11 +35,6 @@ public class ModelUtils {
 	}
 	
 	public static IndexedMesh getStaticMesh(Model m, Matrix4f scaleRotationMatrix){
-		boolean check = false;
-		if(m.modelPath.contains("Castle")) {
-			System.out.println("CASTLE MODE");
-			check = true;
-		}
 		IndexedMesh mesh = new IndexedMesh();
 		
 		int triangleIndexBaseSize = 0;
@@ -64,7 +59,7 @@ public class ModelUtils {
 		for(Vector3f a: (m.vertices)){
 			Vector3f f = a.copy();
 			if(scaleRotationMatrix != null)
-				f.mul(scaleRotationMatrix);
+				f.mulTra(scaleRotationMatrix);
 			vertices.put((f.x)).put(f.y).put(f.z);
 		}
 		vertices.rewind();

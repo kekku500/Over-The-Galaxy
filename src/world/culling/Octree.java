@@ -1,7 +1,5 @@
 package world.culling;
 
-import static org.lwjgl.opengl.GL11.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -275,15 +273,15 @@ public class Octree<T extends Generalizable> {
 		float childSize = bounds.getSize()/2f;
 		int childLevel = level+1;
 		
-		nodes[0] = new Octree<T>(childPos.addGet(0, 0, 0), childSize, childLevel);
-		nodes[1] = new Octree<T>(childPos.addGet(0, 0, childSize), childSize, childLevel);
-		nodes[2] = new Octree<T>(childPos.addGet(childSize, 0, 0), childSize, childLevel);
-		nodes[3] = new Octree<T>(childPos.addGet(childSize, 0, childSize), childSize, childLevel);
+		nodes[0] = new Octree<T>(childPos.addr(0, 0, 0), childSize, childLevel);
+		nodes[1] = new Octree<T>(childPos.addr(0, 0, childSize), childSize, childLevel);
+		nodes[2] = new Octree<T>(childPos.addr(childSize, 0, 0), childSize, childLevel);
+		nodes[3] = new Octree<T>(childPos.addr(childSize, 0, childSize), childSize, childLevel);
 		
-		nodes[4] = new Octree<T>(childPos.addGet(0, childSize, 0), childSize, childLevel);
-		nodes[5] = new Octree<T>(childPos.addGet(0, childSize, childSize), childSize, childLevel);
-		nodes[6] = new Octree<T>(childPos.addGet(childSize, childSize, 0), childSize, childLevel);
-		nodes[7] = new Octree<T>(childPos.addGet(childSize, childSize, childSize), childSize, childLevel);
+		nodes[4] = new Octree<T>(childPos.addr(0, childSize, 0), childSize, childLevel);
+		nodes[5] = new Octree<T>(childPos.addr(0, childSize, childSize), childSize, childLevel);
+		nodes[6] = new Octree<T>(childPos.addr(childSize, childSize, 0), childSize, childLevel);
+		nodes[7] = new Octree<T>(childPos.addr(childSize, childSize, childSize), childSize, childLevel);
 	}
 	
 	@Override

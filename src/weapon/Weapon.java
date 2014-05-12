@@ -2,6 +2,7 @@ package weapon;
 
 import utils.math.Vector2i;
 
+
 public interface Weapon {
 	public Vector2i getTexture();
 	public int getID();

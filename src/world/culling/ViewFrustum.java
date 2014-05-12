@@ -1,39 +1,48 @@
 package world.culling;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import state.Game;
+import state.Copyable;
+import utils.ArrayList;
 import utils.Utils;
 import utils.math.Vector3f;
 import world.entity.VisualEntity;
 
-public class ViewFrustum implements Generalizable{
+public class ViewFrustum implements Generalizable, Copyable<ViewFrustum>{
 	
 	public enum Frustum{
 		OUTSIDE, INTERSECT, INSIDE;
 	}
 	
-	private float width, height, fov;
+	public int id = 0;
+	
+	private float aspect, fov;
 	private float zNear, zFar;
 	private Vector3f X, Y, Z, pos;
 	
 	//Derived variables
-	private float tang, ratio, sphereFactorY, sphereFactorX, Hfar, Wfar;
+	private float tang, sphereFactorY, sphereFactorX, Hfar, Wfar;
 	
-	private Set<VisualEntity> insideFrustum = new HashSet<VisualEntity>();
+	private ArrayList<VisualEntity> insideFrustum = new ArrayList<VisualEntity>();
 	
 	private boolean failIntersectCheck = false;
+	
+	@Override
+	public ViewFrustum copy() {
+		ViewFrustum copy = new ViewFrustum();
+		copy.setProjection(fov, aspect, zNear, zFar);
+		return copy;
+	}
 	
 	public void setIntersectCheckFail(boolean b){
 		failIntersectCheck = b;
 	}
 	
-	public void cullEntities(Set<VisualEntity> set){
+	public void cullEntities(ArrayList<VisualEntity> set){
 		insideFrustum.clear();
 		for(VisualEntity e: set){
+
 			Frustum test = inView(e);
 			if(test != Frustum.OUTSIDE){
 				insideFrustum.add(e);
@@ -41,25 +50,23 @@ public class ViewFrustum implements Generalizable{
 		}
 	}
 	 
-	public Set<VisualEntity> getInsideFrustumEntities(){
+	public ArrayList<VisualEntity> getInsideFrustumEntities(){
 		return insideFrustum;
 	}
 	
-	public void setProjection(float fov, float width, float height, float zNear, float zFar){
-		this.fov = fov;this.width = width;this.height = height;this.zNear = zNear;this.zFar = zFar;
-		
-		ratio = (float)this.width/this.height;
+	public void setProjection(float fov, float aspect, float zNear, float zFar){
+		this.fov = fov;this.aspect = aspect;this.zNear = zNear;this.zFar = zFar;
 		
 		float angle = (float) Math.toRadians(this.fov/2);
 		tang = (float) Math.tan(angle);
 		
 		sphereFactorY = 1/(float)Math.cos(angle);
 		
-		float anglex = (float) Math.atan(tang*ratio);
+		float anglex = (float) Math.atan(tang*aspect);
 		sphereFactorX = 1/(float)Math.cos(anglex);
 
 		Hfar = 2 * tang * zFar;
-		Wfar = Hfar * ratio;
+		Wfar = Hfar * aspect;
 	}
 	
 	public void setView(Vector3f viewRay, Vector3f rightVector, Vector3f upVector){
@@ -77,6 +84,7 @@ public class ViewFrustum implements Generalizable{
 			check = true;
 		}*/
 		Frustum sphereResult = sphereLocation(e.getBoundingSphere());
+		//System.out.println("sphere: " + sphereResult);
 		/*if(check)
 			System.out.println("SPEHRE " + sphereResult);*/
 		if(sphereResult == Frustum.INTERSECT){ //Sphere is touching Frustum
@@ -84,7 +92,7 @@ public class ViewFrustum implements Generalizable{
 				return Frustum.OUTSIDE;
 			}
 			Frustum boxResult = boxLocation(e.getBoundingAxis());
-
+			//System.out.println("box: " + boxResult);
 			/*if(check)
 				System.out.println("BOX " + boxResult);*/
 			return boxResult; //box can be inside, intersect or outside
@@ -127,7 +135,7 @@ public class ViewFrustum implements Generalizable{
 		
 		//Compute and test the X coordinate
 		ax =  v.dot(X);
-		az *= ratio; //Frustum far plane width
+		az *= aspect; //Frustum far plane width
 		d = radius * sphereFactorX;
 		if(ax > az+d || ax < -az-d){
 			return Frustum.OUTSIDE; 
@@ -160,13 +168,13 @@ public class ViewFrustum implements Generalizable{
 	}
 
 	public Vector3f[] getFrustumBox(){
-		Vector3f fc = pos.copy().add(Z.copy().mul(zFar)); //temp variable
+		Vector3f fc = pos.copy().add(Z.copy().scl(zFar)); //temp variable
 		//System.out.println("Front center is " + fc + " view ray " + Z);
-		Vector3f ftl = fc.copy().add(Y.copy().mul(Hfar/2f)).add(X.copy().mul(Wfar/2f).getNegate()); //frustum to left corner
-		Vector3f fbr = fc.copy().add(Y.copy().mul(Hfar/2f).getNegate()).add(X.copy().mul(Wfar/2f)); //frustum bottom right corner
+		Vector3f ftl = fc.copy().add(Y.copy().scl(Hfar/2f)).add(X.copy().scl(Wfar/2f).negater()); //frustum to left corner
+		Vector3f fbr = fc.copy().add(Y.copy().scl(Hfar/2f).negater()).add(X.copy().scl(Wfar/2f)); //frustum bottom right corner
 		
-		Vector3f ftr = fc.copy().add(Y.copy().mul(Hfar/2f)).add(X.copy().mul(Wfar/2f)); //frustum to left corner
-		Vector3f fbl = fc.copy().add(Y.copy().mul(Hfar/2f).getNegate()).add(X.copy().mul(Wfar/2f).getNegate()); //frustum bottom right corner
+		Vector3f ftr = fc.copy().add(Y.copy().scl(Hfar/2f)).add(X.copy().scl(Wfar/2f)); //frustum to left corner
+		Vector3f fbl = fc.copy().add(Y.copy().scl(Hfar/2f).negater()).add(X.copy().scl(Wfar/2f).negater()); //frustum bottom right corner
 		
 		return Utils.getMinMaxVectors(ftl, fbr, pos, ftr, fbl);
 
@@ -186,4 +194,6 @@ public class ViewFrustum implements Generalizable{
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+
 }

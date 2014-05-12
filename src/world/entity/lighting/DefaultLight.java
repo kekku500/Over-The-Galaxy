@@ -1,8 +1,8 @@
 package world.entity.lighting;
 
 import utils.math.Vector4f;
+import world.EntityManager;
 import world.entity.AbstractEntity;
-import world.entity.Entity;
 import world.graphics.ShadowMapper;
 
 public class DefaultLight extends AbstractEntity implements Lighting {
@@ -10,26 +10,13 @@ public class DefaultLight extends AbstractEntity implements Lighting {
 	private Vector4f ambient, diffuse, specular;
 	private boolean enabled = true;
 	
-	public DefaultLight(){
+	private boolean shadow;
+	
+	public DefaultLight(EntityManager world){
+		super(world);
 		ambient = defaultAmbient.copy();
 		diffuse = defaultDiffuse.copy();
 		specular = defaultSpeclar.copy();
-	}
-	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof Lighting){
-			Lighting ve = (Lighting)t;
-			
-			ambient = ve.getAmbient().copy();
-			diffuse = ve.getDiffuse().copy();
-			specular = ve.getSpecular().copy();
-			enabled = ve.isEnabled();
-			
-		}
-
-		return this;
 	}
 
 	public Vector4f getAmbient() {
@@ -71,6 +58,23 @@ public class DefaultLight extends AbstractEntity implements Lighting {
 		//if(isShadowed())
 		//	shadowMapper.setPos(getPosition());
 	}
+
+	@Override
+	public boolean isShadowed() {
+		return shadow;
+	}
+
+	@Override
+	public void setShadowed(boolean m) {
+		shadow = m;
+		
+	}
+
+	@Override
+	public void render() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	/*@Override
 	public void dispose(){
@@ -81,10 +85,5 @@ public class DefaultLight extends AbstractEntity implements Lighting {
 	public void openGLInitialization(){
 	}*/
 
-
-	@Override
-	public Entity getLinked() {
-		return new DefaultLight().setLink(this);
-	}
 
 }

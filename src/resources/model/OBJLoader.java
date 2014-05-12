@@ -6,14 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-
-
-
-
-import state.Game;
 import utils.math.Vector2f;
 import utils.math.Vector3f;
-import utils.math.Vector4f;
 
 public class OBJLoader {
 	

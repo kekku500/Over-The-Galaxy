@@ -10,18 +10,15 @@ import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
 
-import resources.Resources;
-import state.Game;
-import utils.math.Matrix4f;
 import utils.math.Vector3f;
-import utils.math.Vector4f;
 
 public class Utils {
 	
 	public static String getFB(FloatBuffer fb){
-		fb.rewind();
+
 		float[] f = new float[fb.limit()];
 		fb.get(f);
+		fb.rewind();
 		return Arrays.toString(f);
 	}
 	

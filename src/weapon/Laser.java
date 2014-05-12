@@ -2,6 +2,7 @@ package weapon;
 
 import utils.math.Vector2i;
 
+
 public class Laser implements Weapon{
 	private int Ammo;
 	private int MaxAmmo;

@@ -46,9 +46,9 @@ public class Thruster {
 	public void apply(PhysicalEntity entity){
 		Matrix4f m4 = entity.getBodyMatrix();
 		
-		Vector3f applyPoint = getApplyPoint().copy().mul(m4);
+		Vector3f applyPoint = getApplyPoint().copy().mulTra(m4);
 		
-		Vector3f forceStrength = getDirection().copy().mul(m4).mul(getPower());
+		Vector3f forceStrength = getDirection().copy().mulTra(m4).scl(getPower());
 		
 		entity.getBody().applyForce(forceStrength, applyPoint);
 	}

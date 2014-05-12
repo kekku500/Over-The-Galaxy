@@ -6,140 +6,150 @@ import static org.lwjgl.opengl.GL11.glLoadIdentity;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
 
 import java.nio.FloatBuffer;
-
-import javax.vecmath.Quat4f;
+import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.util.glu.GLU;
 
-import resources.model.Model;
-import resources.model.custom.Sphere;
 import state.Game;
-import utils.R;
-import utils.Utils;
+import state.RenderState;
+import state.StateVariable;
+import state.threading.RenderThread;
 import utils.math.Matrix4f;
+import utils.math.Ray;
+import utils.math.Vector2f;
 import utils.math.Vector3f;
-import world.World;
+import utils.math.Vector4f;
+import world.EntityManager;
 import world.culling.ViewFrustum;
 import world.entity.AbstractEntity;
-import world.entity.Entity;
-import world.entity.VisualEntity;
-import world.entity.WorldEntity;
-
-import com.bulletphysics.collision.dispatch.CollisionFlags;
-import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.shapes.ConvexShape;
-import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.linearmath.DefaultMotionState;
-import com.bulletphysics.linearmath.QuaternionUtil;
-import com.bulletphysics.linearmath.Transform;
 
 public class Camera extends AbstractEntity{
+	
+	//public final Matrix4f view;
+	public final Matrix4f projection;
 
-    private float fov, width, height, zNear, zFar;
-	private Matrix4f projection = new Matrix4f();
-	private Matrix4f view = new Matrix4f();
-
-    private Vector3f viewRay = new Vector3f(0,0,1); //Vector which points at the direction your'e looking at
-    private Vector3f upVector = new Vector3f(0,1,0); //Points up
-    private Vector3f rightVector = new Vector3f(1,0,0); //Cross product of viewRay and upVector
+	public float fov, zNear, zFar, aspect;
+	public float viewportWidth, viewportHeight;
     
-	public ViewFrustum cameraFrustum = new ViewFrustum();
+	public StateVariable<ViewFrustum> cameraFrustum;
+	
+	Ray ray = new Ray();
     
-    public Camera(){
-		setProjectionParameters(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
-    }
-    
-    public Camera(float x, float y, float z){
+    public Camera(EntityManager world, float x, float y, float z){
+    	super(world);
     	setPosition(x, y, z);
     	
-		setProjectionParameters(Game.fov, Game.width, Game.height, Game.zNear, Game.zFar);	
+		projection = new Matrix4f();
+		cameraFrustum = new StateVariable<ViewFrustum>(new ViewFrustum());
     }
-    
-	@Override
-	public Entity getLinked() {
-		return new Camera().setLink(this);
-	}
-    
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof Camera){
-			Camera ve = (Camera)t;
-		}
-
-		return this;
-	}
-    
 
      
     @Override
     public void update(float dt){
-		cameraFrustum.setView(getViewRay(), getRightVector(), getUpVector());
-		cameraFrustum.setPos(getPosition());
-		cameraFrustum.cullEntities(getWorld().getVisualEntities());
+		cameraFrustum.updating().setView(getViewRay(RenderState.updating()), getRightVector(RenderState.updating()), getUpVector(RenderState.updating()));
+		cameraFrustum.updating().setPos(getPosition(RenderState.getUpdatingId()));
+		cameraFrustum.updating().cullEntities(getEntityManager().getVisualEntities(RenderState.getUpdatingId()));
     }
     
-    public void setProjectionParameters(float fov, float width, float height, float zNear, float zFar){
+    public void setViewport(float viewportWidth, float viewportHeight){
+    	this.viewportWidth = viewportWidth;
+    	this.viewportHeight = viewportHeight;
+    }
+    
+    public void setProjection(float fov, float aspect, float zNear, float zFar){
     	this.fov = fov;
-    	this.width = width;
-    	this.height = height;
+    	this.aspect = aspect;
     	this.zNear = zNear;
     	this.zFar = zFar;
-    	cameraFrustum.setProjection(fov, width, height, zNear, zFar);
+    	for(ViewFrustum view : cameraFrustum.vars)
+    		view.setProjection(fov, aspect, zNear, zFar);
+    	projection.set(Matrix4f.perspectiveMatrix(fov, aspect, zNear, zFar));
     }
     
-    public void lookAt(){
-    	Vector3f position = getPosition();
-    	GLU.gluLookAt(position.x, position.y, position.z, position.x+viewRay.x, position.y+viewRay.y, position.z+viewRay.z, upVector.x, upVector.y, upVector.z);	
+    public void resized(float width, float height){
+		setProjection(fov, width / height, zNear, zFar);
     }
     
-    public void storeViewMatrixFromOpenGL(){
-    	FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        glLoadIdentity();
-    	Vector3f position = getPosition();
-        GLU.gluLookAt(position.x, position.y, position.z, position.x+viewRay.x, position.y+viewRay.y, position.z+viewRay.z, upVector.x, upVector.y, upVector.z);	
-        glGetFloat(GL_MODELVIEW_MATRIX, fb);
-        view.set(fb);
+    public Vector3f getUpVector(int state){
+    	Matrix4f viewMatrix = new Matrix4f();
+		getTransform(state).getMatrix(viewMatrix);
+		float[] up = new float[4];
+		viewMatrix.getRow(1, up);
+    	return new Vector3f(up[0], up[1], up[2]);
     }
     
-    public void storeProjectionMatrixFromOpenGL(){
-    	FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        glLoadIdentity();
-        gluPerspective(Game.fov, (float) width / (float) height, Game.zNear, Game.zFar);
-        glGetFloat(GL_MODELVIEW_MATRIX, fb);
-        projection.set(fb);
+    public Vector3f getRightVector(int state){
+    	Matrix4f viewMatrix = new Matrix4f();
+		getTransform(state).getMatrix(viewMatrix);
+		float[] right = new float[4];
+		viewMatrix.getRow(0, right);
+    	return new Vector3f(right[0], right[1], right[2]);
     }
     
-    public void updateViewMatrix(FloatBuffer fb){
-    	fb.rewind();
-        glLoadIdentity();
-        lookAt();
-        glGetFloat(GL_MODELVIEW_MATRIX, fb);
+    public Vector3f getViewRay(int state){
+    	Matrix4f viewMatrix = new Matrix4f();
+		getTransform(state).getMatrix(viewMatrix);
+		float[] ray = new float[4];
+		viewMatrix.getRow(2, ray);
+    	return new Vector3f(ray[0], ray[1], ray[2]);
     }
     
-    public Vector3f getUpVector(){
-    	return upVector;
-    }
-    
-    public Vector3f getRightVector(){
-    	return rightVector;
-    }
-    
-    public Vector3f getViewRay(){
-    	return viewRay;
-    }
-    
-    public Matrix4f getProjectionMatrix(){
-    	return projection;
-    }
-    
-    public Matrix4f getViewMatrix(){
-    	return view;
-    }
+	@Override
+	public void render() {}
+	
+	public Vector3f unproject(Vector3f screenCoords, float viewportX, float viewPortY, float viewPortWidth, float viewPortHeight){
+		float x = screenCoords.x, y = screenCoords.y;
+		x = x - viewportX;
+		y = y - viewPortY;
+		screenCoords.x = (2 * x) / viewPortWidth - 1;
+		screenCoords.y = (2 * y) / viewPortHeight - 1;
+		screenCoords.z = 2 * screenCoords.z - 1;
+		
+		Matrix4f invProjView = projection.copy();
+		invProjView.mulLeft(getTransform(RenderState.updating()).getOpenGLViewMatrix());
+		invProjView.inv();
+		invProjView.trans();
+		screenCoords.prj(invProjView);
+		
+		return screenCoords;
+	}
+	
+	public Vector3f unproject(Vector3f screenCoords){
+		return unproject(screenCoords, 0, 0, Display.getWidth(), Display.getHeight());
+	}
+	
+	public Vector3f project(Vector3f objCoords, float viewportX, float viewportY, float viewportWidth, float viewportHeight){
+		Matrix4f combined = getTransform(RenderState.updating()).getOpenGLViewMatrix().mul(projection);
+		combined.trans();
+		
+		objCoords.prj(combined);
+		objCoords.x = viewportWidth * (objCoords.x + 1) / 2 + viewportX;
+		objCoords.y = viewportHeight * (objCoords.y + 1) / 2 + viewportY;
+		objCoords.z = (objCoords.z + 1) / 2;
+		return objCoords;
+	}
+	
+	public Vector3f project(Vector3f objCoords){
+		return project(objCoords, 0, 0, Display.getWidth(), Display.getHeight());
+	}
+	
+	public Ray getPickRay (float screenX, float screenY, float viewportX, float viewportY, float viewportWidth, float viewportHeight) {
+			ray.origin.set(screenX, screenY, 0);
+			ray.direction.set(screenX, screenY, 1f);
+			unproject(ray.origin, viewportX, viewportY, viewportWidth, viewportHeight);
+			unproject(ray.direction, viewportX, viewportY, viewportWidth, viewportHeight);
+			
+			ray.direction.sub(ray.origin.copy());
+			ray.direction.nor();
+			
+			return ray;
+	}
+	
+	public Ray getPickRay (float screenX, float screenY) {
+		return getPickRay(screenX, screenY, 0, 0, Display.getWidth(), Display.getHeight());
+	}
     
 }

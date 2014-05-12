@@ -40,38 +40,5 @@ public class InputConfig {
 	public static int translationLeft = Keyboard.KEY_A;
 	public static int translationUp = Keyboard.KEY_SPACE;
 	public static int translationDown = Keyboard.KEY_LCONTROL;
-	
-	private static int mouseDx, mouseDy;
-	private static int dwheel;
-	
-	public static int getRotationX(){
-		return getMouseDX();
-	}
-	
-	public static int getRotationY(){
-		return getMouseDY();
-	}
-	
-	public static int getRotationZ(){
-		return getDWheel();
-	}
-	
-	public static int getMouseDX(){
-		return mouseDx;
-	}
-	
-	public static int getMouseDY(){
-		return mouseDy;
-	}
-	
-	public static int getDWheel(){
-		return dwheel;
-	}
-	
-	public static void refresh(){
-		mouseDx = Mouse.getDX();
-		mouseDy = Mouse.getDY();
-		dwheel = Mouse.getDWheel();
-	}
 
 }

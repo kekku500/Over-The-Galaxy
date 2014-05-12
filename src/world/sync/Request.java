@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import state.RenderState;
-import world.World;
-import world.entity.gui.Component;
-import controller.Controller;
+import world.EntityManager;
 
 /**
  * A class for updating all worlds.
@@ -19,8 +17,7 @@ public class Request<T>{
 	public enum Action{
 		ADD, //Add Entity to the world
 		REMOVE, //Remove Entity from the world
-		RELINKNEXT, //Links object with same id again in the next state
-		RELINKALL} //Links objects in all world states
+		} //Links objects in all world states
 	
 	public enum Status{
 		FINAL, //One more world left to update
@@ -46,21 +43,15 @@ public class Request<T>{
 
 	public void setAction(Action t){
 		action = t;
-		//World where relinking request is created, is considered updated world.
-		if(getAction() == Action.RELINKNEXT || getAction() == Action.RELINKALL){
-			updatedWorlds.add(RenderState.updatingId);
-		}
 	}
 	
-	public Status requestStatus(World world){
-		if(getAction() == Action.RELINKNEXT) //update only once
-			return Status.FINAL;
-		if(updatedWorlds.contains(world.getID())){
+	public Status requestStatus(){
+		if(updatedWorlds.contains(RenderState.getUpdatingId())){
 			return Status.IDLE;
 		}else
 			if(updatedWorlds.size() >= 2)
 				return Status.FINAL;	
-		updatedWorlds.add(world.getID());
+		updatedWorlds.add(RenderState.getUpdatingId());
 		return Status.CONTINUE;
 	}
 	

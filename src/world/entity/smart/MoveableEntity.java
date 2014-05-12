@@ -1,9 +1,8 @@
 package world.entity.smart;
 
-import utils.math.Vector3f;
-import world.entity.WorldEntity;
+import world.entity.Entity;
 
-public interface MoveableEntity extends WorldEntity{
+public interface MoveableEntity extends Entity{
 	
 	public void accelerate(float amount);
 	

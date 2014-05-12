@@ -1,18 +1,14 @@
 package resources;
 
-import java.io.BufferedReader;
+import static org.lwjgl.opengl.GL11.GL_MAX_TEXTURE_SIZE;
+import static org.lwjgl.opengl.GL11.glGetInteger;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import static org.lwjgl.opengl.GL11.*;
 import resources.model.Model;
 import resources.texture.Texture;
 import shader.Shader;
@@ -189,6 +185,17 @@ public class Resources {
 		if(m == null)
 			throw new Exception("Model " + modelPath + " not found!");
 		return m;
+	}
+	
+	public static Model getModelAbs(String absPath) throws Exception{
+		Model m = models.get(absPath);
+		if(m == null)
+			throw new Exception("Model " + absPath + " not found!");
+		return m;
+	}
+	
+	public static HashMap<String, Model> getModels(){
+		return models;
 	}
 	
 	/**

@@ -1,6 +1,34 @@
 package world.graphics;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_BACK;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.GL_QUADS;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glColor4f;
+import static org.lwjgl.opengl.GL11.glCullFace;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glDisableClientState;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glMultMatrix;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.glPushMatrix;
+import static org.lwjgl.opengl.GL11.glTexCoordPointer;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
@@ -8,24 +36,17 @@ import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 
 import java.awt.Font;
-import java.nio.FloatBuffer;
 import java.util.HashSet;
 
-import javax.vecmath.Quat4f;
-
 import org.lwjgl.util.glu.GLU;
-import org.lwjgl.util.vector.Vector2f;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 
-import com.bulletphysics.linearmath.QuaternionUtil;
-
-import resources.Resources;
 import resources.texture.Texture;
 import state.Game;
-import threading.RenderThread;
+import state.threading.RenderThread;
 import utils.Utils;
 import utils.math.Matrix4f;
 import utils.math.Vector3f;
@@ -43,7 +64,11 @@ public class Graphics2D {
 		//Create fonts here
 		Font awtFont = new Font("Times New Roman", 0, 0);
 		font = createFont(awtFont.deriveFont(0, 18));
+		createFont(awtFont.deriveFont(0, 12));
 		createFont(awtFont.deriveFont(0, 20));
+		createFont(awtFont.deriveFont(0, 24));
+		createFont(awtFont.deriveFont(0, 30));
+		createFont(awtFont.deriveFont(0, 36));
 		Rectangle.init();
 		
 	}
@@ -61,6 +86,16 @@ public class Graphics2D {
 		}
 		Game.println("ERROR: No font size " + size + " (create it in Graphics2D class, init method)");
 		return false;
+	}
+	
+	public static UnicodeFont getFont(int size){
+		for(UnicodeFont f: fonts){
+			if(size == f.getFont().getSize()){
+				return f;
+			}
+		}
+		Game.println("ERROR: No font size " + size + " (create it in Graphics2D class, init method)");
+		return null;
 	}
 	
 	public static UnicodeFont createFont(Font awtFont){
@@ -138,7 +173,7 @@ public class Graphics2D {
 			//Translation
 			m.translate(x, y, 0);
 
-			glMultMatrix(m.asFlippedFloatBuffer());
+			glMultMatrix(m.fb());
 
 			Rectangle.render(textureID);
 			
@@ -266,13 +301,13 @@ public class Graphics2D {
 		drawVBO(vertexCount,vboVertexID, null,0, null,0);
 	}
 	
-	public static void perspective2D(){   
+	public static void perspective2D(float width, float height){   
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
-	    GLU.gluOrtho2D(0.0f, (float)RenderThread.displayWidth, (float)RenderThread.displayHeight, 0.0f);
+	    GLU.gluOrtho2D(0.0f, (float)width, (float)height, 0.0f);
 	    glMatrixMode(GL_MODELVIEW);
 	    glLoadIdentity();
-		glViewport(0, 0, RenderThread.displayWidth, RenderThread.displayHeight);
+		glViewport(0, 0, (int)width, (int)height);
 	}
 
 }

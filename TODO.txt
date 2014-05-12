@@ -1,0 +1,2 @@
+extract physics from world
+create entity manager instead of world

@@ -1,6 +1,8 @@
 package utils;
 
-public class R<T>{ //Reference Object
+import state.Copyable;
+
+public class R<T> implements Copyable<R<T>>{ //Reference Object
 
 	T variable;
 	
@@ -31,6 +33,11 @@ public class R<T>{ //Reference Object
 	@Override
 	public String toString() {
 		return variable.toString();
+	}
+
+	@Override
+	public R<T> copy() {
+		return new R<T>(variable);
 	}
 
 }

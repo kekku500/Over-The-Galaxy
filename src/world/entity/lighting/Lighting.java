@@ -2,10 +2,9 @@ package world.entity.lighting;
 
 import utils.math.Vector4f;
 import world.entity.Entity;
-import world.entity.WorldEntity;
 import world.graphics.ShadowMapper;
 
-public interface Lighting extends WorldEntity{
+public interface Lighting extends Entity{
 	
 	public final Vector4f defaultDiffuse = new Vector4f(.75f, .75f, .75f, 1.0f);
 	public final Vector4f defaultAmbient = new Vector4f(.25f, .25f, .25f, 1.0f);
@@ -35,5 +34,9 @@ public interface Lighting extends WorldEntity{
 	public void setEnabled(boolean enable);
 	
 	public boolean isEnabled();
+	
+	public boolean isShadowed();
+	
+	public void setShadowed(boolean m);
 
 }

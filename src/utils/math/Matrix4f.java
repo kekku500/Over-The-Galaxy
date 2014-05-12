@@ -1,86 +1,147 @@
 package utils.math;
 
+import static org.lwjgl.util.glu.GLU.gluPerspective;
+
 import java.nio.FloatBuffer;
+
 
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.BufferUtils;
 
-import com.bulletphysics.linearmath.QuaternionUtil;
-
+import state.Copyable;
+import state.Game;
 import utils.Utils;
 
-public class Matrix4f extends javax.vecmath.Matrix4f{
+import com.bulletphysics.linearmath.QuaternionUtil;
+
+//OpenGL uses column-major matrix ordering.
+
+public class Matrix4f extends javax.vecmath.Matrix4f implements Copyable<Matrix4f>{
+	
+
 
 	private static final long serialVersionUID = 1L;
 	
-	public static final Matrix4f biasMatrix = new Matrix4f(new float[]{
+	public static final Matrix4f BIASMATRIX = new Matrix4f(new float[]{
 															0.5f, 0.0f, 0.0f, 0.0f, 
 															0.0f, 0.5f, 0.0f, 0.0f,
 															0.0f, 0.0f, 0.5f, 0.0f,
 															0.5f, 0.5f, 0.5f, 1.0f});
 	
-	public static final Matrix4f biasMatrixInverse = new Matrix4f(new float[]{
+	public static final Matrix4f BIASMATRIXINV = new Matrix4f(new float[]{
 															2.0f, 0.0f, 0.0f, 0.0f,
 															0.0f, 2.0f, 0.0f, 0.0f, 
 															0.0f, 0.0f, 2.0f, 0.0f, 
 															-1.0f, -1.0f, -1.0f, 1.0f});
 
-	public Matrix4f(Quat4f q, Vector3f v, float f){
-		super(q, v, f);
-	}
-	
-	public Matrix4f(FloatBuffer fb){
-		set(fb);
+	public Matrix4f(){
+		super();
 	}
 	
 	public Matrix4f(float[] vals){
 		super(vals);
 	}
 	
-	public Matrix4f(){
-		super();
+	public Matrix4f(FloatBuffer fb){
+		set(fb);
 	}
 	
-	public Matrix4f mulReverse(Matrix4f m2){
-		super.mul(m2, this);
-		return this;
-	}
-	
-	public void scaleRelative(float s){
-		scaleRelative(s, s, s);
-	}
-	
-	public void translateRelative(float x, float y, float z){
-		Matrix4f transMat = Matrix4f.translationMatrix(new Vector3f(x, y, z));
-		mulReverse(transMat);
-	}
-	
-	
-	public void scaleRelative(float x, float y, float z){
-		Matrix4f scaleMatrix = Matrix4f.scaleMatrix(new Vector3f(x, y, z));
-		mulReverse(scaleMatrix);
-	}
-	
-	public void rotateRelative(Quat4f q){
-		Matrix4f rotatedMatrix = new Matrix4f();
-		rotatedMatrix.setIdentity();
-		q.normalize();
-		rotatedMatrix.setRotation(q);
-		mulReverse(rotatedMatrix);
-	}
-	
-	public void rotateRelative(float radians, Vector3f around){
-		Quat4f q = new Quat4f();
-		Matrix4f rotationMatrix = new Matrix4f();
-		QuaternionUtil.setRotation(q, around, radians);
-		rotationMatrix.set(q);
-		mulReverse(rotationMatrix);
+	public Matrix4f(Quat4f q, Vector3f v, float f){
+		super(q, v, f);
 	}
 	
 	public Matrix4f mul(Matrix4f m2){
 		super.mul(this, m2);
 		return this;
+	}
+	
+	public static Matrix4f perspectiveMatrix(float fov, float aspect, float zNear, float zFar){
+		Matrix4f m = new Matrix4f();
+		float f = 1/(float)Math.tan(Utils.rads(fov)/2);
+		float nmf = zNear-zFar;
+		m.setRow(0, f/aspect, 0f, 0f, 0f);
+		m.setRow(1, 0f, f, 0f, 0f);
+		m.setRow(2, 0f, 0f, (zFar+zNear)/nmf, 2*zFar*zNear/nmf);
+		m.setRow(3, 0f, 0f, -1f, 0f);
+		m.trans();
+		return m;
+	}
+	
+	public static Matrix4f  toOpenGLViewMatrx(Matrix4f viewMatrix){
+		float[] ray = new float[4];
+		viewMatrix.getRow(2, ray);
+		Vector3f viewRay = new Vector3f(ray[0], ray[1], ray[2]);
+		float[] up = new float[4];
+		viewMatrix.getRow(1, up);
+		Vector3f upVector = new Vector3f(up[0], up[1], up[2]);
+		
+		float[] pos = new float[4];
+		viewMatrix.getColumn(3, pos);
+		Vector3f posVector = new Vector3f(pos[0], pos[1], pos[2]);
+		
+		return viewMatrixDirectional(posVector, viewRay, upVector);
+	}
+	
+	public static Matrix4f viewMatrix(Vector3f eye, Vector3f center, Vector3f up, Vector3f pos){
+		Matrix4f m = new Matrix4f();
+		m.setRow(0, eye.x, center.x, up.x, 0.0f);
+		m.setRow(1, eye.y, center.y, up.y, 0.0f);
+		m.setRow(2, eye.z, center.z, up.z, 0.0f);
+		m.setRow(3, -eye.dot(pos), -center.dot(pos), -up.dot(pos), 1.0f);
+		return m;
+	}
+	
+	public static Matrix4f viewMatrixPositional(Vector3f cameraPosition, Vector3f lookAtPosition, Vector3f upOrientation){
+		return viewMatrixDirectional(cameraPosition, lookAtPosition.copy().add(cameraPosition.copy().negater()), upOrientation);
+	}
+	
+	public static Matrix4f viewMatrixDirectional(Vector3f cameraPosition, Vector3f lookAtDirection, Vector3f upOrientation){
+		Matrix4f m = new Matrix4f();
+		
+		Vector3f f = lookAtDirection.copy().nor();
+		
+		Vector3f upii = upOrientation.copy().nor();
+		
+		Vector3f s = f.copy().crs(upii);
+		
+		Vector3f sii = s.copy().nor();
+		
+		Vector3f u = sii.copy().crs(f);
+		
+		m.setRow(0, s.x, s.y, s.z, 0);
+		m.setRow(1, u.x, u.y, u.z, 0);
+		m.setRow(2, -f.x, -f.y, -f.z, 0);
+		m.setRow(3, 0, 0, 0, 1.0f);
+		m.trans();
+		
+		Matrix4f transMat = Matrix4f.translationMatrix(cameraPosition.copy().negater());
+		m.mulLeft(transMat);
+		
+		return m;
+	}
+	
+	public static Matrix4f translationMatrix(Vector3f v){
+		return translationMatrix(v.x, v.y, v.z);
+	}
+	
+	public static Matrix4f translationMatrix(float x, float y, float z){
+		Matrix4f m = new Matrix4f();
+		m.setRow(0, 1.0f, 0.0f, 0.0f, 0.0f);
+		m.setRow(1, 0.0f, 1.0f, 0.0f, 0.0f);
+		m.setRow(2, 0.0f, 0.0f, 1.0f, 0.0f);
+		m.setRow(3, x, y, z, 1.0f);
+
+		return m;
+	}
+	
+	public static Matrix4f scaleMatrix(Vector3f v){
+		Matrix4f m = new Matrix4f();
+		m.setRow(0, v.x, 0.0f, 0.0f, 0.0f);
+		m.setRow(1, 0.0f, v.y, 0.0f, 0.0f);
+		m.setRow(2, 0.0f, 0.0f, v.z, 0.0f);
+		m.setRow(3, 0.0f, 0.0f, 0.0f, 1.0f);
+		return m;
 	}
 	
 	public void translate(float x, float y, float z){
@@ -109,11 +170,41 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		rotationMatrix.set(q);
 		mul(rotationMatrix);
 	}
+
+	public Matrix4f mulLeft(Matrix4f m2){
+		super.mul(m2, this);
+		return this;
+	}
 	
-	public void rotateLwjgl(float radian, Vector3f axis){
-		org.lwjgl.util.vector.Matrix4f m = new org.lwjgl.util.vector.Matrix4f();
-		m.rotate(radian, axis.lwjglVector3f());
-		set(m);
+	public void scaleLeft(float s){
+		scaleleft(s, s, s);
+	}
+	
+	public void translateLeft(float x, float y, float z){
+		Matrix4f transMat = Matrix4f.translationMatrix(new Vector3f(x, y, z));
+		mulLeft(transMat);
+	}
+	
+	
+	public void scaleleft(float x, float y, float z){
+		Matrix4f scaleMatrix = Matrix4f.scaleMatrix(new Vector3f(x, y, z));
+		mulLeft(scaleMatrix);
+	}
+	
+	public void rotateLeft(Quat4f q){
+		Matrix4f rotatedMatrix = new Matrix4f();
+		rotatedMatrix.setIdentity();
+		q.normalize();
+		rotatedMatrix.setRotation(q);
+		mulLeft(rotatedMatrix);
+	}
+	
+	public void rotateLeft(float radians, Vector3f around){
+		Quat4f q = new Quat4f();
+		Matrix4f rotationMatrix = new Matrix4f();
+		QuaternionUtil.setRotation(q, around, radians);
+		rotationMatrix.set(q);
+		mulLeft(rotationMatrix);
 	}
 	
 	public Vector4f mul(Vector4f u){
@@ -127,33 +218,17 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		return v;
 	}
 	
-	public Matrix4f transposeGet(){
-		super.transpose();
-		return this;
-	}
-	
-	public Matrix4f invertGet(){
-		invert();
-		return this;
-	}
-	
-	public Matrix4f setIdentityGet(){
-		super.setIdentity();
-		return this;
-	}
-	
-	public void set(int i, float val){
-		setElement(i/4, i%4, val);
+
+	public void set(int index, float val){
+		setElement(index/4, index%4, val);
 	}
 	
 	public Matrix4f set(FloatBuffer fb){
 		float[] a = new float[16];
 		fb.get(a);
 		fb.flip();
-		m00=a[0]; m01=a[1]; m02=a[2]; m03=a[3];
-		m10=a[4]; m11=a[5]; m12=a[6]; m13=a[7];
-		m20=a[8]; m21=a[9]; m22=a[10]; m23=a[11];
-		m30=a[12]; m31=a[13]; m32=a[14]; m33=a[15];
+		super.set(a);
+
 		return this;
 	}
 	
@@ -161,40 +236,18 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		return getElement(i/4, i%4);
 	}
 	
+	public Matrix4f setAsRotation(float angle, Vector3f rotationNormal){
+		setIdentity();
+		Quat4f rotation = new Quat4f();
+		
+		QuaternionUtil.setRotation(rotation, rotationNormal, Utils.rads(angle));
+		
+		setRotation(rotation);
 
-	
-	public static Matrix4f viewMatrix(Vector3f eye, Vector3f center, Vector3f up, Vector3f pos){
-		Matrix4f m = new Matrix4f();
-		m.setRow(0, eye.x, center.x, up.x, 0.0f);
-		m.setRow(1, eye.y, center.y, up.y, 0.0f);
-		m.setRow(2, eye.z, center.z, up.z, 0.0f);
-		m.setRow(3, -eye.dot(pos), -center.dot(pos), -up.dot(pos), 1.0f);
-		return m;
-	}
-
-	public static Matrix4f translationMatrix(Vector3f v){
-		Matrix4f m = new Matrix4f();
-		m.setRow(0, 1.0f, 0.0f, 0.0f, 0.0f);
-		m.setRow(1, 0.0f, 1.0f, 0.0f, 0.0f);
-		m.setRow(2, 0.0f, 0.0f, 1.0f, 0.0f);
-		m.setRow(3, v.x, v.y, v.z, 1.0f);
-		return m;
+		return this;
 	}
 	
-	public static Matrix4f scaleMatrix(Vector3f v){
-		Matrix4f m = new Matrix4f();
-		m.setRow(0, v.x, 0.0f, 0.0f, 0.0f);
-		m.setRow(1, 0.0f, v.y, 0.0f, 0.0f);
-		m.setRow(2, 0.0f, 0.0f, v.z, 0.0f);
-		m.setRow(3, 0.0f, 0.0f, 0.0f, 1.0f);
-		return m;
-	}
-	
-	public Matrix4f copy(){
-		return (Matrix4f)clone();
-	}
-	
-	public FloatBuffer asFlippedFloatBuffer(){
+	public FloatBuffer fb(){
 		FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 		float[] array = {m00, m01, m02, m03,
 						 m10, m11, m12, m13,
@@ -205,36 +258,32 @@ public class Matrix4f extends javax.vecmath.Matrix4f{
 		return fb;
 	}
 	
-	/**
-	 * @return Converts this matrix to lwjgl matrix
-	 */
-	public org.lwjgl.util.vector.Matrix4f lwjglMatrix4f(){
-		org.lwjgl.util.vector.Matrix4f m = new org.lwjgl.util.vector.Matrix4f();
-		m.m00 = m00;		m.m10 = m10;		m.m20 = m20;		m.m30 = m30;
-		m.m01 = m01;		m.m11 = m11;		m.m21 = m21;		m.m31 = m31;
-		m.m02 = m02;		m.m12 = m12;		m.m22 = m22;		m.m32 = m32;
-		m.m03 = m03;		m.m13 = m13;		m.m23 = m23;		m.m33 = m33;
-		return m;
+	public float[] get(){
+		float[] array = {m00, m01, m02, m03,
+						 m10, m11, m12, m13,
+						 m20, m21, m22, m23,
+						 m30, m31, m32, m33};
+		return array;
 	}
 	
-	/**
-	 * @return Converts this matrix to pure vecmath matrix
-	 */
-	public javax.vecmath.Matrix4f vecmathMatrix4f(){
-		javax.vecmath.Matrix4f m = new javax.vecmath.Matrix4f();
-		m.m00 = m00;		m.m10 = m10;		m.m20 = m20;		m.m30 = m30;
-		m.m01 = m01;		m.m11 = m11;		m.m21 = m21;		m.m31 = m31;
-		m.m02 = m02;		m.m12 = m12;		m.m22 = m22;		m.m32 = m32;
-		m.m03 = m03;		m.m13 = m13;		m.m23 = m23;		m.m33 = m33;
-		return m;
-	}
-	
-	private Matrix4f set(org.lwjgl.util.vector.Matrix4f m){
-		m00 = m.m00;		m10 = m.m10;		m20 = m.m20;		m30 = m.m30;
-		m01 = m.m01;		m11 = m.m11;		m21 = m.m21;		m31 = m.m31;
-		m02 = m.m02;		m12 = m.m12;		m22 = m.m22;		m32 = m.m32;
-		m03 = m.m03;		m13 = m.m13;		m23 = m.m23;		m33 = m.m33;
+	public Matrix4f trans(){
+		super.transpose();
 		return this;
+	}
+	
+	public Matrix4f inv(){
+		invert();
+		return this;
+	}
+	
+	public Matrix4f idy(){
+		super.setIdentity();
+		return this;
+	}
+	
+	@Override
+	public Matrix4f copy(){
+		return new Matrix4f(get());
 	}
 
 }

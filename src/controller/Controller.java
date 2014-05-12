@@ -2,19 +2,20 @@ package controller;
 
 import input.InputConfig;
 
-import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import state.RenderState;
 import utils.Utils;
+import utils.math.Matrix4f;
+import utils.math.Transform;
 import utils.math.Vector3f;
+import world.EntityManager;
 import world.entity.Entity;
-import world.entity.WorldEntity;
 
 import com.bulletphysics.linearmath.QuaternionUtil;
-import com.bulletphysics.linearmath.Transform;
 
 public class Controller extends Camera{
 	
@@ -25,38 +26,23 @@ public class Controller extends Camera{
     public enum CamType{FP, _6DOF, LOCK}
     private CamType type = CamType.FP;
     
-    private WorldEntity following;
+    private Entity following;
     
     private float viewRadius = 30;
     
-    private Transform referencedTransform = new Transform(new Matrix4f(new Quat4f(0,0,0,1), new Vector3f(0,0,0), 1));
-    
-    public Controller(){}
-    
-    public Controller(float x, float y, float z){
-    	referencedTransform.origin.set(x, y, z);
-    }
-    
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof Camera){
-			Controller ve = (Controller)t;
-			following = ve.getFollowing();
-			referencedTransform = ve.referencedTransform;
-			type = ve.type;
-		}
-
-		return this;
-	}
-    
-    @Override
-    public Entity getLinked(){
-    	return new Controller().setLink(this);
+    public Controller(EntityManager world,float x, float y, float z){
+    	super(world, x, y, z);
+    	//referencedTransform.origin.set(x, y, z);
     }
     
     @Override
     public void update(float dt){
+		Transform updating = getTransform(RenderState.updating());
+		Transform uptodate = getTransform(RenderState.uptodate());
+		Matrix4f uptodatem4 = new Matrix4f();
+		uptodate.getMatrix(uptodatem4);
+		updating.set(uptodatem4);
+    	
     	rotation(dt);
     	
     	translation(dt);
@@ -68,17 +54,17 @@ public class Controller extends Camera{
 		float dx = 0;
 		float dy = 0;
     	if(Mouse.isGrabbed()){
-    		dx = InputConfig.getRotationX() * mouseSensitivity * dt;
-    		dy = InputConfig.getRotationY() * mouseSensitivity * dt;
+    		dx = getEntityManager().getState().getInput().getMouseDX() * mouseSensitivity * dt;
+    		dy = getEntityManager().getState().getInput().getMouseDY() * mouseSensitivity * dt;
     	}
 		float dz = 0;
-		int wheel = InputConfig.getRotationZ();
+		int wheel = getEntityManager().getState().getInput().getMouseDWheel(RenderState.updating());
 		if(wheel > 0)
 			dz += 200 * mouseSensitivity * dt;
 		else if(wheel < 0)
 			dz -= 200 * mouseSensitivity * dt; 
 		if(type == CamType._6DOF){
-			Transform t = referencedTransform;
+			Transform t = getTransform(RenderState.updating());//referencedTransform;
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -103,7 +89,7 @@ public class Controller extends Camera{
 			
 			t.setRotation(orientation);
 		}else if(type == CamType.FP){
-			Transform t = referencedTransform;
+			Transform t = getTransform(RenderState.updating());
 			
 			Quat4f orientation = new Quat4f();
 			t.getRotation(orientation);
@@ -126,7 +112,7 @@ public class Controller extends Camera{
 			t.setRotation(orientation);
 		}else if(type == CamType.LOCK){
 			if(getFollowing() != null){
-				Transform t = getFollowing().getTransform();
+				Transform t = getFollowing().getTransform(RenderState.getUpdatingId());
 				
 				Quat4f orientation = new Quat4f();
 				t.getRotation(orientation);
@@ -145,23 +131,10 @@ public class Controller extends Camera{
 				orientation = qRotatedx;
 				orientation.normalize();*/
 				
-				Transform t2 = referencedTransform;
+				Transform t2 = getTransform(RenderState.updating());
 				t2.setRotation(orientation);
 			}
 		}
-		
-		Matrix4f viewMatrix = new Matrix4f();
-		referencedTransform.getMatrix(viewMatrix);
-		float[] ray = new float[4];
-		viewMatrix.getRow(2, ray);
-		getViewRay().set(ray[0], ray[1], ray[2]);
-		float[] up = new float[4];
-		viewMatrix.getRow(1, up);
-		getUpVector().set(up[0], up[1], up[2]);
-		float[] right = new float[4];
-		viewMatrix.getRow(0, right);
-		getRightVector().set(right[0], right[1], right[2]);
-		
     }
     
     private void translation(float dt){
@@ -169,70 +142,73 @@ public class Controller extends Camera{
 		if(Keyboard.isKeyDown(InputConfig.translationBoost))
 			speed *= shiftBoost;
 		if(getFollowing() == null){
-			Transform tr = referencedTransform;
-			Matrix4f mr = new Matrix4f();
-			tr.getMatrix(mr);
+			Transform updating = getTransform(RenderState.updating());
+			Matrix4f uptodatem4 = new Matrix4f();
+			updating.getMatrix(uptodatem4);
+			updating.set(uptodatem4);
+			
 			Vector3f delta = new Vector3f();
 			if(Keyboard.isKeyDown(InputConfig.translationForward) || Keyboard.isKeyDown(InputConfig.translationBackward)){
 				float[] ray = new float[4];
-				mr.getRow(2, ray);
+				uptodatem4.getRow(2, ray);
 				Vector3f viewRay = new Vector3f(ray[0], ray[1], ray[2]);
 				if(Keyboard.isKeyDown(InputConfig.translationForward)){
 					delta.add(viewRay);
 				}
 				if(Keyboard.isKeyDown(InputConfig.translationBackward)){
-					delta.add(viewRay.getNegate());
+					delta.add(viewRay.negater());
 				}
 			}
 			if(Keyboard.isKeyDown(InputConfig.translationRight) || Keyboard.isKeyDown(InputConfig.translationLeft)){
 				float[] right = new float[4];
-				mr.getRow(0, right);
+				uptodatem4.getRow(0, right);
 				Vector3f rightVector = new Vector3f(right[0], right[1], right[2]);
 				if(Keyboard.isKeyDown(InputConfig.translationLeft)){
 					delta.add(rightVector);
 				}
 				if(Keyboard.isKeyDown(InputConfig.translationRight)){
-					delta.add(rightVector.getNegate());
+					delta.add(rightVector.negater());
 				}
 
 			}
 			if(Keyboard.isKeyDown(InputConfig.translationUp) || Keyboard.isKeyDown(InputConfig.translationDown)){
 				float[] up = new float[4];
-				mr.getRow(1, up);
+				uptodatem4.getRow(1, up);
 				Vector3f upVector = new Vector3f(up[0], up[1], up[2]);
 				if(Keyboard.isKeyDown(InputConfig.translationUp)){
 					delta.add(upVector);
 				}
 				if(Keyboard.isKeyDown(InputConfig.translationDown)){
-					delta.add(upVector.getNegate());
+					delta.add(upVector.negater());
 				}
 			}
 			if(!delta.isZero()){ //moved
 				delta.normalize();
 				delta.scale(speed);
-				tr.origin.add(delta);
+				updating.origin.add(delta);
 			}
-			
-			setPosition(new Vector3f(referencedTransform.origin));
-
 		}else{
-			Transform tcam = referencedTransform;
+			Transform tcam = getTransform(RenderState.updating());
 			
-			Transform tfollow = getFollowing().getTransform();
+			Transform tfollow = getFollowing().getTransform(RenderState.getUpdatingId());
 			
 			Vector3f camPos = new Vector3f();
-			Vector3f viewRay = getViewRay().copy();
+			Vector3f viewRay = getViewRay(RenderState.updating()).copy();
 			viewRay.normalize();
 			viewRay.scale(viewRadius);
-			camPos.add(tfollow.origin, viewRay.getNegate());
+			camPos.add(tfollow.origin, viewRay.negater());
 			tcam.origin.set(camPos);
 			
-			setPosition(new Vector3f(tfollow.origin).copy().add(viewRay.getNegate()));
+			//setPosition(new Vector3f(tfollow.origin).copy().add(viewRay.getNegate()));
 		}
 
     }
     
-	public void setFollowing(WorldEntity e){
+    public Matrix4f getOpenGLView(int state){
+    	return getTransform(state).getOpenGLViewMatrix();
+    }
+    
+	public void setFollowing(Entity e){
 		following = e;
 	}
 	
@@ -242,7 +218,7 @@ public class Controller extends Camera{
 		return false;
 	}
 	
-	public WorldEntity getFollowing(){
+	public Entity getFollowing(){
 		return following;
 	}
 	

@@ -4,12 +4,18 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
 
-public class Matrix3f extends javax.vecmath.Matrix3f{
+import state.Copyable;
+
+public class Matrix3f extends javax.vecmath.Matrix3f implements Copyable<Matrix3f>{
 	
 	private static final long serialVersionUID = 1L;
 
 	public Matrix3f(){
 		super();
+	}
+	
+	public Matrix3f(float[] m){
+		super(m);
 	}
 
 	public Matrix3f(Matrix4f in) {
@@ -24,24 +30,38 @@ public class Matrix3f extends javax.vecmath.Matrix3f{
 		m21 = in.m21;
 		m22 = in.m22;
 	}
-	public Matrix3f invertGet(){
+
+	
+	public FloatBuffer fb(){
+		FloatBuffer fb = BufferUtils.createFloatBuffer(9);
+		float[] array = {m00, m01, m02,
+						 m10, m11, m12,
+						 m20, m21, m22};
+		fb.put(array);
+		fb.flip();
+		return fb;
+	}
+	
+	public float[] get(){
+		float[] array = {m00, m01, m02,
+						 m10, m11, m12,
+						 m20, m21, m22};
+		return array;
+	}
+	
+	public Matrix3f inv(){
 		invert();
 		return this;
 	}
 	
-	public Matrix3f transposeGet(){
+	public Matrix3f trans(){
 		transpose();
 		return this;
 	}
-	
-	public FloatBuffer asFlippedFloatBuffer(){
-		FloatBuffer fb = BufferUtils.createFloatBuffer(9);
-		float[] array = {m00, m01, m02,
-						 m10, m11, m12,
-						 m20, m21, m22 };
-		fb.put(array);
-		fb.flip();
-		return fb;
+
+	@Override
+	public Matrix3f copy() {
+		return new Matrix3f(get());
 	}
 
 }

@@ -2,30 +2,17 @@ package world.entity.lighting;
 
 import utils.math.Vector3f;
 import utils.math.Vector4f;
-import world.entity.Entity;
+import world.EntityManager;
 
 public class DefaultSpotLight extends DefaultLight implements SpotLighting{
 	
+	public DefaultSpotLight(EntityManager world) {
+		super(world);
+	}
+
 	private float spotCutoff = (float)Math.cos(Math.toRadians(30)); //GL_SPOT_CUTOFF
 	private Vector3f spotlightDirection = new Vector3f(-1,-2, -1); //GL_SPOT_DIRECTION 
 	private float spotExponent = 0.1f; //GL_SPOT_EXPONENT
-	
-	public Entity getLinked(){
-		return new DefaultSpotLight().setLink(this);
-	}
-	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof DefaultPointLight){
-			DefaultSpotLight ve = (DefaultSpotLight)t;
-			spotCutoff = ve.getSpotCutoff();
-			spotlightDirection = ve.getSpotLightDirection();
-			spotExponent = ve.getSpotExponent();
-		}
-
-		return this;
-	}
 	
 	@Override
 	public void update(float dt){

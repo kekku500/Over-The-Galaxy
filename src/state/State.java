@@ -1,51 +1,60 @@
 package state;
 
-import input.InputListener;
+import input.InputReciever;
+import input.LWJGLInput;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-import world.World;
+import utils.R;
+import world.EntityManager;
+import world.gui.GameUserInterface;
 import world.sync.RequestList;
 
 public abstract class State{
 	
-	//If false, renderThread sleeps
-	private boolean newStuffToRender = true;
-	private boolean renderInitialized = false;
+	public static final int STATE_COUNT = 3;
+	public static final int FIRST_STATE = 0;
 	
 	//Multithreading rendering handling (synchronizing update and render threads)
-	RenderState[] renderStates = new RenderState[3];
+	RenderState[] renderStates;
 	private RequestList requestList = new RequestList();
 	
+	private GameUserInterface gameUI;
+	
+	LWJGLInput input;
+	
 	public State(){
-		renderStates[0] = new RenderState(this, 0, 0);
-		renderStates[1] = new RenderState(this, 1, -1);
-		renderStates[2] = new RenderState(this, 2, -1);
-		linkWorlds(renderStates[0].getWorld(), renderStates[1].getWorld(), renderStates[2].getWorld());
+		input = new LWJGLInput();
+		renderStates = new RenderState[STATE_COUNT];
+		for(int i = 0;i<STATE_COUNT;i++)
+			renderStates[i] = new RenderState(i, (i == FIRST_STATE ? 0 : -1));
 	}
 	
-	/**
-	 * Gives all worlds same dynamic world and camera
-	 * @param worlds
-	 */
-	private void linkWorlds(World...worlds){
-		World mainWorld = worlds[0];
-		mainWorld.init();
-		
-		//mainWorld.getCamera().openGLInitialization();
-		
-		for(int i=1;i<worlds.length;i++)
-			worlds[i].setLink(mainWorld);
-			//mainWorld.linkWorlds(worlds[i]);
+	public void setInput(LWJGLInput input){
+		this.input = input;
+	}
+	
+	public LWJGLInput getInput(){
+		return input;
 	}
 	
 	//ABSTRACT
 	
 	public abstract void init();
 	
-	public void update1(float dt){
-		InputListener.reset();
-		
+	public void setGameUI(GameUserInterface globalUI){
+		this.gameUI = globalUI;
+	}
+	
+	public GameUserInterface getGameUI(){
+		return gameUI;
+	}
+	
+	public void beginUpdate(float dt){
+		input.updateInputState();
+			
 		update(dt);
 	}
 	
@@ -56,11 +65,6 @@ public abstract class State{
 	public abstract void dispose();
 	
 	public abstract int getId();
-	
-	//SET
-	public void setStuffToRender(boolean b){
-		newStuffToRender = b;
-	}
 	
 	//GET
 	/**
@@ -102,37 +106,54 @@ public abstract class State{
 	 * @return
 	 */
 	public String getStatesCounts(){
-		int[] counts = {0,0,0};
+		String[] counts = {"0","0","0"};
 		int i = 0;
 		for(RenderState state: renderStates){
-			counts[i] = state.getFrameCount();
+			counts[i] = Integer.toString(state.getFrameCount());
+			if(state.isUpdating())
+				counts[i] += "(u)";
+			if(state.isRendering())
+				counts[i] += "(r)";
 			i++;
 		}
-		return Arrays.toString(counts);
+		return "[" + counts[0] + " " + counts[1] + " " + counts[2] + "]";
 	}
+	
+	
+	public int getPreviousStateId(){
+		int updatingFrame = getUpdatingState().getFrameCount(); //highest count
+		for(RenderState s: getRenderStates()){
+			if(s.getFrameCount() == updatingFrame-1){
+				return s.getId();
+			}
+		}
+		
+		return -1;
+	}
+	
+	public abstract void resized(float width, float height);
 	
 	public RequestList getRequestList(){
 		return requestList;
 	}
 	
 	public RenderState getUpdatingState(){
-		return renderStates[RenderState.updatingId];
+		return renderStates[RenderState.getUpdatingId()];
 	}
 	
 	public RenderState getRenderingState(){
-		return renderStates[RenderState.renderingId];
+		return renderStates[RenderState.getRenderingId()];
 	}
 	
 	public RenderState getUpToDateState(){
-		return renderStates[RenderState.upToDateId];
+		return renderStates[RenderState.getUpToDateId()];
 	}
 	
 	public RenderState[] getRenderStates(){
 		return renderStates;
 	}
 	
-	public boolean newStuffToRender(){
-		return newStuffToRender;
-	}
+
+
 
 }

@@ -3,11 +3,11 @@
 const int MAX_LIGHTS = 10;
 
 uniform sampler2D ColorBuffer, NormalBuffer, DepthBuffer, SSAOTexture, RotationTexture;
-//uniform sampler2DArrayShadow ShadowCubeMap;
-uniform sampler2DShadow ShadowCubeMap;
-uniform mat4x4 ProjectionBiasInverse, ViewInverse, LightTexture;
+uniform sampler2DArrayShadow ShadowCubeMap; ///---------------
+uniform sampler2DShadow ShadowMap;
+uniform mat4x4 ProjectionBiasInverse, ViewInverse, LightTexture[7];  ///---------------
 uniform vec2 Samples[16];
-uniform int Shadows, Filtering, Occlusion, CubeLight[MAX_LIGHTS];
+uniform int Shadows, Filtering, Occlusion;
 
 uniform sampler2D MaterialAmbient, MaterialDiffuse, MaterialSpecular, MaterialEmission, MaterialShininess;
 
@@ -19,6 +19,8 @@ uniform float LightSourceSpotCutoff[MAX_LIGHTS], LightSourceSpotExponent[MAX_LIG
 uniform vec3 LightSourceSpotLightDirection[MAX_LIGHTS];
 uniform int LightSourceType[MAX_LIGHTS]; //0 - directional, 1 - point, 2 - spot
 uniform int LightCount;
+uniform int CubeShadowedLight; ///---------------
+uniform int DirectionalShadowEnabled; //---------------
 
 uniform float SkyBoxIntensity;
 
@@ -61,29 +63,82 @@ void main(){
 		
 		//find shadow
 		// shadows ------------------------------------------------------------------------------------------------------------
-		float Shadow = 1.0;
+		//normal
 
+		float DirShadow = 1.0;
+		float CubeShadow = 1.0;
 		if(Shadows == 1){
-			vec4 ShadowTexCoord = LightTexture * vec4(Position.xyz, 1.0);
+			if(DirectionalShadowEnabled == 1){
+				vec4 ShadowTexCoord = LightTexture[0] * vec4(Position.xyz, 1.0);
 
-			if(Filtering == 1){
-				vec2 r = normalize(texture2D(RotationTexture, gl_TexCoord[1].st).rg * 2.0 - 1.0);
+				if(Filtering == 1){
+					vec2 r = normalize(texture2D(RotationTexture, gl_TexCoord[1].st).rg * 2.0 - 1.0);
 
-				mat2x2 RotationMatrix = mat2x2(r.x, r.y, -r.y, r.x);
+					mat2x2 RotationMatrix = mat2x2(r.x, r.y, -r.y, r.x);
 
-				Shadow = 0.0;
+					DirShadow = 0.0;
 
-				for(int n = 0; n < 16; n++){
-					Shadow += shadow2DProj(ShadowCubeMap, ShadowTexCoord + vec4(RotationMatrix * Samples[n] * ShadowTexCoord.w, -0.0009765625 * ShadowTexCoord.w, 0.0)).r;
+					for(int n = 0; n < 16; n++){
+						DirShadow += shadow2DProj(ShadowMap, ShadowTexCoord + vec4(RotationMatrix * Samples[n] * ShadowTexCoord.w, -0.0009765625 * ShadowTexCoord.w, 0.0)).r;
+					}
+
+					DirShadow *= 0.0625;
+				}else{
+					ShadowTexCoord.z -= 0.0009765625 * ShadowTexCoord.w;
+
+					DirShadow = shadow2DProj(ShadowMap, ShadowTexCoord).r;
+				};
+			}
+
+			if(CubeShadowedLight != -1){
+				vec3 LightDirectionCube = LightSourcePosition[CubeShadowedLight] - Position.xyz; 
+			
+				int MaxAxisID = 0;
+
+				vec3 CubeShadowLightDirection = (ViewInverse * vec4(LightDirectionCube, 0.0)).xyz;
+				float Axis[6];
+		
+				Axis[0] = -CubeShadowLightDirection.x;
+				Axis[1] = CubeShadowLightDirection.x;
+				Axis[2] = -CubeShadowLightDirection.y;
+				Axis[3] = CubeShadowLightDirection.y;
+				Axis[4] = -CubeShadowLightDirection.z;
+				Axis[5] = CubeShadowLightDirection.z;
+						
+				for(int i = 1; i < 6; i++)
+				{
+					if(Axis[i] > Axis[MaxAxisID])
+					{
+						MaxAxisID = i;
+					}
 				}
 
-				Shadow *= 0.0625;
-			}else{
-				ShadowTexCoord.z -= 0.0009765625 * ShadowTexCoord.w;
+				vec4 ShadowTexCoord = LightTexture[1+MaxAxisID] * vec4(Position.xyz, 1.0);
+				ShadowTexCoord.xyz /= ShadowTexCoord.w;
+				ShadowTexCoord.w = ShadowTexCoord.z;
+				ShadowTexCoord.z = float(MaxAxisID);
 
-				Shadow = shadow2DProj(ShadowCubeMap, ShadowTexCoord).r;
-			};
-		}
+				if(Filtering == 1){
+					vec2 r = normalize(texture2D(RotationTexture, gl_TexCoord[1].st).rg * 2.0 - 1.0);
+
+					mat2x2 RotationMatrix = mat2x2(r.x, r.y, -r.y, r.x);
+
+					CubeShadow = 0.0;
+
+					for(int i = 0; i < 16; i++)
+					{
+						CubeShadow += shadow2DArray(ShadowCubeMap, ShadowTexCoord + vec4(RotationMatrix * Samples[i] * ShadowTexCoord.w, -0.0009765625 * ShadowTexCoord.w, 0.0)).r;
+					}
+
+					CubeShadow *= 0.0625;
+				}else{
+					CubeShadow = shadow2DArray(ShadowCubeMap, ShadowTexCoord).r;
+				}
+			}
+			
+    	}
+		
+		float Shadow = DirShadow + CubeShadow;
 		
 		vec4 TotalAmbient = vec4(0);
 		vec4 TotalDiffuse = vec4(0);

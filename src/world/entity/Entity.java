@@ -1,20 +1,38 @@
 package world.entity;
 
-import world.World;
-import world.sync.Linkable;
+import utils.math.Transform;
+import utils.math.Vector3f;
+import world.EntityManager;
 
-public interface Entity extends Linkable<Entity> {
+public interface Entity{
 	
-	public void setID(int i);
+	public Transform getTransform(int id);
 	
-	public int getID();
+	public void setPosition(float x, float y, float z);
 	
-	public void setWorld(World world);
+	public void setPosition(Vector3f v);
 	
-	public World getWorld();
+	public Vector3f getPosition(int id);
 	
+	/**
+	 * This method is called in the update thread
+	 * @param dt - time passed since the method was last called
+	 */
 	public void update(float dt);
 	
-	public boolean isInWorld();
+	/**
+	 * This method is called in the render thread
+	 */
+	public void render();
+	
+	/**
+	 * World where object is
+	 * @return
+	 */
+	public EntityManager getEntityManager();
+	
+	public Object getUserData();
+	
+	public void setUserData(Object o);
 	
 }

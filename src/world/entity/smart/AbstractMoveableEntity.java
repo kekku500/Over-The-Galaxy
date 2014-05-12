@@ -1,17 +1,15 @@
 package world.entity.smart;
 
-import com.bulletphysics.dynamics.RigidBody;
-
-import utils.math.Matrix4f;
-import utils.math.Transform;
 import utils.math.Vector3f;
-import utils.math.Vector4f;
-import world.entity.Entity;
-import world.entity.PhysicalEntity;
-import world.entity.dumb.DynamicEntity;
+import world.EntityManager;
+import world.entity.create.DynamicEntity;
 
 public abstract class AbstractMoveableEntity extends DynamicEntity implements MoveableEntity {
 	
+	public AbstractMoveableEntity(EntityManager world) {
+		super(world);
+	}
+
 	//accel, decel
 	private Thruster accelThruster = new Thruster(
 			new Vector3f(0,0,-1), new Vector3f(0,0,1), 1);
@@ -30,18 +28,6 @@ public abstract class AbstractMoveableEntity extends DynamicEntity implements Mo
 			new Vector3f(0,0,-1), new Vector3f(0,-1,0), 1);
 	private Thruster rotateThrusterFrontUp = new Thruster(
 			new Vector3f(0,0,1), new Vector3f(0,1,0), 1);
-	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof AbstractMoveableEntity){
-			AbstractMoveableEntity ve = (AbstractMoveableEntity)t;
-			
-			//make references or copies
-		}
-
-		return this;
-	}
 	
 	@Override
 	public void accelerate(float amount) {

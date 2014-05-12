@@ -5,18 +5,27 @@ import main.PlayState;
 
 import org.lwjgl.Sys;
 
-import threading.ThreadManager;
+import state.threading.ThreadManager;
 
 public class Game extends ThreadManager{
 	
+	public static final boolean MAP_EDITOR_MODE = false;
+	
+	/**Disables updating and rendering of the game for better
+	 * ui debugging
+	 */
+	public static final boolean NO_RENDER = false;
+	
 	public static boolean debug = true;
 	
-	public static final String VERSION = "1.5";
+	public static final String VERSION = "1.9";
 	
 	public static int fps = 60;
 	public static float targetStep = 1f/fps; //16 milliseconds is one frame if fps is 60
-	public static int width = 800;
-	public static int height = 600;
+	public static int displayWidth = 800; //Display screen width
+	public static int displayHeight = 600; //Display screen height
+	public static int viewportWidth = 800; //camera width
+	public static int viewportHeight = 600; //camera height
 	public static boolean fullscreen = false;
 	public static int fov = 45;
 	public static float zNear = 1f;

@@ -1,32 +1,25 @@
 package world.entity.lighting;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.glColor3f;
 import resources.model.Model;
 import resources.model.custom.Sphere;
+import state.RenderState;
 import utils.math.Vector3f;
 import utils.math.Vector4f;
-import world.entity.Entity;
+import world.EntityManager;
+import world.graphics.ShadowMapper;
 import controller.Controller;
 
 public class SunLight extends AbstractVisualLight implements DirectionalLighting{
 	
+	public SunLight(EntityManager world) {
+		super(world);
+	}
+
 	private boolean lightScattering = true;
 	private Vector3f localPosition = new Vector3f();
 	private float radius;
 	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof SunLight){
-			SunLight ve = (SunLight)t;
-			
-			lightScattering = ve.isLightScattering();
-			localPosition = ve.localPosition.copy();
-			radius = ve.getRadius();
-		}
-
-		return this;
-	}
 
 	@Override
 	public void update(float dt) {
@@ -34,10 +27,10 @@ public class SunLight extends AbstractVisualLight implements DirectionalLighting
 		//setAmbient(new Vector4f(.00f,.00f,.00f,1.0f));
 		//setDiffuse(new Vector4f(0.50f,0.60f,0.00f,1.0f));
 		lightExtension.update(dt); //update shadow mapper position
-		Controller cam = getWorld().getController();
+		Controller cam = getEntityManager().getState().getCamera();
 		if(cam != null){
 			//Set sun position relative to camera position
-			positionRotation.origin.set(localPosition.copy().add(cam.getPosition()));
+			getTransform(RenderState.getUpdatingId()).origin.set(localPosition.copy().add(new Vector3f(cam.getTransform(RenderState.getUpdatingId()).origin)));
 		}
 		/*if(isShadowed()){
 			getShadowMapper().setSceneOrigin(cam.getPos());
@@ -58,14 +51,8 @@ public class SunLight extends AbstractVisualLight implements DirectionalLighting
 		glColor3f(1,1,1);
 	}
 	
-	@Override
 	public void setPosition(float x, float y, float z){
 		localPosition.set(x, y, z);
-	}
-
-	@Override
-	public Entity getLinked() {
-		return new SunLight().setLink(this);
 	}
 	
 	@Override
@@ -88,5 +75,6 @@ public class SunLight extends AbstractVisualLight implements DirectionalLighting
 	public void setLightScattering(boolean enableLightScattering) {
 		this.lightScattering = enableLightScattering;
 	}
+
 
 }

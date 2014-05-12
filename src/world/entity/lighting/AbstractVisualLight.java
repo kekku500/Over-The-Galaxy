@@ -1,29 +1,22 @@
 package world.entity.lighting;
 
 import utils.math.Vector4f;
-import world.entity.AbstractVisualEntity;
-import world.entity.Entity;
+import world.EntityManager;
+import world.entity.create.ModeledEntity;
 import world.graphics.ShadowMapper;
 
-public abstract class AbstractVisualLight extends AbstractVisualEntity implements Lighting{
+public abstract class AbstractVisualLight extends ModeledEntity implements Lighting{
 	
-	protected DefaultLight lightExtension = new DefaultLight();
+	public AbstractVisualLight(EntityManager world) {
+		super(world);
+		lightExtension = new DefaultLight(world);
+	}
+
+	protected DefaultLight lightExtension;
 	
 	@Override
 	public void update(float dt){
 		lightExtension.update(dt);
-	}
-	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof AbstractVisualLight){
-			AbstractVisualLight ve = (AbstractVisualLight)t;
-			
-			lightExtension.setLink(ve.lightExtension);
-		}
-
-		return this;
 	}
 
 	@Override
@@ -68,5 +61,16 @@ public abstract class AbstractVisualLight extends AbstractVisualEntity implement
 	public boolean isEnabled() {
 		return lightExtension.isEnabled();
 	}	
+	
+	@Override
+	public boolean isShadowed() {
+		return lightExtension.isShadowed();
+	}
+
+	@Override
+	public void setShadowed(boolean m) {
+		lightExtension.setShadowed(m);
+		
+	}
 
 }

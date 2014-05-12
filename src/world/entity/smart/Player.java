@@ -1,53 +1,45 @@
 package world.entity.smart;
 
-import input.Input;
+import input.InputReciever;
 import input.InputConfig;
-import input.InputListener;
 
 import javax.vecmath.Quat4f;
 
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import resources.Resources;
 import resources.model.Model;
-import resources.model.custom.Sphere;
+import state.RenderState;
 import utils.R;
 import utils.Utils;
-import utils.math.Matrix3f;
 import utils.math.Matrix4f;
 import utils.math.Transform;
 import utils.math.Vector3f;
 import weapon.Laser;
 import weapon.Weapon;
-import world.World;
-import world.entity.Entity;
-import world.entity.dumb.DynamicEntity;
+import world.EntityManager;
+import world.entity.create.DynamicEntity;
 
 import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.linearmath.DefaultMotionState;
-import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.QuaternionUtil;
 
 /**
  * This is temporary.
  */
 
-public class Player extends AbstractMoveableEntity implements Input{
+public class Player extends AbstractMoveableEntity implements InputReciever{
 	
 
 	private R<Float> referencedFuel = new R<Float>(100f);
 	private R<Weapon> weapon = new R<Weapon>();
 	
 	
-	public Player(){}
+	public Player(EntityManager world){
+		super(world);
+	}
 
-	public Player(float x, float y, float z) {
+	public Player(EntityManager world, float x, float y, float z) {
+		super(world);
 		setPosition(x, y, z);
 		Model model2 = null;
 		weapon.set(new Laser());
@@ -70,26 +62,19 @@ public class Player extends AbstractMoveableEntity implements Input{
 		
 		
 		createBody(model2);
+		
+		/*Model cuboid = null;
+		try {
+			cuboid = Resources.getModel("common\\cuboid.obj");
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
+		setPosition(-100, 10, 0);
+		scale(10,10,10);
+		createBody(cuboid);*/
 
 		getBody().setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-	}
-	
-	
-	@Override
-	public Entity getLinked(){
-		return new Player().setLink(this);
-	}
-	
-	@Override
-	public Entity setLink(Entity t) {
-		super.setLink(t);
-		if(t instanceof Player){
-			Player ve = (Player)t;
-			referencedFuel = ve.referencedFuel;
-			//shootBoxes = ve.shootBoxes;
-		}
-
-		return this;
 	}
 	
 	boolean shootBoxes = false;
@@ -101,26 +86,26 @@ public class Player extends AbstractMoveableEntity implements Input{
 	@Override
 	public void update(float dt){
 		if(Keyboard.isKeyDown(InputConfig.playerAccelerate)){
-			accelerate(100);
+			accelerate(1000);
 		}
 		if(Keyboard.isKeyDown(InputConfig.playerRotateRight)){
-			rotateRight(200);
+			rotateRight(2000);
 		}else if(Keyboard.isKeyDown(InputConfig.playerRotateLeft)){
-			rotateLeft(100);
+			rotateLeft(1000);
 		}
 		if(Keyboard.isKeyDown(Keyboard.KEY_I)){
-			rotateUp(200);
+			rotateUp(2000);
 		}
-		Vector3f cam = getWorld().getController().getPosition();
+		Vector3f cam = getEntityManager().getState().getCamera().getPosition(RenderState.getUpdatingId());
 		Vector3f cameraPosition = new Vector3f(cam.x , cam.y, cam.z);
-		Vector3f viewRay = getWorld().getController().getViewRay();
+		Vector3f viewRay = getEntityManager().getState().getCamera().getViewRay(RenderState.updating());
 
 		if(shootBoxes){
 			float w = 2+(float)Math.random()*5, h = 2+(float)Math.random()*5, d = 2+(float)Math.random()*5;
 			float impluseForce = 200;
 			
-			DynamicEntity box = new DynamicEntity();
-			box.setPosition(cameraPosition.copy().add(viewRay.copy().mul((float)Math.sqrt(w+h+d))));
+			DynamicEntity box = new DynamicEntity(getEntityManager());
+			box.setPosition(cameraPosition.copy().add(viewRay.copy().scl((float)Math.sqrt(w+h+d))));
 			box.scale(w, h, d);
 			try {
 				box.createBody(Resources.getModel("common\\cuboid.obj"));
@@ -131,9 +116,9 @@ public class Player extends AbstractMoveableEntity implements Input{
 
 			
 			box.getBody().activate();
-			box.getBody().applyCentralImpulse(viewRay.copy().scaleGet(impluseForce));
+			box.getBody().applyCentralImpulse(viewRay.copy().scl(impluseForce));
 			
-			getWorld().addEntity(box);
+			getEntityManager().addEntity(box);
 			
 			shootBoxes = false;
 		}

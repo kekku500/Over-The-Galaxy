@@ -1,8 +1,6 @@
 package main;
 
-import state.Game;
 import state.State;
-import world.graphics.Graphics2D;
 
 /**
  * A simple example of a state.
@@ -38,6 +36,12 @@ public class IntroState extends State{
 
 	@Override
 	public void init() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resized(float width, float height) {
 		// TODO Auto-generated method stub
 		
 	}

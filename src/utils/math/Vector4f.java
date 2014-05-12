@@ -4,7 +4,9 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
 
-public class Vector4f extends javax.vecmath.Vector4f{
+import state.Copyable;
+
+public class Vector4f extends javax.vecmath.Vector4f implements Copyable<Vector4f>{
 
 	private static final long serialVersionUID = 1L;
 	
@@ -25,49 +27,46 @@ public class Vector4f extends javax.vecmath.Vector4f{
 		return this;
 	}
 	
+	public Vector4f setr(float x, float y, float z, float w){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+		return this;
+	}
+	
 	public Vector4f mul(float m){
 		scale(m);
 		return this;
 	}
 	
+	public Vector3f vec3(){
+		return new Vector3f(x, y, z);
+	}
+	
 	public Vector4f mul(Matrix4f m){
-		Vector4f r = new Vector4f();
-		
-		r.x = m.m00*x + m.m10*y + m.m20*z + m.m30*w;
-		r.y = m.m01*x + m.m11*y + m.m21*z + m.m31*w;
-		r.z = m.m02*x + m.m12*y + m.m22*z + m.m32*w;
-		
-		set(r);
-		
-		return this;
+		return setr(
+			m.m00*x + m.m01*y + m.m02*z + m.m03*w,
+			m.m10*x + m.m11*y + m.m12*z + m.m13*w,
+			m.m20*x + m.m21*y + m.m22*z + m.m23*w,
+			m.m30*x + m.m31*y + m.m32*z + m.m33*w);
+	}
+	
+	public Vector4f mulTra(Matrix4f m){
+		return setr(
+			m.m00*x + m.m10*y + m.m20*z + m.m30*w,
+			m.m01*x + m.m11*y + m.m21*z + m.m31*w,
+			m.m02*x + m.m12*y + m.m22*z + m.m32*w,
+			m.m03*x + m.m13*y + m.m23*z + m.m33*w);
 	}
 	
 	public Vector4f set(Vector4f v){
-		x = v.x;
-		y = v.y;
-		z = v.z;
-		w = v.w;
-		return this;
+		return setr(v.x, v.y, v.z, v.w);
 	}
 	
-	public void setPositive(){
-		if(x < 0)
-			x = 0;
-		if(y < 0)
-			y = 0;
-		if(z < 0)
-			z = 0;
-		if(w < 0)
-			w = 0;
-	}
-	
-	public Vector4f getNegate(){
+	public Vector4f negater(){
 		negate();
 		return this;
-	}
-	
-	public Vector4f copy(){
-		return (Vector4f)clone();
 	}
 	
 	public boolean isZero(){
@@ -76,13 +75,17 @@ public class Vector4f extends javax.vecmath.Vector4f{
 		return false;
 	}
 	
-	
-	public FloatBuffer asFlippedFloatBuffer(){
+	public FloatBuffer fb(){
 		FloatBuffer fb = BufferUtils.createFloatBuffer(4);
 		float[] array = {x, y, z, w};
 		fb.put(array);
 		fb.flip();
 		return fb;
+	}
+	
+	@Override
+	public Vector4f copy(){
+		return new Vector4f(x, y, z, w);
 	}
 
 }
