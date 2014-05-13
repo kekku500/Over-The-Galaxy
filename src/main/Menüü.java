@@ -86,6 +86,7 @@ public class Menüü extends Application {
 	OutputStream output = null;
 	InputStream input = null;
 	Properties prop = new Properties();
+	//Hmmm... miks ei tööta
 	
 	public void Graphics(BorderPane pane){
 		try{
