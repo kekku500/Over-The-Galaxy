@@ -43,7 +43,7 @@ public class Map extends AbstractComponent {
 	private World world;
 	private Player player;
 	
-	private boolean render = true;
+	private boolean render = false;
 	private boolean brender = false;
 	private int heigth = 400;
 	private int width = 400;
