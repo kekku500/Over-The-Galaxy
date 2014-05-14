@@ -43,8 +43,8 @@ public class Map extends AbstractComponent {
 	private World world;
 	private Player player;
 	
-	private boolean render = false;
-	private boolean brender = false;
+	private static boolean render = false;
+	private static boolean brender = false;
 	private int heigth = 400;
 	private int width = 400;
 	private BufferSubData verticesChange = new BufferSubData(BufferUtils.createFloatBuffer(8 * 100), 0, false).setOffsetByFloat(16);
@@ -213,7 +213,7 @@ public class Map extends AbstractComponent {
 		}		
 	}
 	
-	public void setRender(){
+	public static void setRender(){
 		if(render){
 			brender = render;
 			render = false;

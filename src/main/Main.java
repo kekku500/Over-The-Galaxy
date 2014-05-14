@@ -20,7 +20,8 @@ import world.culling.Octree;
 public class Main {
 	
 	public static void main(String[] args){
-		new Game().start();
+		Menüü.menüü();
+		//new Game().start();
 		
 		//new SpriteSheet();
 	}

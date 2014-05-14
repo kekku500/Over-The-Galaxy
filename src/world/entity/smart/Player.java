@@ -149,6 +149,9 @@ public class Player extends AbstractMoveableEntity implements Input{
 		case Keyboard.KEY_P:
 			referencedFuel.set(referencedFuel.get()-5); 
 			break;
+		case Keyboard.KEY_M:
+			world.entity.gui.hud.Map.setRender();
+			break;
 		}
 	}
 
