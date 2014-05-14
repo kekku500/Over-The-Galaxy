@@ -86,7 +86,6 @@ public class Menüü extends Application {
 	OutputStream output = null;
 	InputStream input = null;
 	Properties prop = new Properties();
-	//Hmmm... miks ei tööta
 	
 	public void Graphics(BorderPane pane){
 		try{
@@ -273,48 +272,120 @@ public class Menüü extends Application {
 
 	}
 	
+	int playerAccelerate;
+	int playerRotateRight;
+	int playerRotateLeft;
+	
 	public void Keyconfig(BorderPane pane){
+		try{
+			input = new FileInputStream("lib/config/keyconfig.properties");
+			
+			prop.load(input);
+			
+			playerAccelerate = Integer.parseInt(prop.getProperty("playerAccelerate"));
+			playerRotateRight = Integer.parseInt(prop.getProperty("playerRotateRight"));
+			playerRotateLeft = Integer.parseInt(prop.getProperty("playerRotateLeft"));
+			
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}finally{
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		GridPane box = new GridPane();
 		pane.setCenter(box);
 		
-		final Button forward = new Button("UP");
+		box.getColumnConstraints().add(new ColumnConstraints(50));
+		box.getColumnConstraints().add(new ColumnConstraints(10));
+		box.getColumnConstraints().add(new ColumnConstraints(70));
+		box.getColumnConstraints().add(new ColumnConstraints(10));
+		
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(20));
+		box.getRowConstraints().add(new RowConstraints(20));
+		
+		final Label Forward = new Label ("Forward");
+		box.add(Forward,0,0);
+		final Button forward = new Button(Keyboard.getKeyName(playerAccelerate));
 		forward.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
 				forward.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						System.out.println(Keyboard.getKeyIndex(k.getText().toUpperCase()));
+						playerAccelerate = k.getCode().ordinal();
 						forward.setText(k.getText().toUpperCase());
 					}
 				});
 			}
 		});
-		box.add(forward, 0, 0);
+		box.add(forward, 2, 0);
 		
-		final Button left = new Button("LEFT");
+		final Label Left = new Label ("Left");
+		box.add(Left,0,1);
+		
+		final Button left = new Button(Keyboard.getKeyName(playerRotateLeft));
 		left.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
 				left.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						System.out.println((k.getText()));
+						playerRotateLeft = k.getCode().ordinal();
 						left.setText(k.getText().toUpperCase());
 					}
 				});
 			}
 		});
-		box.add(left, 0, 1);
+		box.add(left, 2, 1);
 		
-		final Button right = new Button("RIGHT");
+		final Label Right = new Label ("Right");
+		box.add(Right,0,2);
+		
+		final Button right = new Button(Keyboard.getKeyName(playerRotateRight));
 		right.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
 				right.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						System.out.println(Keyboard.getKeyIndex(k.getText().toUpperCase()));
+						playerRotateRight = k.getCode().ordinal();
 						right.setText(k.getText().toUpperCase());
 					}
 				});
 			}
 		});
-		box.add(right, 0, 2);
+		box.add(right, 2, 2);
+		
+		Button SaveButton = new Button("Save");
+		box.add(SaveButton,0, 7);
+		SaveButton.setOnMousePressed(new EventHandler<MouseEvent>(){
+			public void handle(MouseEvent event){
+				try{
+					output = new FileOutputStream("lib/config/keyconfig.properties");
+					
+					prop.setProperty("playerAccelerate", Integer.toString(playerAccelerate));
+					prop.setProperty("playerRotateRight", Integer.toString(playerRotateRight));
+					prop.setProperty("playerRotateLeft", Integer.toString(playerRotateLeft));
+				
+					prop.store(output, null);
+					
+				}catch(IOException io){
+					io.printStackTrace();
+				}finally{
+					if(output != null){
+						try{
+							output.close();
+						}catch(IOException e){
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
 	}
 }
 
