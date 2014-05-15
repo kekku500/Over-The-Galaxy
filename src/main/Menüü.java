@@ -47,6 +47,7 @@ public class Menüü extends Application {
 		nupud.setSpacing(8);
 				
 		Button start = new Button("Start");
+		start.setFocusTraversable(false);
 		start.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle (MouseEvent e){
 				new Game().start();
@@ -54,12 +55,14 @@ public class Menüü extends Application {
 			}
 		});
 		Button resolution = new Button("Graphics");
+		resolution.setFocusTraversable(false);
 		resolution.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
 				Graphics(juur);
 			}
 		});
 		Button keys = new Button("Keyconfig");
+		keys.setFocusTraversable(false);
 		keys.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
 				Keyconfig(juur);
@@ -275,6 +278,10 @@ public class Menüü extends Application {
 	int playerAccelerate;
 	int playerRotateRight;
 	int playerRotateLeft;
+	int playerRollRight;
+	int playerRollLeft;
+	int playerRollBack;
+	int playerRollForward;
 	
 	public void Keyconfig(BorderPane pane){
 		try{
@@ -285,6 +292,10 @@ public class Menüü extends Application {
 			playerAccelerate = Integer.parseInt(prop.getProperty("playerAccelerate"));
 			playerRotateRight = Integer.parseInt(prop.getProperty("playerRotateRight"));
 			playerRotateLeft = Integer.parseInt(prop.getProperty("playerRotateLeft"));
+			playerRollRight = Integer.parseInt(prop.getProperty("playerRollRight"));
+			playerRollLeft = Integer.parseInt(prop.getProperty("playerRollLeft"));
+			playerRollBack = Integer.parseInt(prop.getProperty("playerRollBack"));
+			playerRollForward = Integer.parseInt(prop.getProperty("playerRollForward"));
 			
 		}catch(IOException ex){
 			ex.printStackTrace();
@@ -298,10 +309,10 @@ public class Menüü extends Application {
 			}
 		}
 		
-		GridPane box = new GridPane();
+		final GridPane box = new GridPane();
 		pane.setCenter(box);
 		
-		box.getColumnConstraints().add(new ColumnConstraints(50));
+		box.getColumnConstraints().add(new ColumnConstraints(70));
 		box.getColumnConstraints().add(new ColumnConstraints(10));
 		box.getColumnConstraints().add(new ColumnConstraints(70));
 		box.getColumnConstraints().add(new ColumnConstraints(10));
@@ -310,18 +321,25 @@ public class Menüü extends Application {
 		box.getRowConstraints().add(new RowConstraints(30));
 		box.getRowConstraints().add(new RowConstraints(30));
 		box.getRowConstraints().add(new RowConstraints(30));
-		box.getRowConstraints().add(new RowConstraints(20));
-		box.getRowConstraints().add(new RowConstraints(20));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
+		box.getRowConstraints().add(new RowConstraints(30));
 		
 		final Label Forward = new Label ("Forward");
 		box.add(Forward,0,0);
+		
 		final Button forward = new Button(Keyboard.getKeyName(playerAccelerate));
+		forward.setMinWidth(70);
+		forward.setFocusTraversable(false);
 		forward.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
+				forward.requestFocus();
 				forward.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						playerAccelerate = k.getCode().ordinal();
-						forward.setText(k.getText().toUpperCase());
+						playerAccelerate = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						forward.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
 					}
 				});
 			}
@@ -332,12 +350,16 @@ public class Menüü extends Application {
 		box.add(Left,0,1);
 		
 		final Button left = new Button(Keyboard.getKeyName(playerRotateLeft));
+		left.setMinWidth(70);
+		left.setFocusTraversable(false);
 		left.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
+				left.requestFocus();
 				left.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						playerRotateLeft = k.getCode().ordinal();
-						left.setText(k.getText().toUpperCase());
+						playerRotateLeft = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						left.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
 					}
 				});
 			}
@@ -348,19 +370,104 @@ public class Menüü extends Application {
 		box.add(Right,0,2);
 		
 		final Button right = new Button(Keyboard.getKeyName(playerRotateRight));
+		right.setMinWidth(70);
+		right.setFocusTraversable(false);
 		right.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent e){
+				right.requestFocus();
 				right.setOnKeyPressed(new EventHandler<KeyEvent>(){
 					public void handle(KeyEvent k){
-						playerRotateRight = k.getCode().ordinal();
-						right.setText(k.getText().toUpperCase());
+						playerRotateRight = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						right.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
 					}
 				});
 			}
 		});
 		box.add(right, 2, 2);
 		
+		final Label RollRight = new Label ("Roll Right");
+		box.add(RollRight,0,3);
+		
+		final Button rollright = new Button(Keyboard.getKeyName(playerRollRight));
+		rollright.setMinWidth(70);
+		rollright.setFocusTraversable(false);
+		rollright.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			public void handle(MouseEvent e){
+				rollright.requestFocus();
+				rollright.setOnKeyPressed(new EventHandler<KeyEvent>(){
+					public void handle(KeyEvent k){
+						playerRollRight = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						rollright.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
+					}
+				});
+			}
+		});
+		box.add(rollright, 2, 3);
+		
+		final Label RollLeft = new Label ("Roll Left");
+		box.add(RollLeft,0,4);
+		
+		final Button rollleft = new Button(Keyboard.getKeyName(playerRollLeft));
+		rollleft.setMinWidth(70);
+		rollleft.setFocusTraversable(false);
+		rollleft.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			public void handle(MouseEvent e){
+				rollleft.requestFocus();
+				rollleft.setOnKeyPressed(new EventHandler<KeyEvent>(){
+					public void handle(KeyEvent k){
+						playerRollLeft = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						rollleft.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
+					}
+				});
+			}
+		});
+		box.add(rollleft, 2, 4);
+		
+		final Label RollBack = new Label ("Roll Back");
+		box.add(RollBack,0,5);
+		
+		final Button rollback = new Button(Keyboard.getKeyName(playerRollBack));
+		rollback.setMinWidth(70);
+		rollback.setFocusTraversable(false);
+		rollback.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			public void handle(MouseEvent e){
+				rollback.requestFocus();
+				rollback.setOnKeyPressed(new EventHandler<KeyEvent>(){
+					public void handle(KeyEvent k){
+						playerRollBack = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						rollback.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
+					}
+				});
+			}
+		});
+		box.add(rollback, 2, 5);
+		
+		final Label RollForward = new Label ("Roll Forward");
+		box.add(RollForward,0,6);
+		
+		final Button rollforward = new Button(Keyboard.getKeyName(playerRollForward));
+		rollforward.setMinWidth(70);
+		rollforward.setFocusTraversable(false);
+		rollforward.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			public void handle(MouseEvent e){
+				rollforward.requestFocus();
+				rollforward.setOnKeyPressed(new EventHandler<KeyEvent>(){
+					public void handle(KeyEvent k){
+						playerRollForward = Keyboard.getKeyIndex(k.getCode().getName().toUpperCase());
+						rollforward.setText(k.getCode().getName().toUpperCase());
+						box.requestFocus();
+					}
+				});
+			}
+		});
+		box.add(rollforward, 2, 6);
+		
 		Button SaveButton = new Button("Save");
+		SaveButton.setFocusTraversable(false);
 		box.add(SaveButton,0, 7);
 		SaveButton.setOnMousePressed(new EventHandler<MouseEvent>(){
 			public void handle(MouseEvent event){
@@ -370,6 +477,10 @@ public class Menüü extends Application {
 					prop.setProperty("playerAccelerate", Integer.toString(playerAccelerate));
 					prop.setProperty("playerRotateRight", Integer.toString(playerRotateRight));
 					prop.setProperty("playerRotateLeft", Integer.toString(playerRotateLeft));
+					prop.setProperty("playerRollLeft", Integer.toString(playerRollLeft));
+					prop.setProperty("playerRollRight", Integer.toString(playerRollRight));
+					prop.setProperty("playerRollBack", Integer.toString(playerRollBack));
+					prop.setProperty("playerRollForward", Integer.toString(playerRollForward));
 				
 					prop.store(output, null);
 					
