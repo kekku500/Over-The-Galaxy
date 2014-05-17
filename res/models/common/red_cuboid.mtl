@@ -1,0 +1,11 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl Material
+Ns 128.078431  //Shininess
+Ka 0.200000 0.0020000 0.0020000 //Ambient reflectivity
+Kd 0.90000 0.010000 0.010000 //Diffuse reflectivity
+Ks 0.400000 0.400000 0.600000 //Specular reflectivity
+Ni 1.000000 //Refraction
+d 0.100000 //Alpha
+illum 2

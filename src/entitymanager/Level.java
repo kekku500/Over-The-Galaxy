@@ -113,6 +113,7 @@ public class Level implements Serializable {
 						SunLight se = (SunLight)e;
 						se.setModel(new Sphere(100, 16, 16));
 						se.setPosition(2000,100,000);
+						se.setUpdatePriority((short)-6);
 					}
 				}
 	
