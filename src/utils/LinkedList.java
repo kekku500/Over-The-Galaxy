@@ -1,6 +1,7 @@
 package utils;
 
-import state.Copyable;
+import input.MsEvent;
+import main.state.Copyable;
 
 public class LinkedList<T> extends java.util.LinkedList<T> implements Copyable<LinkedList<T>>{
 

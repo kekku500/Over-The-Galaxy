@@ -1,6 +1,6 @@
 package resources.model;
 
-import utils.math.Vector3f;
+import math.Vector3f;
 
 /**
  * A Face in a Model. Each face is a triangle.

@@ -909,6 +909,7 @@
         <param name="hasCloseButton"><bool>false</bool></param>
         <param name="titleAreaBottom"><int>4</int></param>
     </theme>
+	
     <theme name="resizableframe-resizeHandle" ref="resizableframe-title" allowWildcard="true">
         <param name="hasResizeHandle"><bool>true</bool></param>
     </theme>
@@ -948,4 +949,25 @@
             <action name="prevTab">CTRL SHIFT TAB</action>
         </inputMapDef></param>
     </theme>
+	
+	<theme name="buttonBox" ref="-defaults" allowWildcard="true">
+        <param name="background"><image>-borderA</image></param>
+        <param name="border"><border>background.border</border></param>
+        <param name="hasCloseButton"><bool>false</bool></param>
+        <param name="titleAreaBottom"><int>4</int></param>
+		<param name="spacing"><int>8</int></param>
+        <param name="alignment"><enum type="alignment">CENTER</enum></param>
+    </theme>
+	
+		<theme name="borderlayout" ref="-defaults" allowWildcard="true">
+        <param name="background"><image>-borderA</image></param>
+        <param name="border"><border>background.border</border></param>
+        <param name="hasCloseButton"><bool>false</bool></param>
+        <param name="titleAreaBottom"><int>4</int></param>
+		<param name="spacing"><int>8</int></param>
+		<param name="hgap"><int>2</int></param>
+		<param name="vgap"><int>2</int></param>
+        <param name="alignment"><enum type="alignment">CENTER</enum></param>
+    </theme>
+	
 </themes>

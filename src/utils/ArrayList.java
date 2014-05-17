@@ -1,6 +1,6 @@
 package utils;
 
-import state.Copyable;
+import main.state.Copyable;
 
 public class ArrayList<T> extends java.util.ArrayList<T> implements Copyable<ArrayList<T>>{
 

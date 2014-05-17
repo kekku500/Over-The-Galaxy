@@ -1,6 +1,6 @@
 package utils;
 
-import state.Copyable;
+import main.state.Copyable;
 
 public class HashSet<T> extends java.util.HashSet<T> implements Copyable<HashSet<T>>{
 

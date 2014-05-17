@@ -1,9 +1,19 @@
 package utils;
 
-import state.Copyable;
+import java.io.Serializable;
 
-public class R<T> implements Copyable<R<T>>{ //Reference Object
+import main.state.Copyable;
 
+/**
+ * R aka reference aka pointer.
+ */
+
+public class R<T> implements Copyable<R<T>>, Serializable{ //Reference Object
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	T variable;
 	
 	public R(T t){

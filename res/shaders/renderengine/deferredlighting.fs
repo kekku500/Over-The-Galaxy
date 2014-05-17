@@ -140,6 +140,20 @@ void main(){
 		
 		float Shadow = DirShadow + CubeShadow;
 		
+		if(DirectionalShadowEnabled != 1){
+			//not enabled
+			Shadow = CubeShadow;
+		}
+		if(CubeShadowedLight == -1){
+			//not enabled
+			Shadow = DirShadow;
+		}
+
+		if(DirectionalShadowEnabled != 1 && CubeShadowedLight == -1){
+			//not enabled
+			Shadow = 1.0f;
+		}
+		
 		vec4 TotalAmbient = vec4(0);
 		vec4 TotalDiffuse = vec4(0);
 		vec4 TotalSpecular = vec4(0);

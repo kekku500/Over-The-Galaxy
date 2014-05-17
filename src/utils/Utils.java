@@ -6,17 +6,27 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 
-import org.lwjgl.BufferUtils;
+import math.Matrix4f;
+import math.Vector3f;
 
-import utils.math.Vector3f;
+import org.lwjgl.BufferUtils;
 
 public class Utils {
 	
 	public static String getFB(FloatBuffer fb){
 
 		float[] f = new float[fb.limit()];
+		fb.get(f);
+		fb.rewind();
+		return Arrays.toString(f);
+	}
+	
+	public static String getIB(IntBuffer fb){
+
+		int[] f = new int[fb.limit()];
 		fb.get(f);
 		fb.rewind();
 		return Arrays.toString(f);
@@ -61,6 +71,28 @@ public class Utils {
     
 	public static FloatBuffer combineFloatBuffers(FloatBuffer...fbs){
         FloatBuffer send = BufferUtils.createFloatBuffer(fbs[0].capacity()*fbs.length);
+        for(FloatBuffer add: fbs){
+        	send.put(add);
+        }
+        send.flip();
+        return send;
+	}
+	
+	public static FloatBuffer combineFloatBuffers(Matrix4f...fbs){
+        FloatBuffer send = BufferUtils.createFloatBuffer(16*fbs.length);
+        for(Matrix4f add: fbs){
+        	send.put(add.fb());
+        }
+        send.flip();
+        return send;
+	}
+	
+	public static FloatBuffer combineFBIrregular(FloatBuffer...fbs){
+		int size = 0;
+		for(FloatBuffer fb: fbs)
+			size += fb.capacity();
+		
+        FloatBuffer send = BufferUtils.createFloatBuffer(size);
         for(FloatBuffer add: fbs){
         	send.put(add);
         }

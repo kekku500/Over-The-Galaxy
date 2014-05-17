@@ -3,10 +3,10 @@ package resources.model;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import org.lwjgl.BufferUtils;
+import math.Matrix4f;
+import math.Vector3f;
 
-import utils.math.Matrix4f;
-import utils.math.Vector3f;
+import org.lwjgl.BufferUtils;
 
 import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -42,7 +42,7 @@ public class ModelUtils {
 		int numTrianglesSize = 0;
 		for(SubModel subM: m.submodels){
 			triangleIndexBaseSize += subM.faces.size() * 3 * 4;
-			vertexBaseSize += subM.faces.size() * 3 * 3 * 2; //meh taht 2
+			vertexBaseSize += subM.faces.size() * 3 * 3 * 2 /*odd from here on*/ * 2; //meh taht 2
 			numTrianglesSize += subM.faces.size();
 		}
 		

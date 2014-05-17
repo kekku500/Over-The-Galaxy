@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import math.Vector3f;
+
 import org.lwjgl.BufferUtils;
 
+import resources.Resources;
 import utils.Utils;
-import utils.math.Vector3f;
 
 public class Model{
 	
@@ -55,7 +57,7 @@ public class Model{
 	
 	public void loadModel(){
 		try {
-			OBJLoader.loadModel(modelPath, this);
+			OBJLoader.loadModel(Resources.RESOURCESPATH + Resources.MODELPATH + modelPath, this);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

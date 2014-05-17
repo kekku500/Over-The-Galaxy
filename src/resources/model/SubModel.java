@@ -27,19 +27,19 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glUniform1i;
+import graphics.Graphics3D;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import main.Config;
+import math.Vector2f;
+import math.Vector3f;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBVertexShader;
-
-import state.Game;
-import utils.math.Vector2f;
-import utils.math.Vector3f;
-import world.graphics.Graphics3D;
 
 public class SubModel {
 	
@@ -172,7 +172,7 @@ public class SubModel {
 		vboVertexID = glGenBuffers();
 		FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.length * 3);
 		for(Vector3f v: vertices){
-			vertexBuffer.put(v.x*(Game.zNear+1)).put(v.y*(Game.zNear+1)).put(v.z*(Game.zNear+1));
+			vertexBuffer.put(v.x*(Config.Z_NEAR+1)).put(v.y*(Config.Z_NEAR+1)).put(v.z*(Config.Z_NEAR+1));
 		}
         vertexBuffer.rewind();
         

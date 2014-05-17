@@ -1,6 +1,6 @@
 package main;
 
-import state.State;
+import main.state.State;
 
 /**
  * A simple example of a state.

@@ -5,8 +5,8 @@ import static org.lwjgl.opengl.GL11.GL_CULL_FACE_MODE;
 import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL20.glUniform1i;
+import graphics.Graphics3D;
 import resources.model.Model;
-import world.graphics.Graphics3D;
 
 public class Sphere extends Model{
 	

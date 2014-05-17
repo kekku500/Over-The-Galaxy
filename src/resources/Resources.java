@@ -9,10 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import main.state.Game;
 import resources.model.Model;
 import resources.texture.Texture;
 import shader.Shader;
-import state.Game;
 import utils.Utils;
 
 /**
@@ -22,7 +22,6 @@ import utils.Utils;
  * Cube textures are specified using .ct extension. To get cube texture, do include .ct.
  * Vertex and fragment shader must be with same name. Extensions .vt and fs. To get shader
  * reference, do not include extension, ex "shader.vs" and "shader.fs" can be accessed using string "shader".
- * @author Kevin
  */
 
 public class Resources {
@@ -65,6 +64,7 @@ public class Resources {
 	private static List<String> textureFiles = new ArrayList<String>();
 	private static List<String> ctFiles = new ArrayList<String>();
 	private static List<String> taFiles = new ArrayList<String>();
+	private static List<String> levelFiles = new ArrayList<String>();
 	private static void readFiles(String mainFolder){
 		File folder = new File(mainFolder);
 		for(File fileOrInnerFolder: folder.listFiles()){
@@ -79,6 +79,8 @@ public class Resources {
 					modelFiles.add(fpath);
 				}else if(fname.endsWith(shaderVertexExt)){
 					shaderFiles.add(fpath);
+				}else if(fname.endsWith(".lev")){
+					levelFiles.add(fname);
 				}
 				
 				for(String supportedTexExt: supportedTextures)
@@ -86,6 +88,8 @@ public class Resources {
 						textureFiles.add(fpath);
 						break;
 					}
+				
+				
 			}
 		}
 	}
@@ -99,7 +103,7 @@ public class Resources {
 	
 	private static void createModels(){
 		for(String modelPath: modelFiles){
-			models.put(modelPath, new Model(modelPath));
+			models.put(modelPath, new Model(modelPath.replace(RESOURCESPATH + MODELPATH, "")));
 		}
 	}
 	
@@ -237,6 +241,10 @@ public class Resources {
 			throw new Exception("Shader " + shaderPath + " not found!");
 		return shader;
 			
+	}
+	
+	public static List<String> getLevels(){
+		return levelFiles;
 	}
 
 	public static void destoryResources(){

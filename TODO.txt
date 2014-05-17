@@ -1,2 +1,3 @@
-extract physics from world
-create entity manager instead of world
+*creation of all entities (lights), which mean light source with a model must be created
+in entity creation add property to emit light which creates another window with light properties
+

@@ -1,29 +1,32 @@
 package input;
 
+import graphics.Graphics3D;
+
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
-import state.RenderState;
-import state.StateVariable;
 import utils.HashSet;
 import utils.LinkedList;
-import utils.R;
-import world.graphics.Graphics3D;
 import de.matthiasmann.twl.GUI;
 import de.matthiasmann.twl.input.Input;
 
+/**
+ * Class to handle all of OpenGL input; such as when to call input checking method.
+ */
 public class LWJGLInput implements Input{
 	
-	private static Set<InputReciever> globalInputs = new HashSet<InputReciever>();
-	private Set<InputReciever> inputs = new HashSet<InputReciever>();
+	private Set<InputHandler> inputs = new HashSet<InputHandler>();
 	
-	private LinkedList<KbEvent> keyboardEventsForRendering = new LinkedList<KbEvent>();
+	private BlockingQueue<KbEvent> keyboardEventsForRendering = new LinkedBlockingQueue<KbEvent>();
 	private LinkedList<KbEvent> keyboardEventsAvailableInRender = new LinkedList<KbEvent>();
 	
-	private LinkedList<MsEvent> mouseEventsForRendering = new LinkedList<MsEvent>();
+	private BlockingQueue<MsEvent> mouseEventsForRendering = new LinkedBlockingQueue<MsEvent>();
 	private LinkedList<MsEvent> mouseEventsAvailableInRender = new LinkedList<MsEvent>();
 	
 	private int dxEvent; 
@@ -38,7 +41,8 @@ public class LWJGLInput implements Input{
             	KbEvent event = new KbEvent(Keyboard.getEventKey(),
                         Keyboard.getEventCharacter(),
                         Keyboard.getEventKeyState());
-            	checkKeyboardInput(event);
+            	for(InputHandler i: inputs)
+            		i.handleKey(event);
             	keyboardEventsForRendering.offer(new KbEvent(Keyboard.getEventKey(),
                         Keyboard.getEventCharacter(),
                         Keyboard.getEventKeyState()));
@@ -50,7 +54,8 @@ public class LWJGLInput implements Input{
             	MsEvent event = new MsEvent(Mouse.getEventX(), Mouse.getEventY(),
             			Mouse.getEventButton(), Mouse.getEventButtonState(),
             			Mouse.getEventDX(), Mouse.getEventDY(), Mouse.getEventDWheel());
-            	checkMouseInput(event);
+            	for(InputHandler i: inputs)
+            		i.handleMouse(event);
             	mouseEventsForRendering.offer(new MsEvent(Mouse.getEventX(), Mouse.getEventY(),
             			Mouse.getEventButton(), Mouse.getEventButtonState(),
             			Mouse.getEventDX(), Mouse.getEventDY(), Mouse.getEventDWheel()));
@@ -65,18 +70,16 @@ public class LWJGLInput implements Input{
 
         int dwheel = Mouse.getDWheel() / 120;
         dwheelEvent = dwheel;
-
-
 	}
 	
 	public void renderBegin(){
-		while(!keyboardEventsForRendering.isEmpty()){
-			keyboardEventsAvailableInRender.offer(keyboardEventsForRendering.poll());
-			//System.out.println("kb loop");
+		KbEvent kbEvent = null;
+		while((kbEvent = keyboardEventsForRendering.poll()) != null){
+			keyboardEventsAvailableInRender.offer(kbEvent);
 		}
-		while(!mouseEventsForRendering.isEmpty()){
-			mouseEventsAvailableInRender.offer(mouseEventsForRendering.poll());
-			//System.out.println("ms loop");
+		MsEvent msEvent = null;
+		while((msEvent = mouseEventsForRendering.poll()) != null){
+			mouseEventsAvailableInRender.offer(msEvent);
 		}
 
 	}
@@ -99,13 +102,13 @@ public class LWJGLInput implements Input{
 		wasActive = active;
 		
 		for(KbEvent e: keyboardEventsAvailableInRender){
+			
             gui.handleKey(e.key,e.character,e.state);
 		}
 		
 		if(!Mouse.isGrabbed())
 			for(MsEvent e: mouseEventsAvailableInRender){
 				gui.handleMouse(e.x, gui.getHeight() - e.y - 1, e.button, e.state);
-				
 				if(e.dwheel != 0)
 					gui.handleMouseWheel(e.dwheel);
 			}
@@ -114,48 +117,12 @@ public class LWJGLInput implements Input{
 	}
 	
 	//Inputs
-	public void addInput(InputReciever i){
+	public void addInput(InputHandler i){
 		inputs.add(i);
 	}
 	
-	public void removeInput(InputReciever i){
+	public void removeInput(InputHandler i){
 		inputs.remove(i);
-	}
-	
-	/**
-	 * Add only inputs which are independent from world states.
-	 * @param i
-	 */
-	public static void addGlobalInput(InputReciever i){
-		globalInputs.add(i);
-	}
-	
-	public static void removeGlobalInput(InputReciever i){
-		globalInputs.remove(i);
-	}
-	
-	public void checkMouseInput(MsEvent event){
-			if(event.state){
-				int m = event.button;
-				for(InputReciever e: globalInputs)
-					e.checkMouseInput(m);
-				for(InputReciever e: inputs){
-					e.checkMouseInput(m);
-				}
-				Graphics3D.checkMouseInput(m);
-			}
-	}
-	
-	public void checkKeyboardInput(KbEvent event){
-			if(event.state){
-				int k = event.key;
-				for(InputReciever e: globalInputs)
-					e.checkKeyboardInput(k);
-				for(InputReciever e: inputs){
-					e.checkKeyboardInput(k);
-				}
-				Graphics3D.checkKeyboardInput(k);
-			}
 	}
 	
 	public int getMouseDX(){

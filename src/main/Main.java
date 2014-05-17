@@ -1,27 +1,27 @@
 package main;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import javax.vecmath.Quat4f;
-
-import com.bulletphysics.linearmath.QuaternionUtil;
-
-import state.Game;
-import utils.Utils;
-import utils.math.Matrix4f;
-import utils.math.Transform;
-import utils.math.Vector3f;
-import utils.math.Vector4f;
+import resources.Resources;
+import utils.ArrayList;
+import entity.sheet.Entity;
+import entitymanager.Level;
+import main.state.Game;
+import math.Matrix4f;
+import math.Quat4f;
+import math.Transform;
+import math.Vector3f;
 
 public class Main {
 	
-	static LinkedList<Integer> valuesToBeChecked = new LinkedList<Integer>();
-	
 	public static void main(String[] args){
 		new Game().start();
-		
 	}
 	
 }

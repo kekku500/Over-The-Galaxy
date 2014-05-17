@@ -83,8 +83,8 @@ public class Shader {
     	int vertShader = 0, fragShader = 0;
     	
     	try {
-            vertShader = createShader(vertex,GL_VERTEX_SHADER);
-            fragShader = createShader(fragment,GL_FRAGMENT_SHADER);
+            vertShader = createShaderFromFile(vertex,GL_VERTEX_SHADER);
+            fragShader = createShaderFromFile(fragment,GL_FRAGMENT_SHADER);
     	}
     	catch(Exception exc) {
     		exc.printStackTrace();
@@ -100,11 +100,6 @@ public class Shader {
     	if(program == 0)
     		return 0;
         
-        /*
-        * if the vertex and fragment shaders setup sucessfully,
-        * attach them to the shader program, link the sahder program
-        * (into the GL context I suppose), and validate
-        */
         ARBShaderObjects.glAttachObjectARB(program, vertShader);
         ARBShaderObjects.glAttachObjectARB(program, fragShader);
         
@@ -131,8 +126,9 @@ public class Shader {
     * is the same.
     * @param the name and path to the vertex shader
     */
-    private int createShader(String filename, int shaderType) throws Exception {
-    	int shader = 0;
+    private int createShaderFromFile(String filename, int shaderType) throws Exception {
+    	return createShader(Utils.readFileAsString(filename), shaderType);
+    	/*int shader = 0;
     	try {
 	        shader = ARBShaderObjects.glCreateShaderObjectARB(shaderType);
 	        
@@ -140,6 +136,29 @@ public class Shader {
 	        	return 0;
 	        
 	        ARBShaderObjects.glShaderSourceARB(shader, Utils.readFileAsString(filename));
+	        ARBShaderObjects.glCompileShaderARB(shader);
+	        glCompileShader(shader);
+	        
+	        if (ARBShaderObjects.glGetObjectParameteriARB(shader, ARBShaderObjects.GL_OBJECT_COMPILE_STATUS_ARB) == GL11.GL_FALSE)
+	            throw new RuntimeException("Error creating shader: " + getLogInfo(shader));
+	        
+	        return shader;
+    	}
+    	catch(Exception exc) {
+    		ARBShaderObjects.glDeleteObjectARB(shader);
+    		throw exc;
+    	}*/
+    }
+    
+    private int createShader(String data, int shaderType) throws Exception {
+    	int shader = 0;
+    	try {
+	        shader = ARBShaderObjects.glCreateShaderObjectARB(shaderType);
+	        
+	        if(shader == 0)
+	        	return 0;
+	        
+	        ARBShaderObjects.glShaderSourceARB(shader, data);
 	        ARBShaderObjects.glCompileShaderARB(shader);
 	        glCompileShader(shader);
 	        
