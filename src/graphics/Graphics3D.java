@@ -193,7 +193,7 @@ public class Graphics3D{
     public static int materialAmbient, materialDiffuse, materialSpecular, materialEmission, materialShininess;
 
     //Rendering settings
-    private static int width, height;
+    private static int width, height, fov;
     public static boolean  texturing = true;
     public static boolean normalMapping = true;
     public static boolean shadows = true; 
@@ -218,7 +218,8 @@ public class Graphics3D{
 			
 			prop.load(input);
 			
-		//	Fov = Integer.parseInt(prop.getProperty("FOV"));
+			
+			fov = Integer.parseInt(prop.getProperty("FOV"));
 			width = Integer.parseInt(prop.getProperty("Resolution").split("x")[0]);
 			height = Integer.parseInt(prop.getProperty("Resolution").split("x")[1]);
 			shadows = Boolean.parseBoolean(prop.getProperty("Shadows"));
@@ -1159,7 +1160,7 @@ public class Graphics3D{
 		
 		Game.println("Resized to: " + width + " " + height);
         
-        cameraProjectionMatrix = Matrix4f.perspectiveMatrix(Config.FOV, (float) width / (float) height, Config.Z_NEAR, Config.Z_FAR).fb();
+        cameraProjectionMatrix = Matrix4f.perspectiveMatrix(fov, (float) width / (float) height, Config.Z_NEAR, Config.Z_FAR).fb();
         
 
         
