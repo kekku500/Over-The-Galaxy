@@ -10,6 +10,7 @@ import java.util.Properties;
 import org.lwjgl.input.Keyboard;
 
 import main.state.Game;
+import input.InputConfig;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -49,6 +50,7 @@ public class Menüü extends Application {
 		start.setFocusTraversable(false);
 		start.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			public void handle (MouseEvent e){
+				new InputConfig().changeInput();
 				new Game().start();
 				lava.close();
 			}
