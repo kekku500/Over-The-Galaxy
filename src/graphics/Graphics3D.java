@@ -111,9 +111,13 @@ import static org.lwjgl.opengl.GL30.glDeleteFramebuffers;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import input.InputConfig;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Properties;
 
 import main.Config;
 import main.PlayState;
@@ -207,6 +211,32 @@ public class Graphics3D{
 
     
 	public static void init(){
+		InputStream input = null;
+		Properties prop = new Properties();
+		try{
+			input = new FileInputStream("res/config/config.properties");
+			
+			prop.load(input);
+			
+		//	Fov = Integer.parseInt(prop.getProperty("FOV"));
+			width = Integer.parseInt(prop.getProperty("Resolution").split("x")[0]);
+			height = Integer.parseInt(prop.getProperty("Resolution").split("x")[1]);
+			shadows = Boolean.parseBoolean(prop.getProperty("Shadows"));
+			filtering = Boolean.parseBoolean(prop.getProperty("Shadow_Filtering"));
+			occlusion = Boolean.parseBoolean(prop.getProperty("Ambient_Occlusion"));
+			lightScattering = Boolean.parseBoolean(prop.getProperty("Light_Scattering"));
+			normalMapping = Boolean.parseBoolean(prop.getProperty("Normal_Mapping"));
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}finally{
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		// check OpenGL version ---------------------------------------------------------------------------------------------------
         if(!GLContext.getCapabilities().OpenGL30){
             System.err.println("OpenGL 3.0 not supported!");
