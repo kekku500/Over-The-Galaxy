@@ -14,6 +14,10 @@
 	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/vecmath.jar" sourcepath="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/vecmath.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/xpp3_xpath-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/slick-util.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/TWL.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/TWL.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/natives/windows"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

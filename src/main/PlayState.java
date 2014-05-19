@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 import resources.Resources;
 import resources.model.Model;
 import resources.model.custom.Sphere;
+import AI.AIBase;
 
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
@@ -90,7 +91,6 @@ public class PlayState extends State{
 		HUD = new HeadsUpDisplay(player, hudManager);
 	    HUD.init();
 	    
-	    
 		/*camera = new Controller(entityManager, 10,10,10);
 		camera.setViewport(Config.VIEWPORT_WIDTH, Config.VIEWPORT_HEIGHT);
 		camera.setProjection(Config.FOV, (float) Config.VIEWPORT_WIDTH / (float) Config.VIEWPORT_HEIGHT, Config.Z_NEAR, Config.Z_FAR);	
@@ -118,6 +118,16 @@ public class PlayState extends State{
 		//load level
 		entityManager.getLevel().loadNewEntities(
 				Level.loadLevelEntities("demo2.lev"));
+		
+		  AIBase kuubik = new AIBase(null, 20, 30, 35);
+		    try {
+				kuubik.setModel(Resources.getModel("common\\cuboid.obj"));
+				kuubik.action();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    
 	}
 
 	@Override

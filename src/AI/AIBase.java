@@ -8,8 +8,9 @@ import entitymanager.EntityManager;
 
 public class AIBase extends AbstractMoveableEntity {
 
-	public AIBase(EntityManager world) {
+	public AIBase(EntityManager world, float x, float y, float z) {
 		super(world);
+		setPosition(x, y, z);
 	}
 	
 	private Thruster moveX = new Thruster(
@@ -37,7 +38,8 @@ public class AIBase extends AbstractMoveableEntity {
 	}
 	
 	public Vector3f enemyPosition() {
-		return (Vector3f) getEntityManager().getState().getCamera().getTransform().updating().origin;
+		System.out.println(RenderState.updating());
+		return (Vector3f) getEntityManager().getState().getPlayer().getPosition(RenderState.updating());
 	}
 	
 	public Vector3f enemyDistance() {
@@ -69,6 +71,7 @@ public class AIBase extends AbstractMoveableEntity {
 		while (true) {
 			if (this.enemyNotInSight()){
 				try {
+					System.out.println("Kedagi pole");
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -82,6 +85,7 @@ public class AIBase extends AbstractMoveableEntity {
 	
 	public void combatAction(){	
 		while (enemyNotInSight() == false) {
+			System.out.println("Leidsin!!!");
 			kamikaze();
 		}
 	}

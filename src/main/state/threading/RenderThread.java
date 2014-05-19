@@ -78,7 +78,7 @@ public class RenderThread implements Runnable{
 			gui = new GUI(gameUI, renderer, input);
 			gui.setTheme("");
 			URL f = new File("res/ui/simple.xml").toURI().toURL();
-			theme = ThemeManager.createThemeManager(f, renderer);
+			//theme = ThemeManager.createThemeManager(f, renderer);
 			gui.applyTheme(theme);
 			
 		}catch(Exception e){
