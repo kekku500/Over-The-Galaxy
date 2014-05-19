@@ -61,6 +61,12 @@ public class Map extends AbstractComponent {
 		setPosition(200,50);
 	}
 	
+	public Vector3f getPLoc() {
+		return PLoc;
+	}
+
+
+
 	@Override
 	public void render() {
 		if(!brender && render){

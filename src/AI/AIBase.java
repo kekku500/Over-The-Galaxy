@@ -47,8 +47,7 @@ public class AIBase extends AbstractMoveableEntity {
 		}
 	}
 	
-	public void combatAction(){
-		
+	public void combatAction(){	
 	}
 	
 }

@@ -2,18 +2,18 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/jbullet.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/lwjgl.jar">
+	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/jbullet.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/lwjgl.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Marko/Desktop/libs/windows"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/natives/windows"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/lwjgl_util.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/slick.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/slick-util.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/libs/vecmath.jar"/>
-	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/TWL.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Marko/Desktop/xpp3-1.1.4c.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/slick.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/vecmath.jar" sourcepath="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/vecmath.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/xpp3_xpath-1.1.4c.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/slick-util.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ott/workspace/OOP/Over-The-Galaxy-dev_1.85/lib/jars/TWL.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

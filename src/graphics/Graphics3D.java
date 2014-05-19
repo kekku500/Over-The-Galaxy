@@ -692,7 +692,7 @@ public class Graphics3D{
     	
     	//glDisable(GL_BLEND);
 	    //world.getVisualEntities(RenderState.rendering())
-	 enderObjects(world.getVisualEntities(RenderState.rendering()), false);
+	 renderObjects(world.getVisualEntities(RenderState.rendering()), false);
         //renderObjects(world.getState().getCamera().cameraFrustum.rendering().getInsideFrustumEntities(), false);*/
         
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
