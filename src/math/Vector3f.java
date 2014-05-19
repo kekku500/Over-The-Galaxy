@@ -54,6 +54,9 @@ public class Vector3f extends javax.vecmath.Vector3f implements Copyable<Vector3
 		return setr(v.x, v.y, v.z);
 	}
 	
+	public Vector3f abs(){
+		return setr(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z));
+	}
 	
 	/**
 	 * addr stands for Add Return, meaning this vector is returned for chaining.
