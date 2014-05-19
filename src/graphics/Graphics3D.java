@@ -581,8 +581,8 @@ public class Graphics3D{
     	return null;
     }
     
-    private static boolean trsv = false;
-    private static boolean trsv2 = false;
+ 
+
     static EntitySelectionRequest tempReq; 
     public static void render(EntityManager world){
     	if(world.getState().getCamera() == null) //wait for controller to be ready
@@ -692,7 +692,8 @@ public class Graphics3D{
     	
     	//glDisable(GL_BLEND);
 	    //world.getVisualEntities(RenderState.rendering())
-        renderObjects(world.getState().getCamera().cameraFrustum.rendering().getInsideFrustumEntities(), false);
+	 enderObjects(world.getVisualEntities(RenderState.rendering()), false);
+        //renderObjects(world.getState().getCamera().cameraFrustum.rendering().getInsideFrustumEntities(), false);*/
         
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
